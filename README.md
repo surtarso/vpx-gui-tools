@@ -5,7 +5,7 @@ Uses YAD (for launcher) and Python 3 (for ini editor)
 ## [VPX Launcher](vpx_launcher.sh)
 Simple list-type VPX table launcher with basic icon (wheel) support.
 
-![image](https://github.com/user-attachments/assets/09070eae-b26a-4485-95a5-6ff76f4740b4)
+![image](https://github.com/user-attachments/assets/eb60fa04-8e4d-4283-8e25-b0f3875d2ada)
 
 ### Features:
 - Fast
@@ -18,7 +18,7 @@ Simple GUI editor for VPinballX.ini
 
 ### Features:
 - Category-split settings
-- Explanations for each variable (in progress, need help!)
+- Explanations for each variable **(in progress, need help!)**
 
 ## **Installation & Usage**  
 
