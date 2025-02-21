@@ -20,12 +20,23 @@ Simple GUI editor for VPinballX.ini
 - Category-split settings
 - Explanations for each variable (in progress, need help!)
 
-# Usage:
-- Download this repository to any folder you want.
-- Install dependencies. `sudo apt install yad`
-- Run `vpx_launcher.sh`
-- Follow on-screen instructions.
+## **Installation & Usage**  
 
-You can also run the INI Editor standalone by running:
-`python3 vpx_ini_editor.py`
-It uses tkinter only.
+1. **Download the repository** to any folder of your choice.  
+2. **Install dependencies:**  
+   ```bash
+   sudo apt install yad python3 python3-tk
+   ```  
+   > *If you don’t plan to use the launcher, you can skip installing `yad`.*  
+3. **Run the launcher:**  
+   ```bash
+   ./vpx_launcher.sh
+   ```  
+   Follow the on-screen instructions.  
+
+## **Standalone INI Editor**  
+You can run the INI Editor separately without the launcher:  
+```bash
+python3 vpx_ini_editor.py
+```  
+It only requires **Tkinter** and does not depend on `yad`.
