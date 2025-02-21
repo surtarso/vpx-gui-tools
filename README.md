@@ -19,3 +19,11 @@ Simple GUI editor for VPinballX.ini
 ### Features:
 - Category-split settings
 - Explanations for each variable (in progress, need help!)
+
+# Usage:
+- Download this repository to any folder you want.
+- Run `vpx_launcher.sh`
+- Follow on-screen instructions.
+
+You can also run the INI Editor standalone by running:
+`python3 vpx_ini_editor.py`
