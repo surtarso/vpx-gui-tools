@@ -97,7 +97,7 @@ class ToolTip:
 
             # Add a close button for the pop-up window
             close_button = ttk.Button(tipwindow, text="Close", command=tipwindow.destroy)
-            close_button.pack(pady=10)  # Increase padding around the button
+            close_button.pack(pady=5)  # Increase padding around the button
 
             # Automatically adjust window size to fit the content
             tipwindow.update_idletasks()
@@ -267,13 +267,22 @@ class IniEditor:
         self.canvas.create_window((0,0), window=self.inner_frame, anchor="nw")
         self.inner_frame.bind("<Configure>", lambda event: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
 
+        # Create a frame to hold buttons side by side
+        button_frame = ttk.Frame(self.master)
+        button_frame.pack(pady=10)
+
         # Save button
-        save_button = ttk.Button(self.master, text="Save Changes", command=self.save_changes)
-        save_button.pack(pady=5)
+        save_button = ttk.Button(button_frame, text="Save", command=self.save_changes)
+        save_button.pack(side=tk.LEFT, padx=5)
+
+        # Exit button
+        exit_button = ttk.Button(button_frame, text="Discard", command=self.master.quit)
+        exit_button.pack(side=tk.LEFT, padx=5)
 
         if self.ini_data:
             first_section = list(self.ini_data.keys())[0]
             self.load_section(first_section)
+
 
     def on_section_change(self, event):
         section = self.section_var.get()
