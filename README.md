@@ -22,10 +22,10 @@ Simple GUI editor for VPinballX.ini
 
 # Usage:
 - Download this repository to any folder you want.
-- Install dependencies. `sudo apt install yad`
+- Install dependencies. `sudo apt install yad python3 python3-tk`
 - Run `vpx_launcher.sh`
 - Follow on-screen instructions.
 
 You can also run the INI Editor standalone by running:
 `python3 vpx_ini_editor.py`
-It uses tkinter only.
+It uses tkinter only. If you dont want to use the launcher you can skip installing 'Yad'.
