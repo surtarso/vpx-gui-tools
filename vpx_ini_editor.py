@@ -121,20 +121,21 @@ class IniEditor:
         # Define explanations for specific keys.
         # Keys here must exactly match the key names in your INI file.
         self.explanations = {
+            # STANDALONE
             "PinMAMEPath": "Specifies the directory where the PinMAME emulator is located. PinMAME is an emulator for classic pinball machines.\n"
                 "Default is ~/.pinmame: If not specified, the default location for the PinMAME folder is in the home directory.",
-            "PinMAMEWindow": "Controls the visibility of the DMD (Dot Matrix Display) window.\n"
-                "0 - Turns the DMD window off: Disables the DMD window, which is often used for displaying the score and game information.\n"
-                "1 - Turns the DMD window on: Enables the DMD window to display relevant game information. (Default is 1)",
-            "PinMAMEWindowX": "Sets the X pixel coordinate of the top-left corner of the DMD window on the screen.\n"
+            "PinMAMEWindow": "Controls the visibility of the PinMAME DMD (Dot Matrix Display) window.\n"
+                "0 - Turns the DMD window off: Disables the PinMAME DMD window, which is often used for displaying the score and game information.\n"
+                "1 - Turns the DMD window on: Enables the PinMAME DMD window to display relevant game information. (Default is 1)",
+            "PinMAMEWindowX": "Sets the X pixel coordinate of the top-left corner of the PinMAME DMD window on the screen.\n"
                 "This controls the horizontal position where the DMD window appears on the screen.",
-            "PinMAMEWindowY": "Sets the Y pixel coordinate of the top-left corner of the DMD window on the screen.\n"
+            "PinMAMEWindowY": "Sets the Y pixel coordinate of the top-left corner of the PinMAME DMD window on the screen.\n"
                 "This controls the vertical position where the DMD window appears on the screen.",
-            "PinMAMEWindowWidth": "Controls the width of the DMD window.\n"
+            "PinMAMEWindowWidth": "Controls the width of the PinMAME DMD window.\n"
                 "You can resize the DMD window by specifying the width in pixels.",
-            "PinMAMEWindowHeight": "Controls the height of the DMD window.\n"
+            "PinMAMEWindowHeight": "Controls the height of the PinMAME DMD window.\n"
                 "You can resize the DMD window by specifying the height in pixels.",
-            "PinMAMEWindowRotation": "Controls the rotation of the DMD window.\n"
+            "PinMAMEWindowRotation": "Controls the rotation of the PinMAME DMD window.\n"
                 "This setting can rotate the DMD window to a specified angle, useful for certain display setups.",
             "B2SHideGrill": "Controls the visibility of the grill in the backbox of the cabinet setup.\n"
                 "0 - Show grill (if it exists): Displays the grill, a common component in pinball machines.\n"
@@ -171,6 +172,7 @@ class IniEditor:
             "B2SDMDFlipY": "Controls whether the DMD frame is flipped vertically.\n"
                 "0 - No flip: The DMD frame appears normally.\n"
                 "1 - Flip vertically: Flips the DMD frame vertically, which may be useful for specific screen orientations.",
+            # PLAYER
             "BGSet": "Controls the display mode for the backglass and the playfield.\n"
                 "0 - Desktop (default): The default desktop mode for standard use.\n"
                 "1 - Fullscreen: For cabinet use or multi-window on desktop setups.\n"
@@ -230,10 +232,6 @@ class IniEditor:
             "ForceAnisotropicFiltering": "Determines whether anisotropic filtering (AF) is enabled or disabled. AF improves the quality of textures viewed at steep angles, making them appear sharper and clearer.\n"
                 "0 - Disabled: Anisotropic filtering is disabled, leading to potentially blurry textures at certain angles.\n"
                 "1 - Enabled: Anisotropic filtering is enabled, improving the quality of textures, especially at angles.",
-            "RenderingModeOverride": "Overrides the default rendering mode for the game.\n"
-                "0 - Not sure: The behavior is currently unknown or unspecified for this option.\n"
-                "1 - Not sure: The behavior is currently unknown or unspecified for this option.\n"
-                "2 - VR Mode: Activates Virtual Reality (VR) mode, enabling support for VR hardware such as headsets. This mode alters the display and user experience to fit the VR environment.",
         }
 
         self.entry_widgets = {}
