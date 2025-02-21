@@ -2,9 +2,10 @@ import os
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
+from tkinter import filedialog
 
 # Set the ini_file path here (use the full path if needed)
-INI_FILE_PATH = os.path.expandvars("$HOME/.vpinball/VPinballX.ini") # Expands $HOME
+INI_FILE_PATH = os.path.expandvars("$HOME/.vpinball/VPinballX.ini")  # Expands $HOME
 
 def read_ini_preserve_keys(filename):
     """
@@ -275,14 +276,36 @@ class IniEditor:
         save_button = ttk.Button(button_frame, text="Save", command=self.save_changes)
         save_button.pack(side=tk.LEFT, padx=5)
 
+        # Change INI button
+        change_ini_button = ttk.Button(button_frame, text="Change INI", command=self.change_ini)
+        change_ini_button.pack(side=tk.LEFT, padx=5)
+
         # Exit button
-        exit_button = ttk.Button(button_frame, text="Discard", command=self.master.quit)
+        exit_button = ttk.Button(button_frame, text="Exit", command=self.master.quit)
         exit_button.pack(side=tk.LEFT, padx=5)
 
         if self.ini_data:
             first_section = list(self.ini_data.keys())[0]
             self.load_section(first_section)
 
+    def change_ini(self):
+        '''
+        Opens a file dialog to select a new INI file, then loads and displays its contents.
+        '''
+        new_ini_file = filedialog.askopenfilename(
+            title="Select INI file", 
+            filetypes=(("INI files", "*.ini"), ("All files", "*.*"))
+        )
+        
+        if new_ini_file:
+            self.ini_file = new_ini_file
+            self.ini_data = read_ini_preserve_keys(self.ini_file)  # Read the new file
+
+            # Update the section combo box with sections from the new INI file
+            self.section_combo['values'] = list(self.ini_data.keys())
+            if self.ini_data:
+                self.section_combo.current(0)
+            self.load_section(list(self.ini_data.keys())[0])  # Load the first section of the new file
 
     def on_section_change(self, event):
         section = self.section_var.get()
