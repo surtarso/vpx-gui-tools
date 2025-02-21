@@ -1,5 +1,5 @@
 #!/bin/bash
-# URCade VPX Launcher
+# VPX Table Launcher
 # A simple GUI launcher for Visual Pinball X tables
 # Tarso Galvão - 2025
 # Dependencies: yad 0.40.0 (GTK+ 3.24.38)
@@ -21,7 +21,7 @@ fi
 
 ## --------------------- CONFIGURATION ---------------------
 # Config file path
-CONFIG_FILE="$HOME/.urcade_vpx_config"
+CONFIG_FILE="$HOME/.vpx_launcher_config"
 
 # Launcher will run "START_ARGS COMMAND_TO_RUN -play TABLE_FILE END_ARGS"
 # Example: DRI_PRIME=1 gamemoderun /path/to/VPinballX_GL -play /path/to/table.vpx
@@ -37,7 +37,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
 fi
 
 # (Re)Load the config file
-# shellcheck source=$HOME/.urcade_vpx_config
+# shellcheck source=$HOME/.vpx_launcher_config
 source "$CONFIG_FILE"
 
 ## --------------------- SETTINGS DIALOG ---------------------
@@ -104,7 +104,7 @@ open_settings() {
         --width=300 --height=100 2>/dev/null
 
     # Reload the config file
-    # shellcheck source=$HOME/.urcade_vpx_config
+    # shellcheck source=$HOME/.vpx_launcher_config
     source "$CONFIG_FILE"
 }
 
