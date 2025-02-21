@@ -40,7 +40,12 @@ fi
 # shellcheck source=$HOME/.vpx_launcher_config
 source "$CONFIG_FILE"
 
-## --------------------- SETTINGS DIALOG ---------------------
+## --------------------- INI SETTINGS ---------------------
+open_settings_python() {
+    python3 vpx_ini_editor.py
+}
+
+## ------------------ LAUNCHER SETTINGS -------------------
 open_settings() {
     # Show settings dialog
     NEW_VALUES=$(yad --form --title="Settings" \
@@ -170,7 +175,7 @@ while true; do
         SELECTED_NAME=$(yad --list --title="VPX Launcher" \
             --text="Table(s) found: $TABLE_NUM" \
             --width=600 --height=400 \
-            --button="⚙:1" --button="🕹️ :0" --button="🚪 :252" \
+            --button="INI Editor:2" --button="⚙:1" --button="🕹️ :0" --button="🚪 :252" \
             --no-headers \
             --column="Icon:IMG" --column="Table Name" <<< "$FILE_LIST_STR" 2>/dev/null)
 
@@ -179,6 +184,10 @@ while true; do
         if [ $EXIT_CODE -eq 1 ]; then
             open_settings
             continue  # Reload after settings update
+
+        elif [ $EXIT_CODE -eq 2 ]; then
+            open_settings_python
+            continue
 
         elif [ $EXIT_CODE -eq 252 ]; then
             exit 0  # User canceled
