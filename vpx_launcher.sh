@@ -42,6 +42,24 @@ source "$CONFIG_FILE"
 
 ## ------------- INI SETTINGS (Standalone) ---------------
 open_ini_settings() {
+    # Check for Python 3 and Python3-tk
+    if ! command -v python3 &>/dev/null; then
+        yad --form --title="Error" --width=400 --height=200 \
+            --field="Missing dependency: Python3\nINI Editor cannot be run.\n\n \
+                Do you want to install it now? (Requires sudo)\n":LBL \
+            --field="You can also install it manually using:\n \
+                 sudo apt install python3 python3-tk":LBL \
+            --button="Yes:0" --button="Back:1"
+
+        if [ $? -eq 0 ]; then
+            # User chose to install Python3
+            sudo apt install -y python3 python3-tk
+        else
+            # User chose not to install Python3
+            return
+        fi
+    fi
+
     # Check if a parameter (INI file) was passed
     if [ -n "$1" ]; then
         # If so, pass it to the Python script
