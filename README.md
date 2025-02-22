@@ -17,16 +17,43 @@
    ```bash
    sudo apt install yad python3 python3-tk
    ```  
-   > *If you don’t plan to use the launcher, you can skip installing `yad`.*  
+   > *If you don’t plan to use the launcher, you can skip installing `yad`.*
+
 3. **Run the launcher:**  
    ```bash
    ./vpx_launcher.sh
-   ```  
-   Follow the on-screen instructions.  
+   ```
+   
+4. **Configure paths and args**
+   
+   ![](https://github.com/user-attachments/assets/dc01e6a6-4f41-4570-8ebb-d23c8e62732d)
+
+   - Set table folder, it will look recursevely for .vpx files.
+   - Set any initial args you may need. (or leave empty)
+   - Set absolute path of your VPX executable.
+   - Set any final args you may need. (or leave empty)
+  
+   The code will assemble a command line that looks like this:
+   ```bash
+   [initial arg] [VPX executable] `-play` [table dir] [selected.vpx] [final args]
+   ```
+   For example:
+   ```bash
+   DRI_PRIME=1 gamemoderun /home/tarso/Games/vpinball/build/VPinballX_GL -play /home/tarso/Games/vpinball/build/tables/tomandjerry/tomandjerry.vpx --fullscreen`
+   ```
+
+5. **Select a table and press play!**
+
+#### Obs: 
+- The **INI Editor** will open `~/vpinball/VPinballX.ini` by default if no table is selected.
+- Selecting a table and pressing the **INI Editor** button will attempt to open the table ini file if it exists.
+- You can always manually search for the .ini you want to open.
 
 ## **Standalone INI Editor**  
-You can run the INI Editor separately without the launcher:  
+You can run the INI Editor separately without the launcher with:  
 ```bash
 python3 vpx_ini_editor.py
+
+python3 vpx_ini_editor.py /path/to/anyfile.ini
 ```  
 It only requires **Tkinter** and does not depend on `yad`.
