@@ -4,7 +4,7 @@
 | **[VPX Launcher](vpx_launcher.sh)** | **[VPX INI Editor](vpx_ini_editor.py)** |
 |-------------------------------------|---------------------------------------|
 | Simple list-type VPX GUI with basic icon (wheel) support. | Simple GUI editor for `VPinballX.ini` or single table ini's. |
-| ![Launcher](https://github.com/user-attachments/assets/eb60fa04-8e4d-4283-8e25-b0f3875d2ada) | ![INI Editor](https://github.com/user-attachments/assets/e7c5fa40-42ae-4413-bf3a-1bf3e0cef7e2) |
+| ![Launcher](https://github.com/user-attachments/assets/eb60fa04-8e4d-4283-8e25-b0f3875d2ada) | ![INI Editor](https://github.com/user-attachments/assets/010727f1-3e8a-4d2e-ac69-938a0b6bac7e) |
 | **Launcher Features:**  | **Editor Features:**  |
 | - Simple & Fast  | - Category-split Sections |
 | - Configurable  | - Explanations for each variable **(in progress, need help!)** |
