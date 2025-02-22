@@ -182,7 +182,8 @@ while true; do
         SELECTED_NAME=$(yad --list --title="VPX Launcher" \
             --text="Table(s) found: $TABLE_NUM" \
             --width=600 --height=400 \
-            --button="INI Editor:2" --button="⚙:1" --button="🕹️ :0" --button="🚪 :252" \
+            --button="INI Editor:2" --button="Extract VBS:10" \
+            --button="⚙:1" --button="🕹️ :0" --button="🚪 :252" \
             --no-headers \
             --column="Icon:IMG" --column="Table Name" <<< "$FILE_LIST_STR" 2>/dev/null)
 
@@ -207,6 +208,30 @@ while true; do
             fi
             continue  # Return to the menu after editing INI file
 
+        elif [ $EXIT_CODE -eq 10 ]; then
+            # Extract VBS script from the selected table
+            if [ -z "$SELECTED_NAME" ]; then
+                # Show warning if no table is selected
+                yad --title="Attention" --text="No table selected!\nPlease select a table before extracting." \
+                    --width=400 --height=150 --buttons-layout=center --button="OK:0"
+                continue  # Return to the list
+            fi
+            # Extract the selected table name
+            SELECTED_NAME=$(echo "$SELECTED_NAME" | sed 's/^|//;s/|$//')
+            # Get full file path
+            SELECTED_FILE="${FILE_MAP[$SELECTED_NAME]}"
+
+            # Extract the VBS script
+            eval "\"$COMMAND_TO_RUN\" -ExtractVBS \"$SELECTED_FILE\"" &
+            wait $!
+
+            # Give user feedback
+            yad --info --title="VBS Extract" \
+                --text="VBS script extracted successfully!" \
+                --buttons-layout=center --button="OK:0" \
+                --width=300 --height=100 2>/dev/null
+
+            continue  # Return to the list
 
         elif [ $EXIT_CODE -eq 252 ]; then
             exit 0  # User canceled
