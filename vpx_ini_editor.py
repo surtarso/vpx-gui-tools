@@ -1,4 +1,5 @@
 import os
+import argparse
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
@@ -74,6 +75,14 @@ def write_ini_preserve_keys(filename, data):
             else:
                 # For other lines, just write them as is
                 f.write(line)
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="INI File Editor")
+    parser.add_argument(
+        "ini_file", nargs="?", default=None,
+        help="Path to the INI file to be edited. If not provided, the default path is used."
+    )
+    return parser.parse_args()
 
 class ToolTip:
     """
@@ -379,8 +388,9 @@ class IniEditor:
         messagebox.showinfo("Success", f"Changes saved to {self.ini_file}")
 
 def main():
-    # Check if the INI file exists
-    ini_file = INI_FILE_PATH
+    # Parse the command-line arguments
+    args = parse_args()
+    ini_file = args.ini_file or INI_FILE_PATH  # Use provided INI file or default path
 
     if not os.path.exists(ini_file):
         # Prompt user to either select a new INI or exit

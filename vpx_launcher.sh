@@ -42,7 +42,14 @@ source "$CONFIG_FILE"
 
 ## --------------------- INI SETTINGS ---------------------
 open_settings_python() {
-    python3 vpx_ini_editor.py
+    # Check if a parameter (INI file) was passed
+    if [ -n "$1" ]; then
+        # If so, pass it to the Python script
+        python3 vpx_ini_editor.py "$1"
+    else
+        # Otherwise, open the default INI editor
+        python3 vpx_ini_editor.py
+    fi
 }
 
 ## ------------------ LAUNCHER SETTINGS -------------------
@@ -185,9 +192,21 @@ while true; do
             open_settings
             continue  # Reload after settings update
 
-        elif [ $EXIT_CODE -eq 2 ]; then
-            open_settings_python
-            continue
+        elif [ $EXIT_CODE -eq 2 ]; then         
+            # If INI Editor is pressed, check if a table is selected
+            if [ -z "$SELECTED_NAME" ]; then
+                # No table selected, open default INI editor
+                open_settings_python
+            else
+                # Table selected, open the corresponding INI file
+                # Strip the leading and trailing pipe characters
+                SELECTED_NAME=$(echo "$SELECTED_NAME" | sed 's/^|//;s/|$//')
+                # Get the absolute INI file path
+                INI_FILE="${FILE_MAP[$SELECTED_NAME]%.vpx}.ini"
+                open_settings_python "$INI_FILE"
+            fi
+            continue  # Return to the menu after editing INI file
+
 
         elif [ $EXIT_CODE -eq 252 ]; then
             exit 0  # User canceled
