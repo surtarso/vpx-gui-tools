@@ -288,26 +288,30 @@ class IniEditor:
             first_section = list(self.ini_data.keys())[0]
             self.load_section(first_section)
 
+    def update_title(self):
+        '''
+        Updates the window title based on the currently selected INI file.
+        '''
+        self.master.title(f"INI File Editor - {self.ini_file}")
+
     def change_ini(self):
         '''
-        Opens a file dialog to select a new INI file, then loads and displays its contents.
+        Opens a file dialog to choose a new INI file and update the UI accordingly.
         '''
         new_ini_file = filedialog.askopenfilename(
-            title="Select INI file", 
-            filetypes=(("INI files", "*.ini"), ("All files", "*.*"))
+            title="Select INI File", filetypes=[("INI Files", "*.ini"), ("All Files", "*.*")]
         )
-        
         if new_ini_file:
             self.ini_file = new_ini_file
-            self.ini_data = read_ini_preserve_keys(self.ini_file)  # Read the new file
+            self.ini_data = read_ini_preserve_keys(self.ini_file)
+            self.load_section(list(self.ini_data.keys())[0])  # Load the first section
+            self.update_title()  # Update the window title after changing the INI file
 
-            # Update the section combo box with sections from the new INI file
-            self.section_combo['values'] = list(self.ini_data.keys())
-            if self.ini_data:
-                self.section_combo.current(0)
-            self.load_section(list(self.ini_data.keys())[0])  # Load the first section of the new file
 
     def on_section_change(self, event):
+        '''
+        Event handler for section selection change.
+        '''
         section = self.section_var.get()
         self.load_section(section)
 
@@ -378,7 +382,7 @@ def main():
         return
 
     root = tk.Tk()
-    root.title(f"INI File Editor - {ini_file}")  # Set window title with the ini file path
+    root.title(f"INI Editor - {ini_file}")  # Set window title with the ini file path
     root.geometry("700x500")
 
     app = IniEditor(root, ini_file)
