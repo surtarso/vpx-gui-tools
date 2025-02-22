@@ -7,7 +7,7 @@
 | Simple list-type VPX GUI with basic icon (wheel) support. | Simple GUI editor for `VPinballX.ini` or single table ini's. |
 | ![Launcher](https://github.com/user-attachments/assets/18e11743-1ec5-4680-8ad7-c25687db0811) | ![INI Editor](https://github.com/user-attachments/assets/010727f1-3e8a-4d2e-ac69-938a0b6bac7e) |
 | **Launcher Features:**  | **Editor Features:**  |
-| - Simple & Fast  | - Category-split Sections |
+| - Simple & Fast (less than 100kb!)  | - Category-split Sections |
 | - Edit INI files & extract VBS scripts  | - Explanations for each variable **(in progress, need help!)** |
 | - Keyboard/Mouse Navigation | - Can edit single table ini's |
 
