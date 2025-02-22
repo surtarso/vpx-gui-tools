@@ -40,8 +40,8 @@ fi
 # shellcheck source=$HOME/.vpx_launcher_config
 source "$CONFIG_FILE"
 
-## --------------------- INI SETTINGS ---------------------
-open_settings_python() {
+## ------------- INI SETTINGS (Standalone) ---------------
+open_ini_settings() {
     # Check if a parameter (INI file) was passed
     if [ -n "$1" ]; then
         # If so, pass it to the Python script
@@ -53,7 +53,7 @@ open_settings_python() {
 }
 
 ## ------------------ LAUNCHER SETTINGS -------------------
-open_settings() {
+open_launcher_settings() {
     # Show settings dialog
     NEW_VALUES=$(yad --form --title="Settings" \
         --field="Tables Directory:":DIR "$TABLES_DIR" \
@@ -82,7 +82,7 @@ open_settings() {
             exit 0  # Exit the script
         fi
 
-        open_settings
+        open_launcher_settings
         return  # Retry after settings update
     fi
 
@@ -97,7 +97,7 @@ open_settings() {
             exit 0  # Exit the script
         fi
 
-        open_settings
+        open_launcher_settings
         return  # Retry after settings update
     fi
 
@@ -133,7 +133,7 @@ while true; do
             exit 0  # Exit the script
         fi
 
-        open_settings
+        open_launcher_settings
         continue  # Retry after settings update
     fi
 
@@ -148,7 +148,7 @@ while true; do
             exit 0  # Exit the script
         fi
 
-        open_settings
+        open_launcher_settings
         continue  # Retry after settings update
     fi
 
@@ -189,21 +189,21 @@ while true; do
         EXIT_CODE=$?
 
         if [ $EXIT_CODE -eq 1 ]; then
-            open_settings
+            open_launcher_settings
             continue  # Reload after settings update
 
         elif [ $EXIT_CODE -eq 2 ]; then         
             # If INI Editor is pressed, check if a table is selected
             if [ -z "$SELECTED_NAME" ]; then
                 # No table selected, open default INI editor
-                open_settings_python
+                open_ini_settings
             else
                 # Table selected, open the corresponding INI file
                 # Strip the leading and trailing pipe characters
                 SELECTED_NAME=$(echo "$SELECTED_NAME" | sed 's/^|//;s/|$//')
                 # Get the absolute INI file path
                 INI_FILE="${FILE_MAP[$SELECTED_NAME]%.vpx}.ini"
-                open_settings_python "$INI_FILE"
+                open_ini_settings "$INI_FILE"
             fi
             continue  # Return to the menu after editing INI file
 
