@@ -4,7 +4,7 @@ from tkinter import messagebox
 from tkinter import ttk
 from tkinter import filedialog
 
-# Set the ini_file path here (use the full path if needed)
+# Set the default ini_file path here (use the full path if needed)
 INI_FILE_PATH = os.path.expandvars("$HOME/.vpinball/VPinballX.ini")  # Expands $HOME
 
 def read_ini_preserve_keys(filename):
@@ -18,11 +18,17 @@ def read_ini_preserve_keys(filename):
     with open(filename, 'r') as f:
         for line in f:
             stripped = line.strip()
+            
+            # Skip comments and blank lines
             if not stripped or stripped.startswith(';'):
                 continue
+
+            # create section if line is a [section header]
             if stripped.startswith('[') and stripped.endswith(']'):
                 current_section = stripped[1:-1]
                 data[current_section] = {}
+
+            # add key-value pairs to the current section
             elif '=' in line and current_section is not None:
                 key, value = line.split('=', 1)
                 key = key.strip()  # Preserve original case
@@ -105,7 +111,6 @@ class ToolTip:
             width = text_widget.winfo_width() + 40  # Add padding to width
             height = text_widget.winfo_height() + 60  # Add extra space for the button
             tipwindow.geometry(f"{width}x{height}+{x}+{y}")  # Adjust the window size
-
 
 class IniEditor:
     '''
@@ -292,7 +297,7 @@ class IniEditor:
         '''
         Updates the window title based on the currently selected INI file.
         '''
-        self.master.title(f"INI File Editor - {self.ini_file}")
+        self.master.title(f"INI Editor - {self.ini_file}")
 
     def change_ini(self):
         '''
@@ -306,7 +311,6 @@ class IniEditor:
             self.ini_data = read_ini_preserve_keys(self.ini_file)
             self.load_section(list(self.ini_data.keys())[0])  # Load the first section
             self.update_title()  # Update the window title after changing the INI file
-
 
     def on_section_change(self, event):
         '''
@@ -324,6 +328,7 @@ class IniEditor:
             widget.destroy()
         self.entry_widgets = {}
 
+        # Load the section data
         if section not in self.ini_data:
             return
         section_data = self.ini_data[section]
@@ -331,9 +336,7 @@ class IniEditor:
         # Repack the canvas window if necessary
         self.canvas.yview_moveto(0)  # Scroll to top after section change
 
-        # Set a standard padding and row height
-        row_height = 30  # Adjust row height to control vertical spacing
-
+        # Create widgets for each key-value pair in the section
         for i, (key, value) in enumerate(section_data.items()):
             # Label for key (fixed width to avoid stretching)
             label = ttk.Label(self.inner_frame, text=key, anchor='w')  # Label for key
@@ -368,6 +371,8 @@ class IniEditor:
         if section not in self.ini_data:
             messagebox.showerror("Error", f"Section '{section}' not found.")
             return
+        
+        # Update the INI data with the new values
         for key, entry in self.entry_widgets.items():
             self.ini_data[section][key] = entry.get()
         write_ini_preserve_keys(self.ini_file, self.ini_data)
@@ -378,9 +383,21 @@ def main():
     ini_file = INI_FILE_PATH
 
     if not os.path.exists(ini_file):
-        messagebox.showerror("Error", f"INI file not found: {ini_file}")
-        return
+        # Prompt user to either select a new INI or exit
+        response = messagebox.askyesno("Error", f"INI file not found: {ini_file}\nDo you want to select a new INI file?")
+        if response:  # User clicked "Yes"
+            # Open the file selection dialog
+            new_ini_file = filedialog.askopenfilename(
+                title="Select INI File", filetypes=[("INI Files", "*.ini"), ("All Files", "*.*")]
+            )
+            if new_ini_file:
+                ini_file = new_ini_file  # Update the ini_file with the new selected one
+            else:
+                return  # If no file selected, exit
+        else:  # User clicked "No"
+            return  # Exit the program
 
+    # Proceed with the application if INI file is valid or updated
     root = tk.Tk()
     root.title(f"INI Editor - {ini_file}")  # Set window title with the ini file path
     root.geometry("700x500")
