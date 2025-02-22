@@ -47,13 +47,22 @@ open_ini_settings() {
         yad --form --title="Error" --width=400 --height=200 \
             --field="Missing dependency: Python3\nINI Editor cannot be run.\n\n \
                 Do you want to install it now? (Requires sudo)\n":LBL \
-            --field="You can also install it manually using:\n \
+            --field="You can also install it manually (Debian):\n \
                  sudo apt install python3 python3-tk":LBL \
             --button="Yes:0" --button="Back:1"
 
         if [ $? -eq 0 ]; then
             # User chose to install Python3
-            sudo apt install -y python3 python3-tk
+            sudo apt install -y python3 python3-tk &
+            wait $!
+            
+            # Check if the installation was successful
+            if [ $? -ne 0 ]; then
+                yad --form --title="Error" --width=400 --height=200 \
+                    --field="Error installing Python3\nPlease install it manually (Debian):\n \
+                        sudo apt install python3 python3-tk":LBL \
+                    --button="OK:0"
+            fi
         else
             # User chose not to install Python3
             return
