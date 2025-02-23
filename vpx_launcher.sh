@@ -22,51 +22,111 @@ fi
 ## --------------------- CONFIGURATION ---------------------
 # Config file path
 CONFIG_FILE="$HOME/.vpx_launcher_config"
+DEFAULT_ICON="./default_icon.png"
 
-# Launcher will run "START_ARGS COMMAND_TO_RUN -play TABLE_FILE END_ARGS"
-# Example: DRI_PRIME=1 gamemoderun /path/to/VPinballX_GL -play /path/to/table.vpx
-
-# Load or create the config file
+# Load or create the config file with default values
 if [ ! -f "$CONFIG_FILE" ]; then
     {
         echo "TABLES_DIR=\"$HOME/Games/vpinball/build/tables/\""
         echo "START_ARGS=\"$START_ARGS\""
         echo "COMMAND_TO_RUN=\"$HOME/Games/vpinball/build/VPinballX_GL\""
         echo "END_ARGS=\"$END_ARGS\""
+        echo "VPINBALLX_INI=\"$HOME/.vpinball/VPinballX.ini\""
     } > "$CONFIG_FILE"
 fi
 
 # (Re)Load the config file
-# shellcheck source=$HOME/.vpx_launcher_config
+# shellcheck disable=SC1090
 source "$CONFIG_FILE"
 
-## ------------- INI SETTINGS (Standalone) ---------------
-open_ini_settings() {
-    # Check for Python 3 and Python3-tk
-    if ! command -v python3 &>/dev/null; then
-        yad --form --title="Error" --width=400 --height=200 \
-            --field="Missing dependency: Python3\nINI Editor cannot be run.\n\n \
-                Do you want to install it now? (Requires sudo)\n":LBL \
-            --field="You can also install it manually (Debian):\n \
-                 sudo apt install python3 python3-tk":LBL \
-            --button="Yes:0" --button="Back:1"
+## ----------------------- FUNCTIONS -----------------------
+# Function to show an error dialog and return the chosen action
+show_error_dialog() {
+    yad --title="Error" --text="$1" 2>/dev/null \
+        --form --width=400 --height=150 \
+        --buttons-layout=center \
+        --button="Settings:1" --button="Exit:252"
+    return $?  # Return exit code
+}
 
-        if [ $? -eq 0 ]; then
-            # User chose to install Python3
-            sudo apt install -y python3 python3-tk &
-            wait $!
-            
-            # Check if the installation was successful
-            if [ $? -ne 0 ]; then
-                yad --form --title="Error" --width=400 --height=200 \
-                    --field="Error installing Python3\nPlease install it manually (Debian):\n \
-                        sudo apt install python3 python3-tk":LBL \
-                    --button="OK:0"
-            fi
-        else
-            # User chose not to install Python3
-            return
+## -------------------- LAUNCHER SETTINGS ---------------------
+open_launcher_settings() {
+    # Show settings dialog
+    NEW_VALUES=$(yad --form --title="Settings" \
+        --field="Tables Directory:":DIR "$TABLES_DIR" \
+        --field="Initial Arguments:":FILE "$START_ARGS" \
+        --field="VPX Executable:":FILE "$COMMAND_TO_RUN" \
+        --field="Final Arguments:":FILE "$END_ARGS" \
+        --field="VPinballX.ini Path:":FILE "$VPINBALLX_INI" \
+        --width=500 --height=150 \
+        --separator="|")
+
+    if [ -z "$NEW_VALUES" ]; then return; fi
+
+    # Extract new values from user input using awk
+    IFS="|" read -r NEW_TABLES_DIR NEW_START_ARGS NEW_COMMAND NEW_END_ARGS NEW_VPINBALLX_INI <<< "$NEW_VALUES"
+
+    # Validate new directory and executable
+    if [ ! -d "$NEW_TABLES_DIR" ] || ! find "$NEW_TABLES_DIR" -type f -name "*.vpx" | grep -q .; then
+        show_error_dialog "Error: No .vpx files found in the directory!"
+        return
+    elif [ ! -x "$NEW_COMMAND" ]; then
+        show_error_dialog "Error: The executable '$NEW_COMMAND' does not exist or is not executable!"
+        return
+    fi
+
+    # Save settings to configuration file
+    {
+        echo "TABLES_DIR=\"$NEW_TABLES_DIR\""
+        echo "START_ARGS=\"$NEW_START_ARGS\""
+        echo "COMMAND_TO_RUN=\"$NEW_COMMAND\""
+        echo "END_ARGS=\"$NEW_END_ARGS\""
+        echo "VPINBALLX_INI=\"$NEW_VPINBALLX_INI\""
+    } > "$CONFIG_FILE"
+
+    # Give user feedback that the paths were updated successfully
+    yad --info --title="Settings" \
+        --text="Paths updated successfully!" \
+        --buttons-layout=center --button="OK:0" \
+        --width=300 --height=100 2>/dev/null
+
+    # Reload the config file to apply changes
+    # shellcheck disable=SC1090
+    source "$CONFIG_FILE"
+}
+
+## --------------- INI SETTINGS (Standalone) -----------------
+# Function to check and install missing dependencies
+install_python_deps() {
+    if ! command -v python3 &>/dev/null; then
+        # Show the missing dependency dialog
+        show_error_dialog "Missing dependency: Python3\n \
+            INI Editor cannot be run.\n\nDo you want to install it now? (Requires sudo)\n \
+            You can also install it manually (Debian):\nsudo apt install python3 python3-tk"
+
+        # If user chooses not to install, exit
+        if ! yad --title="Install Python3?" --form --buttons-layout=center \
+                --button="Yes:0" --button="No:1"; then
+            return 1
         fi
+
+        # Attempt to install Python3
+        if ! sudo apt install -y python3 python3-tk; then
+            # If installation fails, show error and exit
+            show_error_dialog "Error installing Python3\n \
+                Please install it manually (Debian):\n \
+                sudo apt install python3 python3-tk"
+            return 1
+        fi
+    fi
+    return 0
+}
+
+# Function to open the INI editor (either default or per table)
+open_ini_settings() {
+    # Check for Python 3 and Python3-tk dependencies
+    if ! install_python_deps; then
+        return  # If dependencies fail to install, return
     fi
 
     # Check if a parameter (INI file) was passed
@@ -79,211 +139,157 @@ open_ini_settings() {
     fi
 }
 
-## ------------------ LAUNCHER SETTINGS -------------------
-open_launcher_settings() {
-    # Show settings dialog
-    NEW_VALUES=$(yad --form --title="Settings" \
-        --field="Tables Directory:":DIR "$TABLES_DIR" \
-        --field="Initial Arguments:":FILE "$START_ARGS" \
-        --field="VPX Executable:":FILE "$COMMAND_TO_RUN" \
-        --field="Final Arguments:":FILE "$END_ARGS" \
-        --width=500 --height=150 \
-        --separator="|")
+# Function to create a missing INI file for a table
+create_table_ini() {
+    local ini_file="$1"  # INI file path
 
-    if [ -z "$NEW_VALUES" ]; then return; fi
-
-    # Extract new values
-    NEW_TABLES_DIR=$(echo "$NEW_VALUES" | cut -d '|' -f1)
-    NEW_START_ARGS=$(echo "$NEW_VALUES" | cut -d '|' -f2)
-    NEW_COMMAND=$(echo "$NEW_VALUES" | cut -d '|' -f3)
-    NEW_END_ARGS=$(echo "$NEW_VALUES" | cut -d '|' -f4)
-
-    # Validate new directory
-    if [ ! -d "$NEW_TABLES_DIR" ] || ! find "$NEW_TABLES_DIR" -type f -name "*.vpx" | grep -q .; then
-        yad --title="Error" --text="Error: No .vpx files found in the directory!" \
-            --form --width=400 --height=150 \
-            --buttons-layout=center \
-            --button="Retry:1" --button="Exit:252"
-
-        if [ $? -eq 252 ]; then
-            exit 0  # Exit the script
-        fi
-
-        open_launcher_settings
-        return  # Retry after settings update
+    # If the file exists, no need to do anything
+    if [[ -f "$ini_file" ]]; then
+        return 0
     fi
 
-    # Validate new executable
-    if [ ! -x "$NEW_COMMAND" ]; then
-        yad --title="Error" --text="Error: The executable '$NEW_COMMAND' does not exist or is not executable!" \
-            --form --width=400 --height=150 \
-            --buttons-layout=center \
-            --button="Retry:1" --button="Exit:252"
+    # Prompt the user to create a missing INI file
+    if yad --title="Missing INI File" \
+            --text="The INI file for this table does not exist.\nDo you want to create it?" \
+            --width=400 --height=150 --buttons-layout=center \
+            --button="Yes:0" --button="No:1" 2>/dev/null; then
 
-        if [ $? -eq 252 ]; then
-            exit 0  # Exit the script
-        fi
+        # User selected "Yes" → Copy the default VPINBALLX_INI to the new location
+        cp "$VPINBALLX_INI" "$ini_file"
 
-        open_launcher_settings
-        return  # Retry after settings update
+        # Inform the user that the new INI file was created
+        yad --info --title="INI File Created" \
+            --text="INI file created: $ini_file" \
+            --buttons-layout=center --button="OK:0" \
+            --width=300 --height=100 2>/dev/null
+        return 0  # Success
     fi
 
-    # Save settings
-    {
-        echo "TABLES_DIR=\"$NEW_TABLES_DIR\""
-        echo "START_ARGS=\"$NEW_START_ARGS\""
-        echo "COMMAND_TO_RUN=\"$NEW_COMMAND\""
-        echo "END_ARGS=\"$NEW_END_ARGS\""
-    } > "$CONFIG_FILE"
-
-    # Give user feedback
-    yad --info --title="Settings" \
-        --text="                    Paths updated successfully!" \
-        --buttons-layout=center --button="OK:0" \
-        --width=300 --height=100 2>/dev/null
-
-    # Reload the config file
-    # shellcheck source=$HOME/.vpx_launcher_config
-    source "$CONFIG_FILE"
+    return 1  # User chose not to create the file
 }
 
-# ## --------------------- MAIN LOOP ---------------------
+# Function to launch the INI editor (either default or per table)
+launch_ini_editor() {
+    local ini_file="$1"  # INI file path as the argument
+
+    # Check if a table was selected
+    if [[ -z "$SELECTED_TABLE" ]]; then
+        # No table selected, open default INI settings
+        if [[ ! -f "$VPINBALLX_INI" ]]; then
+            # VPinballX.ini not found, show error and ask user to set the correct path
+            show_error_dialog "VPinballX.ini not found!\nPlease set the correct path in the settings."
+            open_launcher_settings
+        else
+            # Open the default INI settings
+            open_ini_settings "$VPINBALLX_INI"
+        fi
+    else
+        # Table selected, ensure the INI file exists (create if missing)
+        create_table_ini "$ini_file" || return 1
+
+        # Open the table-specific INI file in the settings editor
+        open_ini_settings "$ini_file"
+    fi
+}
+
+## ----------------- PRE-LAUNCH CHECKS ------------------
+# Validate .vpx files and executable before launch
+if ! find "$TABLES_DIR" -type f -name "*.vpx" | grep -q .; then
+    show_error_dialog "No .vpx files found in $TABLES_DIR."
+    [[ $? -eq 252 ]] && exit 0
+    open_launcher_settings
+fi
+
+if [[ ! -x "$COMMAND_TO_RUN" ]]; then
+    show_error_dialog "The executable '$COMMAND_TO_RUN' does not exist or is not executable!"
+    [[ $? -eq 252 ]] && exit 0
+    open_launcher_settings
+fi
+
+## --------------------- MAIN LOOP ---------------------
 while true; do
-    # Ensure valid .vpx files exist on launch
-    if ! find "$TABLES_DIR" -type f -name "*.vpx" | grep -q .; then
-        yad --title="Error" --text="No .vpx files found in $TABLES_DIR." 2>/dev/null \
-        --form --width=400 --height=150 \
-        --buttons-layout=center \
-        --button="Settings:1" --button="Exit:252"
+    FILE_LIST=() # Prepare the table list for the launcher
+    declare -A FILE_MAP # Create an associative array to map table names to file paths
+    TABLE_NUM=0 # Initialize table(s) found count
 
-        if [ $? -eq 252 ]; then
-            exit 0  # Exit the script
-        fi
-
-        open_launcher_settings
-        continue  # Retry after settings update
-    fi
-
-    # Ensure the executable is valid on launch
-    if [ ! -x "$COMMAND_TO_RUN" ]; then
-        yad --title="Error" --text="The executable '$COMMAND_TO_RUN' does not exist or is not executable!" 2>/dev/null \
-        --form --width=400 --height=150 \
-        --buttons-layout=center \
-        --button="Settings:1" --button="Exit:252"
-
-        if [ $? -eq 252 ]; then
-            exit 0  # Exit the script
-        fi
-
-        open_launcher_settings
-        continue  # Retry after settings update
-    fi
-
-    # Create file list
-    FILE_LIST=() # Array to store table names
-    declare -A FILE_MAP # Associative array to map names to paths
-    TABLE_NUM=0  # Initialize counter for table count
-    DEFAULT_ICON="./default_icon.png"  # Set a default icon
-
-    # Read all .vpx files in the tables directory
+    # Read .vpx files and prepare the menu
     while IFS= read -r FILE; do
-        BASENAME=$(basename "$FILE" .vpx) # Get the file name without extension
-        ICON_PATH="${FILE%.vpx}.ico"  # Try to find an icon with the same name
+        BASENAME=$(basename "$FILE" .vpx) # Strip the extension
+        ICON_PATH="${FILE%.vpx}.ico" # Use .ico file if available
+        [[ ! -f "$ICON_PATH" ]] && ICON_PATH="$DEFAULT_ICON"
 
-        # Use the default icon if the image does not exist
-        if [ ! -f "$ICON_PATH" ]; then
-            ICON_PATH="$DEFAULT_ICON"
-        fi
-
-        FILE_LIST+=("$ICON_PATH" "$BASENAME")  # Add the icon and name to the list
-        FILE_MAP["$BASENAME"]="$FILE" # Map the name to the full path
-        ((TABLE_NUM++))  # Increment table counter
+        FILE_LIST+=("$ICON_PATH" "$BASENAME") # Add to the list
+        FILE_MAP["$BASENAME"]="$FILE" # Map table name to file path
+        ((TABLE_NUM++))
     done < <(find "$TABLES_DIR" -type f -name "*.vpx" | sort)
 
-    # Prepare the list for yad (newline-separated)
+    # Convert the array to a string for yad
     FILE_LIST_STR=$(printf "%s\n" "${FILE_LIST[@]}")
 
-    ## ----------- TABLE SELECTION MENU ------------
-    while true; do
-        # Show launcher menu
-        SELECTED_NAME=$(yad --list --title="VPX Launcher" \
-            --text="Table(s) found: $TABLE_NUM" \
-            --width=600 --height=400 \
-            --button="INI Editor:2" --button="Extract VBS:10" \
-            --button="⚙:1" --button="🕹️ :0" --button="🚪 :252" \
-            --no-headers \
-            --column="Icon:IMG" --column="Table Name" <<< "$FILE_LIST_STR" 2>/dev/null)
+    # Show launcher menu
+    SELECTED_TABLE=$(yad --list --title="VPX Launcher" \
+        --text="Table(s) found: $TABLE_NUM" \
+        --width=600 --height=400 \
+        --button="INI Editor:2" --button="Extract VBS:10" \
+        --button="⚙:1" --button="🕹️ :0" --button="🚪 :252" \
+        --no-headers \
+        --column="Icon:IMG" --column="Table Name" <<< "$FILE_LIST_STR" 2>/dev/null)
 
-        EXIT_CODE=$?
+    EXIT_CODE=$?
 
-        if [ $EXIT_CODE -eq 1 ]; then
-            open_launcher_settings
-            continue  # Reload after settings update
+    # Strip pipes from selection (if any)
+    SELECTED_TABLE="${SELECTED_TABLE#|}"
+    SELECTED_TABLE="${SELECTED_TABLE%|}"
 
-        elif [ $EXIT_CODE -eq 2 ]; then         
-            # If INI Editor is pressed, check if a table is selected
-            if [ -z "$SELECTED_NAME" ]; then
-                # No table selected, open default INI editor
-                open_ini_settings
+    # Get full file path if a table is selected
+    [[ -v FILE_MAP["$SELECTED_TABLE"] ]] && SELECTED_FILE="${FILE_MAP[$SELECTED_TABLE]}"
+
+    case $EXIT_CODE in
+        252) exit 0 ;;  # User canceled
+        1) open_launcher_settings ;;  # ⚙ Settings
+        2)  
+            # Open INI Editor (default or per table)
+            INI_FILE="${SELECTED_FILE%.vpx}.ini"
+            launch_ini_editor "$INI_FILE"
+            ;;
+        10) 
+            # Extract VBS script
+            if [[ -z "$SELECTED_TABLE" ]]; then
+                # Show the error dialog and capture the exit code
+                show_error_dialog "No table selected!\nPlease select a table before extracting."
+                # Capture the exit code
+                exit_code=$?
+
+                # If the user clicked "Settings", open the settings
+                if [[ $exit_code -eq 1 ]]; then
+                    open_launcher_settings
+                fi
             else
-                # Table selected, open the corresponding INI file
-                # Strip the leading and trailing pipe characters
-                SELECTED_NAME=$(echo "$SELECTED_NAME" | sed 's/^|//;s/|$//')
-                # Get the absolute INI file path
-                INI_FILE="${FILE_MAP[$SELECTED_NAME]%.vpx}.ini"
-                open_ini_settings "$INI_FILE"
+                eval "\"$COMMAND_TO_RUN\" -ExtractVBS \"$SELECTED_FILE\"" &
+                wait $!
+                yad --info --title="VBS Extract" \
+                    --text="VBS script extracted successfully!" \
+                    --buttons-layout=center --button="OK:0" --width=300 --height=100 2>/dev/null
             fi
-            continue  # Return to the menu after editing INI file
+            ;;
+        *)
+            # Handle missing selection for table launch
+            if [[ -z "$SELECTED_TABLE" ]]; then
+                # Show the error dialog and capture the exit code
+                show_error_dialog "No table selected!\nPlease select a table before launching."
+                # Capture the exit code
+                exit_code=$?
 
-        elif [ $EXIT_CODE -eq 10 ]; then
-            # Extract VBS script from the selected table
-            if [ -z "$SELECTED_NAME" ]; then
-                # Show warning if no table is selected
-                yad --title="Attention" --text="No table selected!\nPlease select a table before extracting." \
-                    --width=400 --height=150 --buttons-layout=center --button="OK:0"
-                continue  # Return to the list
+                # If the user clicked "Settings", open the settings
+                if [[ $exit_code -eq 1 ]]; then
+                    open_launcher_settings
+                fi
+            else
+                # Run the selected table
+                eval "$START_ARGS \"$COMMAND_TO_RUN\" -play \"$SELECTED_FILE\" $END_ARGS" &
+                wait $!
             fi
-            # Extract the selected table name
-            SELECTED_NAME=$(echo "$SELECTED_NAME" | sed 's/^|//;s/|$//')
-            # Get full file path
-            SELECTED_FILE="${FILE_MAP[$SELECTED_NAME]}"
-
-            # Extract the VBS script
-            eval "\"$COMMAND_TO_RUN\" -ExtractVBS \"$SELECTED_FILE\"" &
-            wait $!
-
-            # Give user feedback
-            yad --info --title="VBS Extract" \
-                --text="VBS script extracted successfully!" \
-                --buttons-layout=center --button="OK:0" \
-                --width=300 --height=100 2>/dev/null
-
-            continue  # Return to the list
-
-        elif [ $EXIT_CODE -eq 252 ]; then
-            exit 0  # User canceled
-
-        elif [ -z "$SELECTED_NAME" ]; then
-            # Show warning if no table is selected
-            yad --title="Attention" --text="No table selected!\nPlease select a table before launching." \
-                --width=400 --height=150 --buttons-layout=center --button="OK:0"
-            continue  # Return to the list
-        fi
-
-        break  # Exit loop if a valid table is selected
-    done
-
-    ## ----------- RUN THE SELECTED TABLE ------------
-    # Extract the selected table name (first field from yad output)
-    SELECTED_NAME=$(echo "$SELECTED_NAME" | awk -F '|' '{print $2}')
-
-    # Get full file path
-    SELECTED_FILE="${FILE_MAP[$SELECTED_NAME]}"
-
-    # Run the selected file with "-play" added automatically
-    eval "$START_ARGS \"$COMMAND_TO_RUN\" -play \"$SELECTED_FILE\" $END_ARGS" &
-
-    # Wait for it to finish
-    wait $!
-
+            ;;
+    esac
 done
+
