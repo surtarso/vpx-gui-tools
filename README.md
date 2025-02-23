@@ -27,12 +27,13 @@
    
 4. **Configure paths and args**
    
-   ![](https://github.com/user-attachments/assets/dc01e6a6-4f41-4570-8ebb-d23c8e62732d)
+   ![image](https://github.com/user-attachments/assets/4eea1828-c3f2-431e-b09b-951922bc9751)
 
    - Set table folder, it will look recursevely for .vpx files.
    - Set any initial args you may need. (or leave empty)
    - Set absolute path of your VPX executable.
    - Set any final args you may need. (or leave empty)
+   - Set absolute path of VPinballX.ini
   
    The code will assemble a command line that looks like this:
    ```bash
