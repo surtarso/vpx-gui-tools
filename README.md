@@ -65,3 +65,7 @@ python3 vpx_ini_editor.py
 python3 vpx_ini_editor.py /path/to/anyfile.ini
 ```  
 It only requires **Tkinter** and does not depend on `yad`.
+
+## Contribute
+
+Contributions to this project are welcome! Feel free to open issues or submit pull requests.
