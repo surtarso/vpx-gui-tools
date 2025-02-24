@@ -15,19 +15,23 @@
 
 You can download a release file here: https://github.com/surtarso/vpx-frontend/releases or follow the instructions below.
 
-1. **Download the repository** to any folder of your choice.  
-2. **Install dependencies:**  
+1. **Download the repository** to any folder of your choice.
+   ```bash
+   git clone https://github.com/surtarso/vpx-frontend.git
+   ```
+   
+3. **Install dependencies:**  
    ```bash
    sudo apt install yad python3 python3-tk
    ```  
    > *If you don’t plan to use the launcher, you can skip installing `yad`.*
 
-3. **Run the launcher:**  
+4. **Run the launcher:**  
    ```bash
    ./vpx_launcher.sh
    ```
    
-4. **Configure paths and args**
+5. **Configure paths and args**
    
    ![image](https://github.com/user-attachments/assets/4eea1828-c3f2-431e-b09b-951922bc9751)
 
@@ -46,7 +50,7 @@ You can download a release file here: https://github.com/surtarso/vpx-frontend/r
    DRI_PRIME=1 gamemoderun /home/tarso/Games/vpinball/build/VPinballX_GL -play /home/tarso/Games/vpinball/build/tables/tomandjerry/tomandjerry.vpx --fullscreen`
    ```
 
-5. **Select a table and press play!**
+6. **Select a table and press play!**
 
 #### Obs: 
 - The **INI Editor** will open `~/vpinball/VPinballX.ini` by default if no table is selected.
