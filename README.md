@@ -13,6 +13,8 @@
 
 ## **Installation & Usage**  
 
+You can download a release file here: https://github.com/surtarso/vpx-frontend/releases or follow the instructions below.
+
 1. **Download the repository** to any folder of your choice.  
 2. **Install dependencies:**  
    ```bash
@@ -48,7 +50,7 @@
 
 #### Obs: 
 - The **INI Editor** will open `~/vpinball/VPinballX.ini` by default if no table is selected.
-- Selecting a table and pressing the **INI Editor** button will attempt to open the table ini file if it exists.
+- Selecting a table and pressing the **INI Editor** button will attempt to open the table ini file if it exists or ask to create one.
 - You can always manually search for the .ini you want to open.
 
 ## **Standalone INI Editor**  
