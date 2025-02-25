@@ -4,7 +4,6 @@
 # Tarso Galvão - 2025
 # Dependencies: yad 0.40.0 (GTK+ 3.24.38)
 
-# TODO: add a layout switch from list to grid view (using .png files instead of .ico)
 # TODO: add settings to change launcher window size and placement
 # TODO: fetch table names from the .vpx files instead of the file names (- tablename[filename])
 
@@ -239,6 +238,39 @@ handle_vbs_scripts() {
         fi
     fi
 }
+
+## -------------------- SEARCH LOGIC --------------------
+handle_search_query() {
+    # Open dialog box
+    SEARCH_QUERY=$(yad --entry --title="Search Tables" \
+                    --text="Enter table name filter:" \
+                    --width=300 --height=100 2>/dev/null)
+                    
+    if [[ -z "$SEARCH_QUERY" ]]; then
+        # Handle the case where the user presses Enter without typing anything.
+        handle_error "You need to enter a search term."
+
+    elif [[ -n "$SEARCH_QUERY" ]]; then
+        # Handle the case where the user provides a search term.
+        CURRENT_SEARCH="$SEARCH_QUERY"
+        FILTERED_FILE_LIST=()
+        for (( i=0; i<${#FILE_LIST[@]}; i+=2 )); do
+            ICON="${FILE_LIST[i]}"
+            NAME="${FILE_LIST[i+1]}"
+            if echo "$NAME" | grep -iq "$SEARCH_QUERY"; then
+                FILTERED_FILE_LIST+=("$ICON" "$NAME")
+            fi
+        done
+
+        # If no results, notify and revert to the original list.
+        if [ ${#FILTERED_FILE_LIST[@]} -eq 0 ]; then
+            handle_error "No tables found matching '$SEARCH_QUERY'"
+            CURRENT_SEARCH=""
+            FILTERED_FILE_LIST=("${FILE_LIST[@]}")
+        fi
+    fi
+}
+
 ## ----------------- PRE-LAUNCH CHECKS ------------------
 # Validate .vpx files and executable before launch
 if ! find "$TABLES_DIR" -type f -name "*.vpx" | grep -q .; then
@@ -315,56 +347,24 @@ while true; do
             ;;
         20)
             # Open the tables folder if no table selected
-            if [[ -z "$SELECTED_TABLE" ]]; then
-                xdg-open "$TABLES_DIR" >/dev/null 2>&1
-            else
-                xdg-open "$(dirname "$SELECTED_FILE")" >/dev/null 2>&1
-            fi
+            [[ -z "$SELECTED_TABLE" ]] && xdg-open "$TABLES_DIR" >/dev/null 2>&1 \
+                || xdg-open "$(dirname "$SELECTED_FILE")" >/dev/null 2>&1
             continue
             ;;
         30)
-            # If a search filter is already active, clear it. (show all tables again)
+            # Search filter or show all tables
             if [[ -n "$CURRENT_SEARCH" ]]; then
                 CURRENT_SEARCH=""
                 FILTERED_FILE_LIST=("${FILE_LIST[@]}")
             else
-                # "Search" button pressed: prompt for a search term.
-                SEARCH_QUERY=$(yad --entry --title="Search Tables" \
-                    --text="Enter table name filter:" \
-                    --width=300 --height=100 2>/dev/null)
-                    
-                if [[ -z "$SEARCH_QUERY" ]]; then
-                    # Handle the case where the user presses Enter without typing anything.
-                    handle_error "You need to enter a search term."
-                    # Optionally clear the current search filter.
-                    CURRENT_SEARCH=""
-                    FILTERED_FILE_LIST=("${FILE_LIST[@]}")
-                elif [[ -n "$SEARCH_QUERY" ]]; then
-                    # Handle the case where the user provides a search term.
-                    CURRENT_SEARCH="$SEARCH_QUERY"
-                    FILTERED_FILE_LIST=()
-                    for (( i=0; i<${#FILE_LIST[@]}; i+=2 )); do
-                        ICON="${FILE_LIST[i]}"
-                        NAME="${FILE_LIST[i+1]}"
-                        if echo "$NAME" | grep -iq "$SEARCH_QUERY"; then
-                            FILTERED_FILE_LIST+=("$ICON" "$NAME")
-                        fi
-                    done
-                    # If no results, notify and revert to the original list.
-                    if [ ${#FILTERED_FILE_LIST[@]} -eq 0 ]; then
-                        handle_error "No tables found matching '$SEARCH_QUERY'"
-                        CURRENT_SEARCH=""
-                        FILTERED_FILE_LIST=("${FILE_LIST[@]}")
-                    fi
-                fi
+                handle_search_query
             fi
-            # Restart the loop to show the updated list.
             continue
             ;;
         *)
-            # Handle missing selection for table launch
+            # Run the selected table
             if [[ -z "$SELECTED_TABLE" ]]; then
-                # Show the error dialog and capture the exit code
+                # Handle missing selection for table launch
                 handle_error "No table selected!\nPlease select a table before launching."
             else
                 # Run the selected table
