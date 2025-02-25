@@ -209,6 +209,36 @@ launch_ini_editor() {
     fi
 }
 
+## ------------------ VBS SCRIPTS LOGIC ----------------
+handle_vbs_scripts() {
+    local vbs_script="$1"
+
+    if [[ -z "$SELECTED_TABLE" ]]; then
+        # Show the error dialog and capture the exit code
+        handle_error "No table selected!\nPlease select a table before extracting."
+    else
+        # Check if the VBS file exists
+        if [[ -f "$vbs_script" ]]; then
+            # Try to open the file with xdg-open
+            if ! xdg-open "$vbs_script" 2>/dev/null; then
+                # If xdg-open fails (no default handler), fallback to a text editor
+                handle_error "No default handler found, opening with fallback editor"
+                $FALLBACK_EDITOR "$vbs_script" &
+            fi
+        else
+            # If the VBS file doesn't exist, extract it
+            eval "\"$COMMAND_TO_RUN\" -ExtractVBS \"$SELECTED_FILE\"" &
+            wait $!
+
+            # After extraction, try opening the new VBS file with xdg-open
+            if ! xdg-open "$vbs_script" 2>/dev/null; then
+                # If xdg-open fails (no default handler), fallback to a text editor
+                handle_error "No default handler found, opening with fallback editor"
+                $FALLBACK_EDITOR "$vbs_script" &
+            fi
+        fi
+    fi
+}
 ## ----------------- PRE-LAUNCH CHECKS ------------------
 # Validate .vpx files and executable before launch
 if ! find "$TABLES_DIR" -type f -name "*.vpx" | grep -q .; then
@@ -225,7 +255,6 @@ fi
 while true; do
     FILE_LIST=() # Prepare the table list for the launcher
     declare -A FILE_MAP # Create an associative array to map table names to file paths
-    TABLE_NUM=0 # Initialize table(s) found count
 
     # Read .vpx files and prepare the menu
     while IFS= read -r FILE; do
@@ -237,18 +266,22 @@ while true; do
 
         FILE_LIST+=("$IMAGE_PATH" "$BASENAME") # Add to the list
         FILE_MAP["$BASENAME"]="$FILE" # Map table name to file path
-        ((TABLE_NUM++))
     done < <(find "$TABLES_DIR" -type f -name "*.vpx" | sort)
 
-    # show user search-filtered list if available
+    TABLE_NUM=0 # Initialize table(s) found count
+
+    # Convert the array to a string for yad
     if [ ${#FILTERED_FILE_LIST[@]} -gt 0 ]; then
+        # show user search-filtered list if available
         FILE_LIST_STR=$(printf "%s\n" "${FILTERED_FILE_LIST[@]}")
+        TABLE_NUM=$(( ${#FILTERED_FILE_LIST[@]} / 2 ))
     else
-        # Convert the array to a string for yad
+        # show all tables
         FILE_LIST_STR=$(printf "%s\n" "${FILE_LIST[@]}")
+        TABLE_NUM=$(( ${#FILE_LIST[@]} / 2 ))
     fi
 
-    # # Show launcher menu (list view)
+    # Show launcher menu (list view)
     SELECTED_TABLE=$(yad --list --title="VPX Launcher" \
         --text="Table(s) found: $TABLE_NUM" \
         --width=600 --height=400 --search=true \
@@ -276,36 +309,9 @@ while true; do
             launch_ini_editor "$INI_FILE"
             ;;
         10) 
-            # Extract VBS script
-            if [[ -z "$SELECTED_TABLE" ]]; then
-                # Show the error dialog and capture the exit code
-                handle_error "No table selected!\nPlease select a table before extracting."
-            else
-                # Determine the directory and VBS file path (same name as the selected .vpx)
-                VBS_FILE_DIR=$(dirname "$SELECTED_FILE")
-                VBS_FILE="${VBS_FILE_DIR}/$(basename "$SELECTED_TABLE" .vpx).vbs"
-
-                # Check if the VBS file exists
-                if [[ -f "$VBS_FILE" ]]; then
-                    # Try to open the file with xdg-open
-                    if ! xdg-open "$VBS_FILE" 2>/dev/null; then
-                        # If xdg-open fails (no default handler), fallback to a text editor
-                        handle_error "No default handler found, opening with fallback editor"
-                        $FALLBACK_EDITOR "$VBS_FILE" &
-                    fi
-                else
-                    # If the VBS file doesn't exist, extract it
-                    eval "\"$COMMAND_TO_RUN\" -ExtractVBS \"$SELECTED_FILE\"" &
-                    wait $!
-
-                    # After extraction, try opening the new VBS file with xdg-open
-                    if ! xdg-open "$VBS_FILE" 2>/dev/null; then
-                        # If xdg-open fails (no default handler), fallback to a text editor
-                        handle_error "No default handler found, opening with fallback editor"
-                        $FALLBACK_EDITOR "$VBS_FILE" &
-                    fi
-                fi
-            fi
+            # Extract or open VBS script
+            VBS_FILE="${SELECTED_FILE%.vpx}.vbs"
+            handle_vbs_scripts "$VBS_FILE"
             ;;
         20)
             # Open the tables folder if no table selected
@@ -317,7 +323,7 @@ while true; do
             continue
             ;;
         30)
-            # If a search filter is already active, clear it.
+            # If a search filter is already active, clear it. (show all tables again)
             if [[ -n "$CURRENT_SEARCH" ]]; then
                 CURRENT_SEARCH=""
                 FILTERED_FILE_LIST=("${FILE_LIST[@]}")
@@ -352,13 +358,6 @@ while true; do
                     fi
                 fi
             fi
-
-            # Rebuild the FILE_LIST_STR and recalc TABLE_NUM based on the (possibly filtered) list.
-            FILE_LIST_STR=$(printf "%s\n" "${FILTERED_FILE_LIST[@]}")
-            TABLE_NUM=0
-            for (( i=0; i<${#FILTERED_FILE_LIST[@]}; i+=2 )); do
-                ((TABLE_NUM++))
-            done
             # Restart the loop to show the updated list.
             continue
             ;;
