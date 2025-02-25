@@ -6,7 +6,7 @@
 | **[VPX Launcher](vpx_launcher.sh)** | **[VPX INI Editor](vpx_ini_editor.py)** |
 |-------------------------------------|---------------------------------------|
 | Simple list-type VPX GUI with basic icon (wheel) support. | Simple GUI editor for `VPinballX.ini` or single table ini's. |
-| ![Launcher](https://github.com/user-attachments/assets/18e11743-1ec5-4680-8ad7-c25687db0811) | ![INI Editor](https://github.com/user-attachments/assets/010727f1-3e8a-4d2e-ac69-938a0b6bac7e) |
+| ![Launcher](https://github.com/user-attachments/assets/1e5699e7-5c89-4cae-b386-a75a67408c0a) | ![INI Editor](https://github.com/user-attachments/assets/010727f1-3e8a-4d2e-ac69-938a0b6bac7e) |
 | **Launcher Features:**  | **Editor Features:**  |
 | - Simple & Fast (less than 100kb!)  | - Category-split Sections |
 | - Edit INI files & extract VBS scripts  | - Explanations for each variable **(in progress, need help!)** |
@@ -34,13 +34,14 @@ You can download a release file here: https://github.com/surtarso/vpx-frontend/r
    
 5. **Configure paths and args**
    
-   ![image](https://github.com/user-attachments/assets/4eea1828-c3f2-431e-b09b-951922bc9751)
+   ![image](https://github.com/user-attachments/assets/a17f6550-7e38-4e07-852a-b1b041ecc91c)
 
    - Set table folder, it will look recursevely for .vpx files.
    - Set any initial args you may need. (or leave empty)
    - Set absolute path of your VPX executable.
    - Set any final args you may need. (or leave empty)
    - Set absolute path of VPinballX.ini
+   - Set fallback editor for VBS files (any text editor in case there's no default one)
   
    The code will assemble a command line that looks like this:
    ```bash
