@@ -44,23 +44,18 @@ source "$CONFIG_FILE"
 
 ## ----------------------- FUNCTIONS -----------------------
 # Function to show an error dialog and return the chosen action
-show_error_dialog() {
+handle_error() {
     yad --title="Error" --text="$1" 2>/dev/null \
         --form --width=400 --height=150 \
         --buttons-layout=center \
         --button="Settings:1" --button="Exit:252"
-    return $?  # Return exit code
-}
-
-# Function to handle error dialog and settings redirection
-handle_error() {
-    local error_message="$1"
-    show_error_dialog "$error_message"
+    
     local exit_code=$?
     if [[ $exit_code -eq 1 ]]; then
         open_launcher_settings
     fi
 }
+
 ## -------------------- LAUNCHER SETTINGS ---------------------
 open_launcher_settings() {
     # Show settings dialog
