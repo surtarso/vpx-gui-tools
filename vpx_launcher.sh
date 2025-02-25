@@ -229,15 +229,20 @@ while true; do
         ((TABLE_NUM++))
     done < <(find "$TABLES_DIR" -type f -name "*.vpx" | sort)
 
-    # Convert the array to a string for yad
-    FILE_LIST_STR=$(printf "%s\n" "${FILE_LIST[@]}")
+    # show user search-filtered list if available
+    if [ ${#FILTERED_FILE_LIST[@]} -gt 0 ]; then
+        FILE_LIST_STR=$(printf "%s\n" "${FILTERED_FILE_LIST[@]}")
+    else
+        # Convert the array to a string for yad
+        FILE_LIST_STR=$(printf "%s\n" "${FILE_LIST[@]}")
+    fi
 
     # # Show launcher menu (list view)
     SELECTED_TABLE=$(yad --list --title="VPX Launcher" \
         --text="Table(s) found: $TABLE_NUM" \
-        --width=600 --height=400 \
+        --width=600 --height=400 --search=true \
         --button="INI Editor:2" --button="Extract VBS:10" \
-        --button="📂 :20" \
+        --button="📂 :20" --button="🔍 :30" \
         --button="⚙:1" --button="🕹️ :0" --button="🚪 :252" \
         --no-headers \
         --column="Icon:IMG" --column="Table Name" <<< "$FILE_LIST_STR" 2>/dev/null)
@@ -286,6 +291,52 @@ while true; do
             else
                 xdg-open "$(dirname "$SELECTED_FILE")" >/dev/null 2>&1
             fi
+            continue
+            ;;
+        30)
+            # If a search filter is already active, clear it.
+            if [[ -n "$CURRENT_SEARCH" ]]; then
+                CURRENT_SEARCH=""
+                FILTERED_FILE_LIST=("${FILE_LIST[@]}")
+            else
+                # "Search" button pressed: prompt for a search term.
+                SEARCH_QUERY=$(yad --entry --title="Search Tables" \
+                    --text="Enter table name filter:" \
+                    --width=300 --height=100 2>/dev/null)
+                    
+                if [[ -z "$SEARCH_QUERY" ]]; then
+                    # Handle the case where the user presses Enter without typing anything.
+                    show_error_dialog "You need to enter a search term."
+                    # Optionally clear the current search filter.
+                    CURRENT_SEARCH=""
+                    FILTERED_FILE_LIST=("${FILE_LIST[@]}")
+                elif [[ -n "$SEARCH_QUERY" ]]; then
+                    # Handle the case where the user provides a search term.
+                    CURRENT_SEARCH="$SEARCH_QUERY"
+                    FILTERED_FILE_LIST=()
+                    for (( i=0; i<${#FILE_LIST[@]}; i+=2 )); do
+                        ICON="${FILE_LIST[i]}"
+                        NAME="${FILE_LIST[i+1]}"
+                        if echo "$NAME" | grep -iq "$SEARCH_QUERY"; then
+                            FILTERED_FILE_LIST+=("$ICON" "$NAME")
+                        fi
+                    done
+                    # If no results, notify and revert to the original list.
+                    if [ ${#FILTERED_FILE_LIST[@]} -eq 0 ]; then
+                        show_error_dialog "No tables found matching '$SEARCH_QUERY'"
+                        CURRENT_SEARCH=""
+                        FILTERED_FILE_LIST=("${FILE_LIST[@]}")
+                    fi
+                fi
+            fi
+
+            # Rebuild the FILE_LIST_STR and recalc TABLE_NUM based on the (possibly filtered) list.
+            FILE_LIST_STR=$(printf "%s\n" "${FILTERED_FILE_LIST[@]}")
+            TABLE_NUM=0
+            for (( i=0; i<${#FILTERED_FILE_LIST[@]}; i+=2 )); do
+                ((TABLE_NUM++))
+            done
+            # Restart the loop to show the updated list.
             continue
             ;;
         *)
