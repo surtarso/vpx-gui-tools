@@ -354,8 +354,8 @@ while true; do
             ;;
         20)
             # Open the tables folder if no table selected
-            [[ -z "$SELECTED_TABLE" ]] && xdg-open "$TABLES_DIR" >/dev/null 2>&1 \
-                || xdg-open "$(dirname "$SELECTED_FILE")" >/dev/null 2>&1
+            if [[ -z "$SELECTED_TABLE" ]]; then xdg-open "$TABLES_DIR" >/dev/null 2>&1; \
+            else xdg-open "$(dirname "$SELECTED_FILE")" >/dev/null 2>&1; fi
             continue
             ;;
         30)
