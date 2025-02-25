@@ -1,7 +1,7 @@
 <h1 align="center">Simple VPX Front-end GUI for Linux</h1>
-<p align="center">A minimal frontend for launching VPX tables and editing INI settings to be used with <a href="https://github.com/vpinball/vpinball">VPinballX_GL</a>.</p>
+<p align="center">A minimal frontend for launching VPX tables and editing INI settings to be used with <a href="https://github.com/vpinball/vpinball">VPinballX_GL</a>*.</p>
 <p align="center">Just <a href="https://github.com/surtarso/vpx-frontend/releases/">download a release file</a> and run anywhere you want.</p>
-<p align="center"><i>If you need help installing VPX check the <a href="https://github.com/surtarso/vpx-frontend/wiki/Visual-Pinball-X-on-Debian-Linux">wiki</a>.</i></p>
+<p align="center"><i>*If you need help installing VPX check the <a href="https://github.com/surtarso/vpx-frontend/wiki/Visual-Pinball-X-on-Debian-Linux">wiki</a>.</i></p>
 
 | **[VPX Launcher](vpx_launcher.sh)** | **[VPX INI Editor](vpx_ini_editor.py)** |
 |-------------------------------------|---------------------------------------|
