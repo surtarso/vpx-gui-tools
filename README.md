@@ -25,7 +25,7 @@ You can download a release file here: https://github.com/surtarso/vpx-frontend/r
    ```bash
    sudo apt install yad python3 python3-tk
    ```  
-   > *If you don’t plan to use the launcher, you can skip installing `yad`.*
+   > *If you don’t plan to use the launcher, you can skip installing `yad`. Move to [Standalone INI Editor](#standalone-ini-editor)*
 
 4. **Run the launcher:**  
    ```bash
