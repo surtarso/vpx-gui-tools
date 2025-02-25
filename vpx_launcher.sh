@@ -4,7 +4,6 @@
 # Tarso Galvão - 2025
 # Dependencies: yad 0.40.0 (GTK+ 3.24.38)
 
-# TODO: add settings to change launcher window size and placement
 # TODO: fetch table names from the .vpx files instead of the file names (- tablename[filename])
 
 # Check for dependencies
@@ -34,6 +33,8 @@ if [ ! -f "$CONFIG_FILE" ]; then
         echo "END_ARGS=\"$END_ARGS\""
         echo "VPINBALLX_INI=\"$HOME/.vpinball/VPinballX.ini\""
         echo "FALLBACK_EDITOR=\"code\""
+        echo "WINDOW_WIDTH=\"800\""
+        echo "WINDOW_HEIGHT=\"600\""
     } > "$CONFIG_FILE"
 fi
 
@@ -65,6 +66,8 @@ open_launcher_settings() {
         --field="Final Arguments:":FILE "$END_ARGS" \
         --field="VPinballX.ini Path:":FILE "$VPINBALLX_INI" \
         --field="Fallback Editor:":FILE "$FALLBACK_EDITOR" \
+        --field="Launcher Width:":FILE "$WINDOW_WIDTH" \
+        --field="Launcher Height:":FILE "$WINDOW_HEIGHT" \
         --width=500 --height=150 \
         --separator="|")
 
@@ -77,6 +80,8 @@ open_launcher_settings() {
                     NEW_END_ARGS \
                     NEW_VPINBALLX_INI \
                     NEW_FALLBACK_EDITOR \
+                    NEW_WINDOW_WIDTH \
+                    NEW_WINDOW_HEIGHT \
                     <<< "$NEW_VALUES"
 
     # Validate new directory and executables
@@ -99,6 +104,8 @@ open_launcher_settings() {
         echo "END_ARGS=\"$NEW_END_ARGS\""
         echo "VPINBALLX_INI=\"$NEW_VPINBALLX_INI\""
         echo "FALLBACK_EDITOR=\"$NEW_FALLBACK_EDITOR\""
+        echo "WINDOW_WIDTH=\"$NEW_WINDOW_WIDTH\""
+        echo "WINDOW_HEIGHT=\"$NEW_WINDOW_HEIGHT\""
     } > "$CONFIG_FILE"
 
     # Give user feedback that the paths were updated successfully
@@ -316,7 +323,7 @@ while true; do
     # Show launcher menu (list view)
     SELECTED_TABLE=$(yad --list --title="VPX Launcher" \
         --text="Table(s) found: $TABLE_NUM" \
-        --width=600 --height=400 --search=true \
+        --width="$WINDOW_WIDTH" --height="$WINDOW_HEIGHT" --search=true \
         --button="INI Editor:2" --button="Extract VBS:10" \
         --button="📂 :20" --button="⚙:1" \
         --button="🔍 :30" --button="🕹️ :0" --button="🚪 :252" \
