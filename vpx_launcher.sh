@@ -5,10 +5,8 @@
 # Dependencies: yad 0.40.0 (GTK+ 3.24.38)
 
 # TODO: add a layout switch from list to grid view (using .png files instead of .ico)
-# TODO: add a search bar to filter tables by name
 # TODO: add settings to change launcher window size and placement
 # TODO: fetch table names from the .vpx files instead of the file names (- tablename[filename])
-# TODO: change "extract VBS" to open an editor with the script if it exists, else extract and open
 
 # Check for dependencies
 if ! command -v yad &>/dev/null; then
@@ -36,6 +34,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
         echo "COMMAND_TO_RUN=\"$HOME/Games/vpinball/build/VPinballX_GL\""
         echo "END_ARGS=\"$END_ARGS\""
         echo "VPINBALLX_INI=\"$HOME/.vpinball/VPinballX.ini\""
+        echo "FALLBACK_EDITOR=\"code\""
     } > "$CONFIG_FILE"
 fi
 
@@ -53,6 +52,15 @@ show_error_dialog() {
     return $?  # Return exit code
 }
 
+# Function to handle error dialog and settings redirection
+handle_error() {
+    local error_message="$1"
+    show_error_dialog "$error_message"
+    local exit_code=$?
+    if [[ $exit_code -eq 1 ]]; then
+        open_launcher_settings
+    fi
+}
 ## -------------------- LAUNCHER SETTINGS ---------------------
 open_launcher_settings() {
     # Show settings dialog
@@ -62,20 +70,30 @@ open_launcher_settings() {
         --field="VPX Executable:":FILE "$COMMAND_TO_RUN" \
         --field="Final Arguments:":FILE "$END_ARGS" \
         --field="VPinballX.ini Path:":FILE "$VPINBALLX_INI" \
+        --field="Fallback Editor:":FILE "$FALLBACK_EDITOR" \
         --width=500 --height=150 \
         --separator="|")
 
     if [ -z "$NEW_VALUES" ]; then return; fi
 
     # Extract new values from user input using awk
-    IFS="|" read -r NEW_TABLES_DIR NEW_START_ARGS NEW_COMMAND NEW_END_ARGS NEW_VPINBALLX_INI <<< "$NEW_VALUES"
+    IFS="|" read -r NEW_TABLES_DIR \
+                    NEW_START_ARGS \
+                    NEW_COMMAND \
+                    NEW_END_ARGS \
+                    NEW_VPINBALLX_INI \
+                    NEW_FALLBACK_EDITOR \
+                    <<< "$NEW_VALUES"
 
-    # Validate new directory and executable
+    # Validate new directory and executables
     if [ ! -d "$NEW_TABLES_DIR" ] || ! find "$NEW_TABLES_DIR" -type f -name "*.vpx" | grep -q .; then
-        show_error_dialog "Error: No .vpx files found in the directory!"
+        handle_error "Error: No .vpx files found in the directory!"
         return
     elif [ ! -x "$NEW_COMMAND" ]; then
-        show_error_dialog "Error: The executable '$NEW_COMMAND' does not exist or is not executable!"
+        handle_error "Error: VPX executable '$NEW_COMMAND' does not exist or is not executable!"
+        return
+    elif ! command -v "$NEW_FALLBACK_EDITOR" >/dev/null 2>&1; then
+        handle_error "Error: Fallback editor '$NEW_FALLBACK_EDITOR' cannot be opened!"
         return
     fi
 
@@ -86,6 +104,7 @@ open_launcher_settings() {
         echo "COMMAND_TO_RUN=\"$NEW_COMMAND\""
         echo "END_ARGS=\"$NEW_END_ARGS\""
         echo "VPINBALLX_INI=\"$NEW_VPINBALLX_INI\""
+        echo "FALLBACK_EDITOR=\"$NEW_FALLBACK_EDITOR\""
     } > "$CONFIG_FILE"
 
     # Give user feedback that the paths were updated successfully
@@ -104,7 +123,7 @@ open_launcher_settings() {
 install_python_deps() {
     if ! command -v python3 &>/dev/null; then
         # Show the missing dependency dialog
-        show_error_dialog "Missing dependency: Python3\n \
+        handle_error "Missing dependency: Python3\n \
             INI Editor cannot be run.\n\nDo you want to install it now? (Requires sudo)\n \
             You can also install it manually (Debian):\nsudo apt install python3 python3-tk"
 
@@ -117,7 +136,7 @@ install_python_deps() {
         # Attempt to install Python3
         if ! sudo apt install -y python3 python3-tk; then
             # If installation fails, show error and exit
-            show_error_dialog "Error installing Python3\n \
+            handle_error "Error installing Python3\n \
                 Please install it manually (Debian):\n \
                 sudo apt install python3 python3-tk"
             return 1
@@ -181,8 +200,7 @@ launch_ini_editor() {
         # No table selected, open default INI settings
         if [[ ! -f "$VPINBALLX_INI" ]]; then
             # VPinballX.ini not found, show error and ask user to set the correct path
-            show_error_dialog "VPinballX.ini not found!\nPlease set the correct path in the settings."
-            open_launcher_settings
+            handle_error "VPinballX.ini not found!\nPlease set the correct path in the settings."
         else
             # Open the default INI settings
             open_ini_settings "$VPINBALLX_INI"
@@ -199,15 +217,13 @@ launch_ini_editor() {
 ## ----------------- PRE-LAUNCH CHECKS ------------------
 # Validate .vpx files and executable before launch
 if ! find "$TABLES_DIR" -type f -name "*.vpx" | grep -q .; then
-    show_error_dialog "No .vpx files found in $TABLES_DIR."
+    handle_error "No .vpx files found in $TABLES_DIR."
     [[ $? -eq 252 ]] && exit 0
-    open_launcher_settings
 fi
 
 if [[ ! -x "$COMMAND_TO_RUN" ]]; then
-    show_error_dialog "The executable '$COMMAND_TO_RUN' does not exist or is not executable!"
+    handle_error "The executable '$COMMAND_TO_RUN' does not exist or is not executable!"
     [[ $? -eq 252 ]] && exit 0
-    open_launcher_settings
 fi
 
 ## --------------------- MAIN LOOP ---------------------
@@ -242,8 +258,8 @@ while true; do
         --text="Table(s) found: $TABLE_NUM" \
         --width=600 --height=400 --search=true \
         --button="INI Editor:2" --button="Extract VBS:10" \
-        --button="📂 :20" --button="🔍 :30" \
-        --button="⚙:1" --button="🕹️ :0" --button="🚪 :252" \
+        --button="📂 :20" --button="⚙:1" \
+        --button="🔍 :30" --button="🕹️ :0" --button="🚪 :252" \
         --no-headers \
         --column="Icon:IMG" --column="Table Name" <<< "$FILE_LIST_STR" 2>/dev/null)
 
@@ -268,20 +284,32 @@ while true; do
             # Extract VBS script
             if [[ -z "$SELECTED_TABLE" ]]; then
                 # Show the error dialog and capture the exit code
-                show_error_dialog "No table selected!\nPlease select a table before extracting."
-                # Capture the exit code
-                exit_code=$?
-
-                # If the user clicked "Settings", open the settings
-                if [[ $exit_code -eq 1 ]]; then
-                    open_launcher_settings
-                fi
+                handle_error "No table selected!\nPlease select a table before extracting."
             else
-                eval "\"$COMMAND_TO_RUN\" -ExtractVBS \"$SELECTED_FILE\"" &
-                wait $!
-                yad --info --title="VBS Extract" \
-                    --text="VBS script extracted successfully!" \
-                    --buttons-layout=center --button="OK:0" --width=300 --height=100 2>/dev/null
+                # Determine the directory and VBS file path (same name as the selected .vpx)
+                VBS_FILE_DIR=$(dirname "$SELECTED_FILE")
+                VBS_FILE="${VBS_FILE_DIR}/$(basename "$SELECTED_TABLE" .vpx).vbs"
+
+                # Check if the VBS file exists
+                if [[ -f "$VBS_FILE" ]]; then
+                    # Try to open the file with xdg-open
+                    if ! xdg-open "$VBS_FILE" 2>/dev/null; then
+                        # If xdg-open fails (no default handler), fallback to a text editor
+                        handle_error "No default handler found, opening with fallback editor"
+                        $FALLBACK_EDITOR "$VBS_FILE" &
+                    fi
+                else
+                    # If the VBS file doesn't exist, extract it
+                    eval "\"$COMMAND_TO_RUN\" -ExtractVBS \"$SELECTED_FILE\"" &
+                    wait $!
+
+                    # After extraction, try opening the new VBS file with xdg-open
+                    if ! xdg-open "$VBS_FILE" 2>/dev/null; then
+                        # If xdg-open fails (no default handler), fallback to a text editor
+                        handle_error "No default handler found, opening with fallback editor"
+                        $FALLBACK_EDITOR "$VBS_FILE" &
+                    fi
+                fi
             fi
             ;;
         20)
@@ -306,7 +334,7 @@ while true; do
                     
                 if [[ -z "$SEARCH_QUERY" ]]; then
                     # Handle the case where the user presses Enter without typing anything.
-                    show_error_dialog "You need to enter a search term."
+                    handle_error "You need to enter a search term."
                     # Optionally clear the current search filter.
                     CURRENT_SEARCH=""
                     FILTERED_FILE_LIST=("${FILE_LIST[@]}")
@@ -323,7 +351,7 @@ while true; do
                     done
                     # If no results, notify and revert to the original list.
                     if [ ${#FILTERED_FILE_LIST[@]} -eq 0 ]; then
-                        show_error_dialog "No tables found matching '$SEARCH_QUERY'"
+                        handle_error "No tables found matching '$SEARCH_QUERY'"
                         CURRENT_SEARCH=""
                         FILTERED_FILE_LIST=("${FILE_LIST[@]}")
                     fi
@@ -343,14 +371,7 @@ while true; do
             # Handle missing selection for table launch
             if [[ -z "$SELECTED_TABLE" ]]; then
                 # Show the error dialog and capture the exit code
-                show_error_dialog "No table selected!\nPlease select a table before launching."
-                # Capture the exit code
-                exit_code=$?
-
-                # If the user clicked "Settings", open the settings
-                if [[ $exit_code -eq 1 ]]; then
-                    open_launcher_settings
-                fi
+                handle_error "No table selected!\nPlease select a table before launching."
             else
                 # Run the selected table
                 eval "$START_ARGS \"$COMMAND_TO_RUN\" -play \"$SELECTED_FILE\" $END_ARGS" &
