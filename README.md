@@ -1,6 +1,7 @@
 <h1 align="center">Simple VPX Front-end GUI for Linux</h1>
-<p align="center">A minimal frontend for launching VPX tables and editing INI settings to be used with <a href="https://github.com/vpinball/vpinball">VPinballX_GL</a></p>
+<p align="center">A minimal frontend for launching VPX tables, editing INI settings and extracting VBS scripts with "just a mouse click", to be used with <a href="https://github.com/vpinball/vpinball">VPinballX_GL</a>*.</p>
 <p align="center">Just <a href="https://github.com/surtarso/vpx-frontend/releases/">download a release file</a> and run anywhere you want.</p>
+<p align="center"><i>*If you need help installing VPX check the <a href="https://github.com/surtarso/vpx-frontend/wiki/Visual-Pinball-X-on-Debian-Linux">wiki</a>.</i></p>
 
 | **[VPX Launcher](vpx_launcher.sh)** | **[VPX INI Editor](vpx_ini_editor.py)** |
 |-------------------------------------|---------------------------------------|
@@ -24,7 +25,7 @@ You can download a release file here: https://github.com/surtarso/vpx-frontend/r
    ```bash
    sudo apt install yad python3 python3-tk
    ```  
-   > *If you don’t plan to use the launcher, you can skip installing `yad`.*
+   > *If you don’t plan to use the launcher, you can skip installing `yad`. Move to [Standalone INI Editor](#standalone-ini-editor)*
 
 4. **Run the launcher:**  
    ```bash
@@ -65,3 +66,7 @@ python3 vpx_ini_editor.py
 python3 vpx_ini_editor.py /path/to/anyfile.ini
 ```  
 It only requires **Tkinter** and does not depend on `yad`.
+
+## Contribute
+
+Contributions to this project are welcome! The code is highly commented, so feel free to snoop around, open issues or submit pull requests.
