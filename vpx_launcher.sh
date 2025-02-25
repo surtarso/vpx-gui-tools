@@ -4,7 +4,11 @@
 # Tarso Galvão - 2025
 # Dependencies: yad 0.40.0 (GTK+ 3.24.38)
 
-# fix: app moves to mouse pointer when exiting a game (keep it centered/fixed)
+# TODO: add a layout switch from list to grid view (using .png files instead of .ico)
+# TODO: add a search bar to filter tables by name
+# TODO: add settings to change launcher window size and placement
+# TODO: fetch table names from the .vpx files instead of the file names (- tablename[filename])
+# TODO: change "extract VBS" to open an editor with the script if it exists, else extract and open
 
 # Check for dependencies
 if ! command -v yad &>/dev/null; then
@@ -22,7 +26,7 @@ fi
 ## --------------------- CONFIGURATION ---------------------
 # Config file path
 CONFIG_FILE="$HOME/.vpx_launcher_config"
-DEFAULT_ICON="./default_icon.png"
+DEFAULT_ICON="./default_icon.ico"  # Default icon for list view
 
 # Load or create the config file with default values
 if [ ! -f "$CONFIG_FILE" ]; then
@@ -215,10 +219,12 @@ while true; do
     # Read .vpx files and prepare the menu
     while IFS= read -r FILE; do
         BASENAME=$(basename "$FILE" .vpx) # Strip the extension
-        ICON_PATH="${FILE%.vpx}.ico" # Use .ico file if available
-        [[ ! -f "$ICON_PATH" ]] && ICON_PATH="$DEFAULT_ICON"
 
-        FILE_LIST+=("$ICON_PATH" "$BASENAME") # Add to the list
+        # List view (using .ico files)
+        IMAGE_PATH="${FILE%.vpx}.ico" # Use .ico file if available
+        [[ ! -f "$IMAGE_PATH" ]] && IMAGE_PATH="$DEFAULT_ICON"
+
+        FILE_LIST+=("$IMAGE_PATH" "$BASENAME") # Add to the list
         FILE_MAP["$BASENAME"]="$FILE" # Map table name to file path
         ((TABLE_NUM++))
     done < <(find "$TABLES_DIR" -type f -name "*.vpx" | sort)
@@ -226,11 +232,12 @@ while true; do
     # Convert the array to a string for yad
     FILE_LIST_STR=$(printf "%s\n" "${FILE_LIST[@]}")
 
-    # Show launcher menu
+    # # Show launcher menu (list view)
     SELECTED_TABLE=$(yad --list --title="VPX Launcher" \
         --text="Table(s) found: $TABLE_NUM" \
         --width=600 --height=400 \
         --button="INI Editor:2" --button="Extract VBS:10" \
+        --button="📂 :20" \
         --button="⚙:1" --button="🕹️ :0" --button="🚪 :252" \
         --no-headers \
         --column="Icon:IMG" --column="Table Name" <<< "$FILE_LIST_STR" 2>/dev/null)
@@ -271,6 +278,15 @@ while true; do
                     --text="VBS script extracted successfully!" \
                     --buttons-layout=center --button="OK:0" --width=300 --height=100 2>/dev/null
             fi
+            ;;
+        20)
+            # Open the tables folder if no table selected
+            if [[ -z "$SELECTED_TABLE" ]]; then
+                xdg-open "$TABLES_DIR" >/dev/null 2>&1
+            else
+                xdg-open "$(dirname "$SELECTED_FILE")" >/dev/null 2>&1
+            fi
+            continue
             ;;
         *)
             # Handle missing selection for table launch
