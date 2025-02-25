@@ -5,12 +5,13 @@
 
 | **[VPX Launcher](vpx_launcher.sh)** | **[VPX INI Editor](vpx_ini_editor.py)** |
 |-------------------------------------|---------------------------------------|
-| Simple list-type VPX GUI with basic icon (wheel) support. | Simple GUI editor for `VPinballX.ini` or single table ini's. |
-| ![Launcher](https://github.com/user-attachments/assets/1e5699e7-5c89-4cae-b386-a75a67408c0a) | ![INI Editor](https://github.com/user-attachments/assets/010727f1-3e8a-4d2e-ac69-938a0b6bac7e) |
+| ![image](https://github.com/user-attachments/assets/5a4926af-4f6d-4d92-8a05-90deb7f06f97) | ![INI Editor](https://github.com/user-attachments/assets/010727f1-3e8a-4d2e-ac69-938a0b6bac7e) |
 | **Launcher Features:**  | **Editor Features:**  |
-| - Simple & Fast (less than 100kb!)  | - Category-split Sections |
-| - Edit INI files & extract VBS scripts  | - Explanations for each variable **(in progress, need help!)** |
-| - Keyboard/Mouse Navigation | - Can edit single table ini's |
+| - Simple & Fast (less than 100kb!)  | - Explanations for each variable **(need help!)** |
+| - Keyboard/Mouse Navigation | - Category-split Sections |
+| - Extract and edit VBS scripts | - Create and edit single table ini's |
+| - Search and folder shortcuts | - Open any ini you want! |
+| - Basic wheel support | - Wont override code comments |
 
 ## **Installation & Usage**  
 
@@ -55,10 +56,13 @@ You can download a release file here: https://github.com/surtarso/vpx-frontend/r
 
 6. **Select a table and press play!**
 
-#### Obs: 
-- The **INI Editor** will open `~/vpinball/VPinballX.ini` by default if no table is selected.
-- Selecting a table and pressing the **INI Editor** button will attempt to open the table ini file if it exists or ask to create one.
-- You can always manually search for the .ini you want to open.
+   #### Obs: 
+   - The **INI Editor** will open `~/vpinball/VPinballX.ini` by default if no table is selected.
+   - Selecting a table and pressing the **INI Editor** button will attempt to open the table ini file if it exists or ask to create one.
+   - You can always manually search for the .ini you want to open.
+   - The **Extract VBS** will extract by default if no script is found and open the script with your preferred editor.
+   - The **Open Folder** button will open the selected table' dir or root dir if no table selected.
+   - To clear the **Search term** just press the button again.
 
 ## **Standalone INI Editor**  
 You can run the INI Editor separately without the launcher with:  
