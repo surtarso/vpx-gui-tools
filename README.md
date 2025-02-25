@@ -69,4 +69,4 @@ It only requires **Tkinter** and does not depend on `yad`.
 
 ## Contribute
 
-Contributions to this project are welcome! Feel free to open issues or submit pull requests.
+Contributions to this project are welcome! The code is highly commented, so feel free to snoop around, open issues or submit pull requests.
