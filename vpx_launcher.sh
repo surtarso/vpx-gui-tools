@@ -324,8 +324,11 @@ while true; do
     SELECTED_TABLE=$(yad --list --title="VPX Launcher" \
         --text="Table(s) found: $TABLE_NUM" \
         --width="$WINDOW_WIDTH" --height="$WINDOW_HEIGHT" --search=true \
-        --button="⚙:1" --button="INI Editor:2" --button="Extract VBS:10" \
-        --button="📂 :20" --button="🔍 :30" --button="🕹️ :0" --button="🚪 :252" \
+        --button="⚙!!Launcher Settings :1" \
+        --button="INI Editor!!Create and edit INI files:2" \
+        --button="Extract VBS!!Extract and edit VBS scripts:10" \
+        --button="📂!!Open a table folder :20" --button="🔍!!Filter tables:30" \
+        --button="🕹️!!Launch selected table :0" --button="🚪!!Exit :252" \
         --buttons-layout=center \
         --column=":IMG" --column="Table Filename" <<< "$FILE_LIST_STR" 2>/dev/null)
 
