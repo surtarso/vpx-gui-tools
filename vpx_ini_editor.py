@@ -137,6 +137,13 @@ class IniEditor:
         # Keys here must exactly match the key names in your INI file.
         self.explanations = {
             # STANDALONE
+            "AltSound": "Controls sound format.(0-3)\n"
+                "1 - If the folder contains an “altsound.csv” or “g-sound.csv” file.\n"
+                "1 - If the folder contains subfolders with names like “jingle”, “single”, “voice”, etc. and you are NOT running on PinSound sound hardware.\n"
+                "Note: this only works for the unencrypted versions of the PinSound libraries, which are now quite old.\n"
+                "2 - If the folder contains subfolders with names like “jingle”, “single”, “voice”, etc. and you are running on PinSound sound hardware.\n"
+                "Note: This will also require you to run the PinSound Audio Studio prior to launching. This too only works for the unencrypted versions of the PinSound libraries.\n"
+                "3 - ??",
             "PinMAMEPath": "Specifies the directory where the PinMAME emulator is located. PinMAME is an emulator for classic pinball machines.\n"
                 "Default is ~/.pinmame: If not specified, the default location for the PinMAME folder is in the home directory.",
             "PinMAMEWindow": "Controls the visibility of the PinMAME DMD (Dot Matrix Display) window.\n"
@@ -247,6 +254,11 @@ class IniEditor:
             "ForceAnisotropicFiltering": "Determines whether anisotropic filtering (AF) is enabled or disabled. AF improves the quality of textures viewed at steep angles, making them appear sharper and clearer.\n"
                 "0 - Disabled: Anisotropic filtering is disabled, leading to potentially blurry textures at certain angles.\n"
                 "1 - Enabled: Anisotropic filtering is enabled, improving the quality of textures, especially at angles.",
+            # VIDEO
+            "BAMHeadTracking": "Makes the game appear as a 3D image without the need for 3D glasse.\n"
+                "Note: BAM Head Tracking uses a PS3 Eye Camera and a 3 point Infrared LED hat.\n"
+                "0 - Disabled.\n"
+                "1 - Enabled.",
         }
 
         self.entry_widgets = {}
