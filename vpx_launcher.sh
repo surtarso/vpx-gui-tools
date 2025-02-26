@@ -324,11 +324,10 @@ while true; do
     SELECTED_TABLE=$(yad --list --title="VPX Launcher" \
         --text="Table(s) found: $TABLE_NUM" \
         --width="$WINDOW_WIDTH" --height="$WINDOW_HEIGHT" --search=true \
-        --button="INI Editor:2" --button="Extract VBS:10" \
-        --button="📂 :20" --button="⚙:1" \
-        --button="🔍 :30" --button="🕹️ :0" --button="🚪 :252" \
-        --no-headers \
-        --column="Icon:IMG" --column="Table Name" <<< "$FILE_LIST_STR" 2>/dev/null)
+        --button="⚙:1" --button="INI Editor:2" --button="Extract VBS:10" \
+        --button="📂 :20" --button="🔍 :30" --button="🕹️ :0" --button="🚪 :252" \
+        --buttons-layout=center \
+        --column=":IMG" --column="Table Filename" <<< "$FILE_LIST_STR" 2>/dev/null)
 
     EXIT_CODE=$?
 
