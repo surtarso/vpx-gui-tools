@@ -1,3 +1,4 @@
 make_release.sh
+create_icons.sh
 grid/*
 cabinet/*
