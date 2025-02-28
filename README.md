@@ -1,4 +1,4 @@
-<h1 align="center">Simple VPX Tool GUI for Linux</h1>
+<h1 align="center">Simple VPX GUI Tools for Linux</h1>
 <p align="center">A minimal GUI tool for launching VPX tables*, editing INI settings, extracting VBS scripts and more with "just a mouse click", to be used with <a href="https://github.com/vpinball/vpinball">VPinballX_GL</a>**.</p>
 <p align="center">Just <a href="https://github.com/surtarso/vpx-frontend/releases/">download a release file</a> and run anywhere you want.</p>
 
