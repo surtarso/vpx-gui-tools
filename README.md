@@ -3,7 +3,7 @@
 <p align="center">Just <a href="https://github.com/surtarso/vpx-frontend/releases/">download a release file</a> and run anywhere you want.</p>
 <p align="center"><i>*If you need help installing VPX check the <a href="https://github.com/surtarso/vpx-frontend/wiki/Visual-Pinball-X-on-Debian-Linux">wiki</a>.</i></p>
 
-| **[VPX Launcher](vpx_launcher.sh)** | **[VPX INI Editor](vpx_ini_editor.py)** |
+| **[VPX Tool Launcher](vpx_launcher.sh)** | **[VPX INI Editor](vpx_ini_editor.py)** |
 |-------------------------------------|---------------------------------------|
 | ![image](https://github.com/user-attachments/assets/5a4926af-4f6d-4d92-8a05-90deb7f06f97) | ![INI Editor](https://github.com/user-attachments/assets/010727f1-3e8a-4d2e-ac69-938a0b6bac7e) |
 | **Launcher Features:**  | **Editor Features:**  |
