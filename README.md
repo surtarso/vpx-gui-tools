@@ -12,6 +12,7 @@
 | - Extract and edit VBS scripts | - Create and edit single table ini's |
 | - Search and folder shortcuts | - Open any ini you want! |
 | - Launch VPX tables | - Wont override code comments |
+<p><i>If you need a dual monitor fullscreen frontend as simple as possible, <a href="https://github.com/surtarso/asap-cabinet-fe/">look here</a></i></p>
 
 ## **Installation & Usage**  
 
