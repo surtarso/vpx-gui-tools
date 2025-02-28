@@ -1,5 +1,5 @@
-<h1 align="center">Simple VPX Front-end GUI for Linux</h1>
-<p align="center">A minimal frontend for launching VPX tables, editing INI settings, extracting VBS scripts and more with "just a mouse click", to be used with <a href="https://github.com/vpinball/vpinball">VPinballX_GL</a>*.</p>
+<h1 align="center">Simple VPX Tool GUI for Linux</h1>
+<p align="center">A minimal GUI tool for launching VPX tables, editing INI settings, extracting VBS scripts and more with "just a mouse click", to be used with <a href="https://github.com/vpinball/vpinball">VPinballX_GL</a>*.</p>
 <p align="center">Just <a href="https://github.com/surtarso/vpx-frontend/releases/">download a release file</a> and run anywhere you want.</p>
 <p align="center"><i>*If you need help installing VPX check the <a href="https://github.com/surtarso/vpx-frontend/wiki/Visual-Pinball-X-on-Debian-Linux">wiki</a>.</i></p>
 
@@ -11,7 +11,7 @@
 | - Keyboard/Mouse Navigation | - Category-split Sections |
 | - Extract and edit VBS scripts | - Create and edit single table ini's |
 | - Search and folder shortcuts | - Open any ini you want! |
-| - Basic wheel support | - Wont override code comments |
+| - Launch VPX tables | - Wont override code comments |
 
 ## **Installation & Usage**  
 
