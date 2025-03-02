@@ -4,7 +4,27 @@
 # Tarso Galvão - 2025
 # Dependencies: yad 0.40.0 (GTK+ 3.24.38)
 
-# TODO: fetch table names from the .vpx files instead of the file names (- tablename[filename])
+# TODO:
+# add this file informations to table list:
+# - I V B | i[TBD] v[TBD]
+# where:
+# -- I=has ini file, V=has vbs script, B=has directb2s
+# ---- filenames are <table_name>.ini|.vbs|.directb2s
+# -- i=images [table, backglass, dmd]
+# ---- <table_folder>/images/ table|backglass|dmd.png
+# -- v=video [table, backglass, dmd]
+# ---- <table_folder>/images/ table|backglass|dmd.mp4
+# - color coded green=exists red=missing for B and i[] and v groups[] items
+# - color coded diff for I V, gray=not found white=no changes yellow=modified
+# -- .ini will diff from VPINBALLX_INI, .vbs will diff from <table_name>.vpx
+# - e.g.: Alien Trilogy (2009) - I V B | i[TBD] v[TBD]
+# or add another column for all of this.
+
+# add buttons to extract table/backglass media
+# - no selection: runs the full script
+# - table selected: --force runs only table selected
+# - ask if user wants video or images
+# this will use code from the art_generator script.
 
 # Check for dependencies
 if ! command -v yad &>/dev/null; then
