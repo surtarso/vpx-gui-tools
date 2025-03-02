@@ -6,18 +6,18 @@
 
 # TODO:
 # add this file informations to table list:
-# - I V B | i[TBD] v[TBD]
+# - I V B | i[WTBD] v[TBD]
 # where:
 # -- I=has ini file, V=has vbs script, B=has directb2s
 # ---- filenames are <table_name>.ini|.vbs|.directb2s
-# -- i=images [table, backglass, dmd]
-# ---- <table_folder>/images/ table|backglass|dmd.png
+# -- i=images [wheel, table, backglass, dmd]
+# ---- <table_folder>/images/ wheel|table|backglass|dmd.png
 # -- v=video [table, backglass, dmd]
 # ---- <table_folder>/images/ table|backglass|dmd.mp4
-# - color coded green=exists red=missing for B and i[] and v groups[] items
-# - color coded diff for I V, gray=not found white=no changes yellow=modified
+# - color coded: green=exists red=missing for B and i[] and v[] groups items
+# - color coded: diff for I V, gray=file not found white=no changes yellow=modified
 # -- .ini will diff from VPINBALLX_INI, .vbs will diff from <table_name>.vpx
-# - e.g.: Alien Trilogy (2009) - I V B | i[TBD] v[TBD]
+# - e.g.: | [icon] | Alien Trilogy (2009) - I V B | i[WTBD] v[TBD] |
 # or add another column for all of this.
 
 # add buttons to extract table/backglass media
