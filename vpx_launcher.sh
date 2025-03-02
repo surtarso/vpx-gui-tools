@@ -13,7 +13,7 @@
 # -- i=images [wheel, table, backglass, dmd]
 # ---- <table_folder>/images/ wheel|table|backglass|dmd.png
 # -- v=video [table, backglass, dmd]
-# ---- <table_folder>/images/ table|backglass|dmd.mp4
+# ---- <table_folder>/video/ table|backglass|dmd.mp4
 # - color coded: green=exists red=missing for B and i[] and v[] groups items
 # - color coded: diff for I V, gray=file not found white=no changes yellow=modified
 # -- .ini will diff from VPINBALLX_INI, .vbs will diff from <table_name>.vpx
@@ -41,8 +41,11 @@ fi
 
 ## --------------------- CONFIGURATION ---------------------
 # Config file path
-CONFIG_FILE="$HOME/.vpx_launcher_config"
+CONFIG_FILE="$HOME/.vpx-gui-tools/settings.ini"
 DEFAULT_ICON="./default_icon.ico"  # Default icon for list view
+
+# Create the directory if it doesn't exist
+mkdir -p "$(dirname "$CONFIG_FILE")"
 
 # Load or create the config file with default values
 if [ ! -f "$CONFIG_FILE" ]; then
@@ -55,6 +58,13 @@ if [ ! -f "$CONFIG_FILE" ]; then
         echo "FALLBACK_EDITOR=\"code\""
         echo "WINDOW_WIDTH=\"800\""
         echo "WINDOW_HEIGHT=\"600\""
+        echo "WHEEL_IMAGE=\"/images/wheel.png\""
+        echo "TABLE_IMAGE=\"/images/table.png\""
+        echo "BACKGLASS_IMAGE=\"/images/backglass.png\""
+        echo "DMD_IMAGE=\"/images/dmd.png\""
+        echo "TABLE_VIDEO=\"/video/table.mp4\""
+        echo "BACKGLASS_VIDEO=\"/video/backglass.mp4\""
+        echo "DMD_VIDEO=\"/video/dmd.mp4\""
     } > "$CONFIG_FILE"
 fi
 
@@ -67,7 +77,7 @@ source "$CONFIG_FILE"
 handle_error() {
     yad --title="Error" --text="$1" 2>/dev/null \
         --form --width=400 --height=150 \
-        --buttons-layout=center \
+    rm    --buttons-layout=center \
         --button="Settings:1" --button="Exit:252"
     
     local exit_code=$?
@@ -88,6 +98,13 @@ open_launcher_settings() {
         --field="Fallback Editor:":FILE "$FALLBACK_EDITOR" \
         --field="Launcher Width:":FILE "$WINDOW_WIDTH" \
         --field="Launcher Height:":FILE "$WINDOW_HEIGHT" \
+        --field="Wheel Image:":FILE "$WHEEL_IMAGE" \
+        --field="Table Image:":FILE "$TABLE_IMAGE" \
+        --field="Backglass Image:":FILE "$BACKGLASS_IMAGE" \
+        --field="DMD Image:":FILE "$DMD_IMAGE" \
+        --field="Table Video:":FILE "$TABLE_VIDEO" \
+        --field="Backglass Video:":FILE "$BACKGLASS_VIDEO" \
+        --field="DMD Video:":FILE "$DMD_VIDEO" \
         --width=500 --height=150 \
         --separator="|")
 
@@ -102,6 +119,13 @@ open_launcher_settings() {
                     NEW_FALLBACK_EDITOR \
                     NEW_WINDOW_WIDTH \
                     NEW_WINDOW_HEIGHT \
+                    NEW_WHEEL_IMAGE \
+                    NEW_TABLE_IMAGE \
+                    NEW_BACKGLASS_IMAGE \
+                    NEW_DMD_IMAGE \
+                    NEW_TABLE_VIDEO \
+                    NEW_BACKGLASS_VIDEO \
+                    NEW_DMD_VIDEO \
                     <<< "$NEW_VALUES"
 
     # Validate new directory and executables
@@ -126,6 +150,13 @@ open_launcher_settings() {
         echo "FALLBACK_EDITOR=\"$NEW_FALLBACK_EDITOR\""
         echo "WINDOW_WIDTH=\"$NEW_WINDOW_WIDTH\""
         echo "WINDOW_HEIGHT=\"$NEW_WINDOW_HEIGHT\""
+        echo "WHEEL_IMAGE=\"$NEW_WHEEL_IMAGE\""
+        echo "TABLE_IMAGE=\"$NEW_TABLE_IMAGE\""
+        echo "BACKGLASS_IMAGE=\"$NEW_BACKGLASS_IMAGE\""
+        echo "DMD_IMAGE=\"$NEW_DMD_IMAGE\""
+        echo "TABLE_VIDEO=\"$NEW_TABLE_VIDEO\""
+        echo "BACKGLASS_VIDEO=\"$NEW_BACKGLASS_VIDEO\""
+        echo "DMD_VIDEO=\"$NEW_DMD_VIDEO\""
     } > "$CONFIG_FILE"
 
     # Give user feedback that the paths were updated successfully
