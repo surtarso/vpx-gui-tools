@@ -4,15 +4,16 @@
 
 | **[VPX Tool Launcher](vpx_launcher.sh)** | **[VPX INI Editor](vpx_ini_editor.py)** |
 |-------------------------------------|---------------------------------------|
-| ![image](https://github.com/user-attachments/assets/5a4926af-4f6d-4d92-8a05-90deb7f06f97) | ![INI Editor](https://github.com/user-attachments/assets/010727f1-3e8a-4d2e-ac69-938a0b6bac7e) |
+| ![image](https://github.com/user-attachments/assets/65458fd6-8f0c-4650-8686-473fa7f0f057) | ![INI Editor](https://github.com/user-attachments/assets/010727f1-3e8a-4d2e-ac69-938a0b6bac7e) |
 | **Launcher Features:**  | **Editor Features:**  |
-| - Simple & Fast (less than 100kb!)  | - Explanations for each variable **(need help!)** |
-| - Keyboard/Mouse Navigation | - Category-split Sections |
+| - Lists tables and extra files  | - Explanations for each variable **(need help!)** |
+| - Lists frontend media files | - Category-split Sections |
 | - Extract and edit VBS scripts | - Create and edit single table ini's |
 | - Search and folder shortcuts | - Open any ini you want! |
-| - Launch VPX tables | - Wont override code comments |
+| - Show if files have diff*** | - Wont override code comments |
 <p><i>*If you need a dual monitor fullscreen frontend as simple as possible, <a href="https://github.com/surtarso/asap-cabinet-fe/">look here</a>.</i></p>
 <p></p><i>**If you need help installing VPX check the <a href="https://github.com/surtarso/vpx-frontend/wiki/Visual-Pinball-X-on-Debian-Linux">wiki</a>.</i></p>
+<p></p><i>***Shows only INI diffs. Not yet implemented for .vbs scripts.</i></p>
 
 ## **Installation & Usage**  
 
