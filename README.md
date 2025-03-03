@@ -37,7 +37,7 @@ You can download a release file here: https://github.com/surtarso/vpx-frontend/r
    
 5. **Configure paths and args**
    
-   ![image](https://github.com/user-attachments/assets/abc08ad5-7c1e-4992-a9c0-506c79262d56)
+   ![image](https://github.com/user-attachments/assets/f3d4ca55-99b2-4b96-be17-027d30a7e3c4)
 
    - Set table folder, it will look recursevely for .vpx files.
    - Set any initial args you may need. (or leave empty)
@@ -46,6 +46,7 @@ You can download a release file here: https://github.com/surtarso/vpx-frontend/r
    - Set absolute path of VPinballX.ini
    - Set fallback editor for VBS files (any text editor in case there's no default one)
    - Set launcher window widht and height
+   - Set you own media path for images and videos (from /tables/table_name/)
   
    The code will assemble a command line that looks like this:
    ```bash
