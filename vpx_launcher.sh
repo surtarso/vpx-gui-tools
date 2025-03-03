@@ -344,7 +344,7 @@ while true; do
     LOADING_PID=
     (
         for i in {5..100..5}; do
-            echo $i
+            echo "$i"
             sleep 0.1
         done
     ) | yad --progress --title="Loading" --text=" Reading files..." \
