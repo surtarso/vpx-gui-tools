@@ -295,6 +295,7 @@ handle_vbs_scripts() {
 
 handle_search_query() {
     # Open dialog box
+    local SEARCH_QUERY
     SEARCH_QUERY=$(yad --entry --title="Search Tables" \
                     --text="Enter table name filter:" \
                     --width=300 --height=100 2>/dev/null)
