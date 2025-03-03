@@ -34,6 +34,12 @@ fi
 #LOGFILE="$HOME/.vpx-gui-tools/erros.log"
 CONFIG_FILE="$HOME/.vpx-gui-tools/settings.ini"
 DEFAULT_ICON="default_icon.ico"  # Default icon for list view
+# HELP_TEXT="Files: missing, present, modified - Media: present, missing"
+HELP_TEXT="   |   Color codes - Extra Files: <span foreground='gray'>missing</span>, \
+<span foreground='white'>present</span>, \
+<span foreground='yellow'>modified</span>   |   \
+Front-End Media: <span foreground='green'>present</span>, \
+<span foreground='red'>missing</span>"
 
 # Create the directory if it doesn't exist
 mkdir -p "$(dirname "$CONFIG_FILE")"
@@ -459,7 +465,7 @@ while true; do
 
     #Show launcher menu (list view)
         SELECTED_TABLE=$(yad --list --title="VPX Launcher" \
-            --text="Table(s) found: $TABLE_NUM" \
+            --text="Table(s) found: $TABLE_NUM $HELP_TEXT" \
             --width="$WINDOW_WIDTH" --height="$WINDOW_HEIGHT" --search=true \
             --button="⚙!!Launcher Settings :1" \
             --button="INI Editor!!Create and edit INI files:2" \
