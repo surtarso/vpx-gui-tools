@@ -307,11 +307,13 @@ handle_search_query() {
         # Handle the case where the user provides a search term.
         CURRENT_SEARCH="$SEARCH_QUERY"
         FILTERED_FILE_LIST=()
-        for (( i=0; i<${#FILE_LIST[@]}; i+=2 )); do
-            ICON="${FILE_LIST[i]}"
-            NAME="${FILE_LIST[i+1]}"
+        for (( i=0; i<${#FILE_LIST[@]}; i+=4 )); do
+            local ICON="${FILE_LIST[i]}"
+            local NAME="${FILE_LIST[i+1]}"
+            local EXTRA="${FILE_LIST[i+2]}"
+            local MEDIA="${FILE_LIST[i+3]}"
             if echo "$NAME" | grep -iq "$SEARCH_QUERY"; then
-                FILTERED_FILE_LIST+=("$ICON" "$NAME")
+                FILTERED_FILE_LIST+=("$ICON" "$NAME" "$EXTRA" "$MEDIA")
             fi
         done
 
