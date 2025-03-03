@@ -5,26 +5,16 @@
 # Dependencies: yad 0.40.0 (GTK+ 3.24.38)
 
 # TODO:
-# add this file informations to table list:
-# - I V B | i[WTBD] v[TBD]
-# where:
-# -- I=has ini file, V=has vbs script, B=has directb2s
-# ---- filenames are <table_name>.ini|.vbs|.directb2s
-# -- i=images [wheel, table, backglass, dmd]
-# ---- <table_folder>/images/ wheel|table|backglass|dmd.png
-# -- v=video [table, backglass, dmd]
-# ---- <table_folder>/video/ table|backglass|dmd.mp4
-# - color coded: green=exists red=missing for B and i[] and v[] groups items
-# - color coded: diff for I V, gray=file not found white=no changes yellow=modified
-# -- .ini will diff from VPINBALLX_INI, .vbs will diff from <table_name>.vpx
-# - e.g.: | [icon] | Alien Trilogy (2009) - I V B | i[WTBD] v[TBD] |
-# or add another column for all of this.
+# someshow diff .vbs with .vbs inside .vpx
 
-# add buttons to extract table/backglass media
-# - no selection: runs the full script
+# add buttons to extract media (image or video)
+# - no selection: runs the full script 
 # - table selected: --force runs only table selected
-# - ask if user wants video or images
-# this will use code from the art_generator script.
+# - ask if user wants table or backglass (or both)
+# this will use code from the art_generators script.
+
+# Suppress GTK warnings (?)
+export NO_AT_BRIDGE=1
 
 # Check for dependencies
 if ! command -v yad &>/dev/null; then
@@ -41,8 +31,9 @@ fi
 
 ## --------------------- CONFIGURATION ---------------------
 # Config file path
+#LOGFILE="$HOME/.vpx-gui-tools/erros.log"
 CONFIG_FILE="$HOME/.vpx-gui-tools/settings.ini"
-DEFAULT_ICON="./default_icon.ico"  # Default icon for list view
+DEFAULT_ICON="default_icon.ico"  # Default icon for list view
 
 # Create the directory if it doesn't exist
 mkdir -p "$(dirname "$CONFIG_FILE")"
@@ -61,7 +52,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
         echo "WHEEL_IMAGE=\"/images/wheel.png\""
         echo "TABLE_IMAGE=\"/images/table.png\""
         echo "BACKGLASS_IMAGE=\"/images/backglass.png\""
-        echo "DMD_IMAGE=\"/images/dmd.png\""
+        echo "MARQUEE_IMAGE=\"/images/marquee.png\""
         echo "TABLE_VIDEO=\"/video/table.mp4\""
         echo "BACKGLASS_VIDEO=\"/video/backglass.mp4\""
         echo "DMD_VIDEO=\"/video/dmd.mp4\""
@@ -77,7 +68,7 @@ source "$CONFIG_FILE"
 handle_error() {
     yad --title="Error" --text="$1" 2>/dev/null \
         --form --width=400 --height=150 \
-    rm    --buttons-layout=center \
+        --buttons-layout=center \
         --button="Settings:1" --button="Exit:252"
     
     local exit_code=$?
@@ -87,6 +78,7 @@ handle_error() {
 }
 
 ## -------------------- LAUNCHER SETTINGS ---------------------
+
 open_launcher_settings() {
     # Show settings dialog
     NEW_VALUES=$(yad --form --title="Settings" \
@@ -101,12 +93,12 @@ open_launcher_settings() {
         --field="Wheel Image:":FILE "$WHEEL_IMAGE" \
         --field="Table Image:":FILE "$TABLE_IMAGE" \
         --field="Backglass Image:":FILE "$BACKGLASS_IMAGE" \
-        --field="DMD Image:":FILE "$DMD_IMAGE" \
+        --field="Marquee Image:":FILE "$MARQUEE_IMAGE" \
         --field="Table Video:":FILE "$TABLE_VIDEO" \
         --field="Backglass Video:":FILE "$BACKGLASS_VIDEO" \
         --field="DMD Video:":FILE "$DMD_VIDEO" \
         --width=500 --height=150 \
-        --separator="|")
+        --separator="|" 2>/dev/null)
 
     if [ -z "$NEW_VALUES" ]; then return; fi
 
@@ -122,12 +114,12 @@ open_launcher_settings() {
                     NEW_WHEEL_IMAGE \
                     NEW_TABLE_IMAGE \
                     NEW_BACKGLASS_IMAGE \
-                    NEW_DMD_IMAGE \
+                    NEW_MARQUEE_IMAGE \
                     NEW_TABLE_VIDEO \
                     NEW_BACKGLASS_VIDEO \
                     NEW_DMD_VIDEO \
                     <<< "$NEW_VALUES"
-
+                    
     # Validate new directory and executables
     if [ ! -d "$NEW_TABLES_DIR" ] || ! find "$NEW_TABLES_DIR" -type f -name "*.vpx" | grep -q .; then
         handle_error "Error: No .vpx files found in the directory!"
@@ -153,7 +145,7 @@ open_launcher_settings() {
         echo "WHEEL_IMAGE=\"$NEW_WHEEL_IMAGE\""
         echo "TABLE_IMAGE=\"$NEW_TABLE_IMAGE\""
         echo "BACKGLASS_IMAGE=\"$NEW_BACKGLASS_IMAGE\""
-        echo "DMD_IMAGE=\"$NEW_DMD_IMAGE\""
+        echo "MARQUEE_IMAGE=\"$NEW_MARQUEE_IMAGE\""
         echo "TABLE_VIDEO=\"$NEW_TABLE_VIDEO\""
         echo "BACKGLASS_VIDEO=\"$NEW_BACKGLASS_VIDEO\""
         echo "DMD_VIDEO=\"$NEW_DMD_VIDEO\""
@@ -171,6 +163,7 @@ open_launcher_settings() {
 }
 
 ## --------------- INI SETTINGS (Standalone) -----------------
+
 # Function to check and install missing dependencies
 install_python_deps() {
     if ! command -v python3 &>/dev/null; then
@@ -181,7 +174,7 @@ install_python_deps() {
 
         # If user chooses not to install, exit
         if ! yad --title="Install Python3?" --form --buttons-layout=center \
-                --button="Yes:0" --button="No:1"; then
+                --button="Yes:0" --button="No:1" 2>/dev/null; then
             return 1
         fi
 
@@ -267,6 +260,7 @@ launch_ini_editor() {
 }
 
 ## ------------------ VBS SCRIPTS LOGIC ----------------
+
 handle_vbs_scripts() {
     local vbs_script="$1"
 
@@ -298,6 +292,7 @@ handle_vbs_scripts() {
 }
 
 ## -------------------- SEARCH LOGIC --------------------
+
 handle_search_query() {
     # Open dialog box
     SEARCH_QUERY=$(yad --entry --title="Search Tables" \
@@ -346,17 +341,103 @@ while true; do
     FILE_LIST=() # Prepare the table list for the launcher
     declare -A FILE_MAP # Create an associative array to map table names to file paths
 
+    LOADING_PID=
+    (
+        for i in {5..100..5}; do
+            echo $i
+            sleep 0.1
+        done
+    ) | yad --progress --title="Loading" --text=" Reading files..." \
+        --width=300 --height=70 --percentage=0 --auto-close \
+        --undecorated --no-buttons 2>/dev/null &
+    LOADING_PID=$!
+
     # Read .vpx files and prepare the menu
     while IFS= read -r FILE; do
+        
         BASENAME=$(basename "$FILE" .vpx) # Strip the extension
+        VPX_FOLDER=$(dirname "$FILE")
 
-        # List view (using .ico files)
-        IMAGE_PATH="${FILE%.vpx}.ico" # Use .ico file if available
-        [[ ! -f "$IMAGE_PATH" ]] && IMAGE_PATH="$DEFAULT_ICON"
+        # --------------------------------Check for icons
+        ICON_PATH=$(find "$(dirname "$FILE")" -iname "$(basename "$ICON_PATH")" -print -quit)
+        [[ ! -f "$ICON_PATH" ]] && ICON_PATH="$DEFAULT_ICON"
 
-        FILE_LIST+=("$IMAGE_PATH" "$BASENAME") # Add to the list
+        # ---------------------------------Check for INI, VBS(?), directb2s
+        local_ini_file=$(find "$VPX_FOLDER" -iname "${BASENAME}.ini" -print -quit)
+        local_vbs_file=$(find "$VPX_FOLDER" -iname "${BASENAME}.vbs" -print -quit)
+        local_b2s_file=$(find "$VPX_FOLDER" -iname "${BASENAME}.directb2s" -print -quit)
+
+        INI_STATUS="<span foreground='gray'>Ini </span>"
+        VBS_STATUS="<span foreground='gray'>Vbs </span>"
+        DIRECTB2S_STATUS="<span foreground='red'>B2s</span>" # Default to missing, change if found
+
+        if [[ -f "$local_ini_file" ]]; then
+            INI_STATUS="<span foreground='white'>Ini </span>"
+            if [[ -f "$VPINBALLX_INI" ]]; then
+                if [[ "$(diff "$local_ini_file" "$VPINBALLX_INI")" != "" ]]; then
+                INI_STATUS="<span foreground='yellow'>Ini </span>"
+                fi
+            fi
+        fi
+
+        if [[ -f "$local_vbs_file" ]]; then
+            VBS_STATUS="<span foreground='white'>Vbs </span>"
+        fi
+
+        if [[ -f "$local_b2s_file" ]]; then
+            DIRECTB2S_STATUS="<span foreground='white'>B2s</span>"
+        fi
+
+        # ------------------------------------Check for images
+        local_wheel=$(find "$VPX_FOLDER" -iname "$(basename "$WHEEL_IMAGE")" -print -quit)
+        local_table=$(find "$VPX_FOLDER" -iname "$(basename "$TABLE_IMAGE")" -print -quit)
+        local_backglass=$(find "$VPX_FOLDER" -iname "$(basename "$BACKGLASS_IMAGE")" -print -quit)
+        local_marquee=$(find "$VPX_FOLDER" -iname "$(basename "$MARQUEE_IMAGE")" -print -quit)
+
+        WHEEL_STATUS="<span foreground='red'>Wheel,</span>"
+        TABLE_STATUS="<span foreground='red'>Table,</span>"
+        BACKGLASS_STATUS="<span foreground='red'>B2S,</span>"
+        MARQUEE_STATUS="<span foreground='red'>Marquee</span>"
+
+        if [[ -f "$local_wheel" ]]; then
+            WHEEL_STATUS="<span foreground='green'>Wheel,</span>"
+        fi
+        if [[ -f "$local_table" ]]; then
+            TABLE_STATUS="<span foreground='green'>Table,</span>"
+        fi
+        if [[ -f "$local_backglass" ]]; then
+            BACKGLASS_STATUS="<span foreground='green'>B2S,</span>"
+        fi
+        if [[ -f "$local_marquee" ]]; then
+            MARQUEE_STATUS="<span foreground='green'>Marquee</span>"
+        fi
+
+        IMAGES_STATUS="<span foreground='gray'>img </span>[${WHEEL_STATUS}${TABLE_STATUS}${BACKGLASS_STATUS}${MARQUEE_STATUS}] "
+
+        # -----------------------------------------------Check for videos
+        local_table_video=$(find "$VPX_FOLDER" -iname "$(basename "$TABLE_VIDEO")" -print -quit)
+        local_backglass_video=$(find "$VPX_FOLDER" -iname "$(basename "$BACKGLASS_VIDEO")" -print -quit)
+        local_dmd_video=$(find "$VPX_FOLDER" -iname "$(basename "$DMD_VIDEO")" -print -quit)
+
+        TABLE_VIDEO_STATUS="<span foreground='red'>Table,</span>"
+        BACKGLASS_VIDEO_STATUS="<span foreground='red'>B2S,</span>"
+        DMD_VIDEO_STATUS="<span foreground='red'>DMD</span>"
+
+        if [[ -f "$local_table_video" ]]; then
+            TABLE_VIDEO_STATUS="<span foreground='green'>Table,</span>"
+        fi
+        if [[ -f "$local_backglass_video" ]]; then
+            BACKGLASS_VIDEO_STATUS="<span foreground='green'>B2S,</span>"
+        fi
+        if [[ -f "$local_dmd_video" ]]; then
+            DMD_VIDEO_STATUS="<span foreground='green'>DMD</span>"
+        fi
+
+        VIDEOS_STATUS="<span foreground='gray'>vid </span>[${TABLE_VIDEO_STATUS}${BACKGLASS_VIDEO_STATUS}${DMD_VIDEO_STATUS}]"
+
+        FILE_LIST+=("$ICON_PATH" "$BASENAME" "$INI_STATUS $VBS_STATUS $DIRECTB2S_STATUS" "$IMAGES_STATUS $VIDEOS_STATUS") # Add to the list
         FILE_MAP["$BASENAME"]="$FILE" # Map table name to file path
-    done < <(find "$TABLES_DIR" -type f -name "*.vpx" | sort)
+        done < <(find "$TABLES_DIR" -type f -name "*.vpx" | sort)
 
     TABLE_NUM=0 # Initialize table(s) found count
 
@@ -364,25 +445,29 @@ while true; do
     if [ ${#FILTERED_FILE_LIST[@]} -gt 0 ]; then
         # show user search-filtered list if available
         FILE_LIST_STR=$(printf "%s\n" "${FILTERED_FILE_LIST[@]}")
-        TABLE_NUM=$(( ${#FILTERED_FILE_LIST[@]} / 2 ))
+        TABLE_NUM=$(( ${#FILTERED_FILE_LIST[@]} / 4 )) # Adjust for the extra columns
     else
         # show all tables
         FILE_LIST_STR=$(printf "%s\n" "${FILE_LIST[@]}")
-        TABLE_NUM=$(( ${#FILE_LIST[@]} / 2 ))
+        TABLE_NUM=$(( ${#FILE_LIST[@]} / 4 )) # Adjust for the extra columns
     fi
 
-    # Show launcher menu (list view)
-    SELECTED_TABLE=$(yad --list --title="VPX Launcher" \
-        --text="Table(s) found: $TABLE_NUM" \
-        --width="$WINDOW_WIDTH" --height="$WINDOW_HEIGHT" --search=true \
-        --button="⚙!!Launcher Settings :1" \
-        --button="INI Editor!!Create and edit INI files:2" \
-        --button="Extract VBS!!Extract and edit VBS scripts:10" \
-        --button="📂!!Open a table folder :20" --button="🔍!!Filter tables:30" \
-        --button="🕹️!!Launch selected table :0" --button="🚪!!Exit :252" \
-        --buttons-layout=center \
-        --column=":IMG" --column="Table Filename" <<< "$FILE_LIST_STR" 2>/dev/null)
+    kill $LOADING_PID 2>/dev/null
 
+    #Show launcher menu (list view)
+        SELECTED_TABLE=$(yad --list --title="VPX Launcher" \
+            --text="Table(s) found: $TABLE_NUM" \
+            --width="$WINDOW_WIDTH" --height="$WINDOW_HEIGHT" --search=true \
+            --button="⚙!!Launcher Settings :1" \
+            --button="INI Editor!!Create and edit INI files:2" \
+            --button="Extract VBS!!Extract and edit VBS scripts:10" \
+            --button="📂!!Open a table folder :20" --button="🔍!!Filter tables:30" \
+            --button="🕹️!!Launch selected table :0" --button="🚪!!Exit :252" \
+            --buttons-layout=center \
+            --column=":IMG" --column="Table Filename" \
+            --column="Extra Files" --column="Front-End Media" \
+            --print-column=2 <<< "$FILE_LIST_STR" 2>/dev/null)
+    
     EXIT_CODE=$?
 
     # Strip pipes from selection (if any)
