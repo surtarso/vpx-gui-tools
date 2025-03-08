@@ -53,8 +53,8 @@ if [ ! -f "$CONFIG_FILE" ]; then
         echo "END_ARGS=\"$END_ARGS\""
         echo "VPINBALLX_INI=\"$HOME/.vpinball/VPinballX.ini\""
         echo "FALLBACK_EDITOR=\"code\""
-        echo "WINDOW_WIDTH=\"800\""
-        echo "WINDOW_HEIGHT=\"600\""
+        echo "WINDOW_WIDTH=\"1024\""
+        echo "WINDOW_HEIGHT=\"768\""
         echo "WHEEL_IMAGE=\"/images/wheel.png\""
         echo "TABLE_IMAGE=\"/images/table.png\""
         echo "BACKGLASS_IMAGE=\"/images/backglass.png\""
@@ -62,6 +62,8 @@ if [ ! -f "$CONFIG_FILE" ]; then
         echo "TABLE_VIDEO=\"/video/table.mp4\""
         echo "BACKGLASS_VIDEO=\"/video/backglass.mp4\""
         echo "DMD_VIDEO=\"/video/dmd.mp4\""
+        echo "ROM_PATH=\"/pinmame/roms\""
+        echo "SND_PATH=\"/pinmame/altsound\""
     } > "$CONFIG_FILE"
 fi
 
@@ -103,6 +105,8 @@ open_launcher_settings() {
         --field="Table Video:":FILE "$TABLE_VIDEO" \
         --field="Backglass Video:":FILE "$BACKGLASS_VIDEO" \
         --field="DMD Video:":FILE "$DMD_VIDEO" \
+        --field="ROM Path:":FILE "$ROM_PATH" \
+        --field="AltSound Path:":FILE "$SND_PATH" \
         --width=500 --height=150 \
         --separator="|" 2>/dev/null)
 
@@ -124,6 +128,8 @@ open_launcher_settings() {
                     NEW_TABLE_VIDEO \
                     NEW_BACKGLASS_VIDEO \
                     NEW_DMD_VIDEO \
+                    NEW_ROM_PATH \
+                    NEW_SND_PATH \
                     <<< "$NEW_VALUES"
                     
     # Validate new directory and executables
@@ -155,6 +161,8 @@ open_launcher_settings() {
         echo "TABLE_VIDEO=\"$NEW_TABLE_VIDEO\""
         echo "BACKGLASS_VIDEO=\"$NEW_BACKGLASS_VIDEO\""
         echo "DMD_VIDEO=\"$NEW_DMD_VIDEO\""
+        echo "ROM_PATH=\"$NEW_ROM_PATH\""
+        echo "SND_PATH=\"$NEW_SND_PATH\""
     } > "$CONFIG_FILE"
 
     # Give user feedback that the paths were updated successfully
@@ -367,11 +375,11 @@ while true; do
         BASENAME=$(basename "$FILE" .vpx) # Strip the extension
         VPX_FOLDER=$(dirname "$FILE")
 
-        # --------------------------------Check for icons
+        # ------------------------------------Check for icons
         ICON_PATH=$(find "$(dirname "$FILE")" -iname "$(basename "$ICON_PATH")" -print -quit)
         [[ ! -f "$ICON_PATH" ]] && ICON_PATH="$DEFAULT_ICON"
 
-        # ---------------------------------Check for INI, VBS(?), directb2s
+        # ------------------------------------Check for INI, VBS(?), directb2s
         local_ini_file=$(find "$VPX_FOLDER" -iname "${BASENAME}.ini" -print -quit)
         local_vbs_file=$(find "$VPX_FOLDER" -iname "${BASENAME}.vbs" -print -quit)
         local_b2s_file=$(find "$VPX_FOLDER" -iname "${BASENAME}.directb2s" -print -quit)
@@ -397,7 +405,7 @@ while true; do
             DIRECTB2S_STATUS="<span foreground='white'>B2s</span>"
         fi
 
-        # ------------------------------------Check for images
+        # --------------------------------------------Check for images
         local_wheel=$(find "$VPX_FOLDER" -iname "$(basename "$WHEEL_IMAGE")" -print -quit)
         local_table=$(find "$VPX_FOLDER" -iname "$(basename "$TABLE_IMAGE")" -print -quit)
         local_backglass=$(find "$VPX_FOLDER" -iname "$(basename "$BACKGLASS_IMAGE")" -print -quit)
@@ -421,7 +429,7 @@ while true; do
             MARQUEE_STATUS="<span foreground='green'>Marquee</span>"
         fi
 
-        IMAGES_STATUS="<span foreground='gray'>img </span>[${WHEEL_STATUS}${TABLE_STATUS}${BACKGLASS_STATUS}${MARQUEE_STATUS}] "
+        IMAGES_STATUS="🖼️ [${WHEEL_STATUS}${TABLE_STATUS}${BACKGLASS_STATUS}${MARQUEE_STATUS}] "
 
         # -----------------------------------------------Check for videos
         local_table_video=$(find "$VPX_FOLDER" -iname "$(basename "$TABLE_VIDEO")" -print -quit)
@@ -442,9 +450,28 @@ while true; do
             DMD_VIDEO_STATUS="<span foreground='green'>DMD</span>"
         fi
 
-        VIDEOS_STATUS="<span foreground='gray'>vid </span>[${TABLE_VIDEO_STATUS}${BACKGLASS_VIDEO_STATUS}${DMD_VIDEO_STATUS}]"
+        VIDEOS_STATUS="🎬 [${TABLE_VIDEO_STATUS}${BACKGLASS_VIDEO_STATUS}${DMD_VIDEO_STATUS}]"
 
-        FILE_LIST+=("$ICON_PATH" "$BASENAME" "$INI_STATUS $VBS_STATUS $DIRECTB2S_STATUS" "$IMAGES_STATUS $VIDEOS_STATUS") # Add to the list
+        # -------------------------------------Check for ROM and AltSound folders
+        ROM_STATUS="<span foreground='red'>✗</span>"
+        SND_STATUS="<span foreground='red'>✗</span>"
+
+        if [[ -n "$ROM_PATH" && -n "$VPX_FOLDER" ]]; then
+            local_rom_dir="$VPX_FOLDER$ROM_PATH"
+            if [[ -d "$local_rom_dir" ]]; then
+                ROM_STATUS="💾"
+            fi
+        fi
+
+        if [[ -n "$SND_PATH" && -n "$VPX_FOLDER" ]]; then
+            local_snd_dir="$VPX_FOLDER$SND_PATH"
+            if [[ -d "$local_snd_dir" ]]; then
+                SND_STATUS="🎵"
+            fi
+        fi
+
+        # --------------Create the array of columns------------
+        FILE_LIST+=("$ICON_PATH" "$BASENAME" "$INI_STATUS $VBS_STATUS $DIRECTB2S_STATUS" "$ROM_STATUS" "$SND_STATUS" "$IMAGES_STATUS $VIDEOS_STATUS") # Add to the list
         FILE_MAP["$BASENAME"]="$FILE" # Map table name to file path
         done < <(find "$TABLES_DIR" -type f -name "*.vpx" | sort)
 
@@ -454,11 +481,11 @@ while true; do
     if [ ${#FILTERED_FILE_LIST[@]} -gt 0 ]; then
         # show user search-filtered list if available
         FILE_LIST_STR=$(printf "%s\n" "${FILTERED_FILE_LIST[@]}")
-        TABLE_NUM=$(( ${#FILTERED_FILE_LIST[@]} / 4 )) # Adjust for the extra columns
+        TABLE_NUM=$(( ${#FILTERED_FILE_LIST[@]} / 6 )) # Adjust for the extra columns
     else
         # show all tables
         FILE_LIST_STR=$(printf "%s\n" "${FILE_LIST[@]}")
-        TABLE_NUM=$(( ${#FILE_LIST[@]} / 4 )) # Adjust for the extra columns
+        TABLE_NUM=$(( ${#FILE_LIST[@]} / 6 )) # Adjust for the extra columns
     fi
 
     kill $LOADING_PID 2>/dev/null
@@ -474,7 +501,8 @@ while true; do
             --button="🕹️!!Launch selected table :0" --button="🚪!!Exit :252" \
             --buttons-layout=center \
             --column=":IMG" --column="Table Filename" \
-            --column="Extra Files" --column="Front-End Media" \
+            --column="Extra Files" --column="ROM" \
+            --column="AltSound" --column="Front-End Media" \
             --print-column=2 <<< "$FILE_LIST_STR" 2>/dev/null)
     
     EXIT_CODE=$?
