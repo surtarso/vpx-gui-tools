@@ -64,6 +64,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
         echo "DMD_VIDEO=\"/video/dmd.mp4\""
         echo "ROM_PATH=\"/pinmame/roms\""
         echo "SND_PATH=\"/pinmame/altsound\""
+        echo "CRZ_PATH=\"/pinmame/AltColor\""
     } > "$CONFIG_FILE"
 fi
 
@@ -107,6 +108,7 @@ open_launcher_settings() {
         --field="DMD Video:":FILE "$DMD_VIDEO" \
         --field="ROM Path:":FILE "$ROM_PATH" \
         --field="AltSound Path:":FILE "$SND_PATH" \
+        --field="AltColor Path:":FILE "$CRZ_PATH" \
         --width=500 --height=150 \
         --separator="|" 2>/dev/null)
 
@@ -130,6 +132,7 @@ open_launcher_settings() {
                     NEW_DMD_VIDEO \
                     NEW_ROM_PATH \
                     NEW_SND_PATH \
+                    NEW_CRZ_PATH \
                     <<< "$NEW_VALUES"
                     
     # Validate new directory and executables
@@ -163,6 +166,7 @@ open_launcher_settings() {
         echo "DMD_VIDEO=\"$NEW_DMD_VIDEO\""
         echo "ROM_PATH=\"$NEW_ROM_PATH\""
         echo "SND_PATH=\"$NEW_SND_PATH\""
+        echo "CRZ_PATH=\"$NEW_CRZ_PATH\""
     } > "$CONFIG_FILE"
 
     # Give user feedback that the paths were updated successfully
@@ -358,6 +362,7 @@ while true; do
     FILE_LIST=() # Prepare the table list for the launcher
     declare -A FILE_MAP # Create an associative array to map table names to file paths
 
+    # Loading screen
     LOADING_PID=
     (
         for i in {5..100..5}; do
@@ -452,14 +457,17 @@ while true; do
 
         VIDEOS_STATUS="🎬 [${TABLE_VIDEO_STATUS}${BACKGLASS_VIDEO_STATUS}${DMD_VIDEO_STATUS}]"
 
-        # -------------------------------------Check for ROM and AltSound folders
+        # -------------------------------Check for ROM and AltSound/Color folders
         ROM_STATUS="<span foreground='red'>✗</span>"
-        SND_STATUS="<span foreground='red'>✗</span>"
+        SND_STATUS="<span foreground='gray'>–</span>"
+        CRZ_STATUS="<span foreground='gray'>–</span>"
 
         if [[ -n "$ROM_PATH" && -n "$VPX_FOLDER" ]]; then
             local_rom_dir="$VPX_FOLDER$ROM_PATH"
+            ROM_NAME="<span foreground='gray'>none</span>"
             if [[ -d "$local_rom_dir" ]]; then
                 ROM_STATUS="💾"
+                ROM_NAME=$(basename "$(find "$local_rom_dir" -maxdepth 1 -type f -name "*.zip" | head -n 1)" .zip)
             fi
         fi
 
@@ -470,8 +478,16 @@ while true; do
             fi
         fi
 
+        if [[ -n "$CRZ_PATH" && -n "$VPX_FOLDER" ]]; then
+            local_crz_dir="$VPX_FOLDER$CRZ_PATH"
+            if [[ -d "$local_crz_dir" ]]; then
+                CRZ_STATUS="🌈"
+            fi
+        fi
+
         # --------------Create the array of columns------------
-        FILE_LIST+=("$ICON_PATH" "$BASENAME" "$INI_STATUS $VBS_STATUS $DIRECTB2S_STATUS" "$ROM_STATUS" "$SND_STATUS" "$IMAGES_STATUS $VIDEOS_STATUS") # Add to the list
+        FILE_LIST+=("$ICON_PATH" "$BASENAME" "$INI_STATUS $VBS_STATUS $DIRECTB2S_STATUS" \
+                    "$ROM_STATUS $ROM_NAME" "$SND_STATUS $CRZ_STATUS" "$IMAGES_STATUS $VIDEOS_STATUS") # Add to the list
         FILE_MAP["$BASENAME"]="$FILE" # Map table name to file path
         done < <(find "$TABLES_DIR" -type f -name "*.vpx" | sort)
 
@@ -501,8 +517,8 @@ while true; do
             --button="🕹️!!Launch selected table :0" --button="🚪!!Exit :252" \
             --buttons-layout=center \
             --column=":IMG" --column="Table Filename" \
-            --column="Extra Files" --column="ROM" \
-            --column="AltSound" --column="Front-End Media" \
+            --column="Extra Files" --column="Bios" \
+            --column="Alts" --column="Front-End Media" \
             --print-column=2 <<< "$FILE_LIST_STR" 2>/dev/null)
     
     EXIT_CODE=$?
@@ -542,18 +558,14 @@ while true; do
                 handle_search_query
             fi
             continue
-            ;;
-        *)
-            # Run the selected table
+            ;; 
+        *)  
             if [[ -z "$SELECTED_TABLE" ]]; then
-                # Handle missing selection for table launch
                 handle_error "No table selected!\nPlease select a table before launching."
             else
-                # Run the selected table
+                # Normal launch (no terminal)
                 eval "$START_ARGS \"$COMMAND_TO_RUN\" -play \"$SELECTED_FILE\" $END_ARGS" &
                 wait $!
             fi
-            ;;
     esac
 done
-
