@@ -35,11 +35,13 @@ fi
 CONFIG_FILE="$HOME/.vpx-gui-tools/settings.ini"
 DEFAULT_ICON="default_icon.ico"  # Default icon for list view
 # HELP_TEXT="Files: missing, present, modified - Media: present, missing"
-HELP_TEXT="   |   Color codes - Extra Files: <span foreground='gray'>missing</span>, \
-<span foreground='white'>present</span>, \
-<span foreground='yellow'>modified</span>   |   \
-Front-End Media: <span foreground='green'>present</span>, \
-<span foreground='red'>missing</span>"
+# HELP_TEXT="   |   Color codes - Extra Files: <span foreground='gray'>missing</span>, \
+# <span foreground='white'>present</span>, \
+# <span foreground='yellow'>modified</span>   |   \
+# Front-End Media: <span foreground='green'>present</span>, \
+# <span foreground='red'>missing</span>"
+HELP_TEXT=""
+COLS=11 # number of columns on the list
 
 # Create the directory if it doesn't exist
 mkdir -p "$(dirname "$CONFIG_FILE")"
@@ -330,16 +332,20 @@ handle_search_query() {
         # Handle the case where the user provides a search term.
         CURRENT_SEARCH="$SEARCH_QUERY"
         FILTERED_FILE_LIST=()
-        for (( i=0; i<${#FILE_LIST[@]}; i+=7 )); do
+        for (( i=0; i<${#FILE_LIST[@]}; i+=COLS )); do
             local ICON="${FILE_LIST[i]}"
-            local NAME="${FILE_LIST[i+1]}"
-            local EXTRA="${FILE_LIST[i+2]}"
-            local ROM="${FILE_LIST[i+3]}"
-            local ALT="${FILE_LIST[i+4]}"
-            local MUSIC="${FILE_LIST[i+5]}"
-            local MEDIA="${FILE_LIST[i+6]}"
+            local YEAR="${FILE_LIST[i+1]}"
+            local BRAND="${FILE_LIST[i+2]}"
+            local NAME="${FILE_LIST[i+3]}"
+            local EXTRA="${FILE_LIST[i+4]}"
+            local ROM="${FILE_LIST[i+5]}"
+            local ALT="${FILE_LIST[i+6]}"
+            local MUSIC="${FILE_LIST[i+7]}"
+            local IMAGES="${FILE_LIST[i+8]}"
+            local VIDEOS="${FILE_LIST[i+9]}"
+            local TFILE="${FILE_LIST[i+10]}"
             if echo "$NAME" | grep -iq "$SEARCH_QUERY"; then
-                FILTERED_FILE_LIST+=("$ICON" "$NAME" "$EXTRA" "$ROM" "$ALT" "$MUSIC" "$MEDIA")
+                FILTERED_FILE_LIST+=("$ICON" "$YEAR" "$BRAND" "$NAME" "$EXTRA" "$ROM" "$ALT" "$MUSIC" "$IMAGES" "$VIDEOS" "$TFILE")
             fi
         done
 
@@ -384,20 +390,24 @@ while true; do
     # Read .vpx files and prepare the menu
     while IFS= read -r FILE; do
         
-        BASENAME=$(basename "$FILE" .vpx) # Strip the extension
         VPX_FOLDER=$(dirname "$FILE")
-        # T_NAME="BASENAME minus '(shit here)'"
-        # T_BRAND="BASENAME ('only this' YEAR)"
-        # T_YEAR="BASENAME (brand '1997')"
+        BASENAME=$(basename "$FILE" .vpx | sed 's/&/\&amp;/g; s/'"'"'/\&apos;/g') # Strip the extension
+        # Extract name (everything before the first opening parenthesis)
+        T_NAME=$(echo "$BASENAME" | sed -E 's/\s*\(.*\)//')
+        # T_NAME=$(echo -e "$BASENAME" | sed -E 's/\s*\(.*\)//') # Yad can't handle special characters?
+        # Extract brand (text inside parentheses before the year)
+        T_BRAND=$(echo -e "$BASENAME" | sed -E 's/.*\((.*) [0-9]{4}\).*/\1/')
+        # Extract year (last four-digit number in parentheses)
+        T_YEAR=$(echo -e "$BASENAME" | sed -E 's/.*([0-9]{4}).*/\1/')
 
         # ------------------------------------Check for icons
         ICON_PATH=$(find "$(dirname "$FILE")" -iname "$(basename "$ICON_PATH")" -print -quit)
         [[ ! -f "$ICON_PATH" ]] && ICON_PATH="$DEFAULT_ICON"
 
         # ------------------------------------Check for INI, VBS(?), directb2s
-        local_ini_file=$(find "$VPX_FOLDER" -iname "${BASENAME}.ini" -print -quit)
-        local_vbs_file=$(find "$VPX_FOLDER" -iname "${BASENAME}.vbs" -print -quit)
-        local_b2s_file=$(find "$VPX_FOLDER" -iname "${BASENAME}.directb2s" -print -quit)
+        local_ini_file=$(find "$VPX_FOLDER" -iname "$(basename "$FILE" .vpx).ini" -print -quit)
+        local_vbs_file=$(find "$VPX_FOLDER" -iname "$(basename "$FILE" .vpx).vbs" -print -quit)
+        local_b2s_file=$(find "$VPX_FOLDER" -iname "$(basename "$FILE" .vpx).directb2s" -print -quit)
 
         INI_STATUS="<span foreground='gray'>Ini </span>"
         VBS_STATUS="<span foreground='gray'>Vbs </span>"
@@ -504,8 +514,12 @@ while true; do
         fi
 
         # --------------Create the array of columns------------
-        FILE_LIST+=("$ICON_PATH" "$BASENAME" "$INI_STATUS $VBS_STATUS $DIRECTB2S_STATUS" \
-                    "$ROM_STATUS $ROM_NAME" "$SND_STATUS $CRZ_STATUS" "$MUSIC_STATUS" "$IMAGES_STATUS $VIDEOS_STATUS") # Add to the list
+        FILE_LIST+=("$ICON_PATH" "$T_YEAR" "$T_BRAND" "$T_NAME" \
+                    "$INI_STATUS $VBS_STATUS $DIRECTB2S_STATUS" \
+                    "$ROM_STATUS $ROM_NAME" "$SND_STATUS $CRZ_STATUS" \
+                    "$MUSIC_STATUS" "$IMAGES_STATUS" "$VIDEOS_STATUS" \
+                    "$BASENAME") # Add to the list
+
         FILE_MAP["$BASENAME"]="$FILE" # Map table name to file path
         done < <(find "$TABLES_DIR" -type f -name "*.vpx" | sort)
 
@@ -515,29 +529,34 @@ while true; do
     if [ ${#FILTERED_FILE_LIST[@]} -gt 0 ]; then
         # show user search-filtered list if available
         FILE_LIST_STR=$(printf "%s\n" "${FILTERED_FILE_LIST[@]}")
-        TABLE_NUM=$(( ${#FILTERED_FILE_LIST[@]} / 7 )) # Adjust for the extra columns
+        TABLE_NUM=$(( ${#FILTERED_FILE_LIST[@]} / COLS )) # Adjust for the extra columns
     else
         # show all tables
         FILE_LIST_STR=$(printf "%s\n" "${FILE_LIST[@]}")
-        TABLE_NUM=$(( ${#FILE_LIST[@]} / 7 )) # Adjust for the extra columns
+        TABLE_NUM=$(( ${#FILE_LIST[@]} / COLS )) # Adjust for the extra columns
     fi
 
     kill $LOADING_PID 2>/dev/null
 
     #Show launcher menu (list view)
-        SELECTED_TABLE=$(yad --list --title="VPX Launcher" \
+    #Keep filename as last and ajust COLS variable with the number of total columns
+        SELECTED_TABLE=$(LC_ALL=en_US.UTF-8 yad --list --title="VPX GUI Tools" \
             --text="Table(s) found: $TABLE_NUM $HELP_TEXT" \
             --width="$WINDOW_WIDTH" --height="$WINDOW_HEIGHT" --search=true \
-            --button="⚙!!Launcher Settings :1" \
+            --button="⚙!!Settings :1" \
             --button="INI Editor!!Create and edit INI files:2" \
             --button="Extract VBS!!Extract and edit VBS scripts:10" \
-            --button="📂!!Open a table folder :20" --button="🔍!!Filter tables:30" \
-            --button="🕹️!!Launch selected table :0" --button="🚪!!Exit :252" \
+            --button="📂!!Open a table folder :20" \
+            --button="🔍!!Filter tables:30" \
+            --button="🕹️!!Launch selected table :0" \
+            --button="🚪!!Exit :252" \
             --buttons-layout=center \
-            --column=":IMG" --column="Table Filename" \
-            --column="Extra Files" --column="ROM" \
-            --column="AltS/C" --column="Music" --column="Front-End Media" \
-            --print-column=2 <<< "$FILE_LIST_STR" 2>/dev/null)
+            --column=":IMG" \
+            --column="Year:NUM" --column="Manufacturer" --column="Title" \
+            --column="Extra Files" --column="ROM" --column="AltS/C" \
+            --column="Music" --column="Images" --column="Videos" \
+            --column="Filename" --markup-columns=4 \
+            --hide-column="$COLS" --print-column="$COLS" <<< "$FILE_LIST_STR" 2>/dev/null)
     
     EXIT_CODE=$?
 
