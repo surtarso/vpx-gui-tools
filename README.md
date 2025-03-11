@@ -2,7 +2,7 @@
 <p align="center">A minimal GUI tool for launching VPX tables*, editing INI settings, extracting VBS scripts and more with "just a mouse click", to be used with <a href="https://github.com/vpinball/vpinball">VPinballX_GL</a>**.</p>
 <p align="center">Just <a href="https://github.com/surtarso/vpx-frontend/releases/">download a release file</a> and run anywhere you want.</p>
 
-| **[VPX Tool Launcher](vpx_launcher.sh)** | **[VPX INI Editor](vpx_ini_editor.py)** |
+| **[VPX GUI Launcher](vpx_launcher.sh)** | **[INI Editor](vpx_ini_editor.py)** |
 |-------------------------------------|---------------------------------------|
 | ![image](https://github.com/user-attachments/assets/7697daaf-fa62-4010-b1d3-7cb050555bef) | ![INI Editor](https://github.com/user-attachments/assets/010727f1-3e8a-4d2e-ac69-938a0b6bac7e) |
 | **Launcher Features:**  | **Editor Features:**  |
