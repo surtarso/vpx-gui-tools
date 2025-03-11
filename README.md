@@ -4,7 +4,7 @@
 
 | **[VPX Tool Launcher](vpx_launcher.sh)** | **[VPX INI Editor](vpx_ini_editor.py)** |
 |-------------------------------------|---------------------------------------|
-| ![image](https://github.com/user-attachments/assets/65458fd6-8f0c-4650-8686-473fa7f0f057) | ![INI Editor](https://github.com/user-attachments/assets/010727f1-3e8a-4d2e-ac69-938a0b6bac7e) |
+| ![image](https://github.com/user-attachments/assets/7697daaf-fa62-4010-b1d3-7cb050555bef) | ![INI Editor](https://github.com/user-attachments/assets/010727f1-3e8a-4d2e-ac69-938a0b6bac7e) |
 | **Launcher Features:**  | **Editor Features:**  |
 | - Lists tables and extra files  | - Explanations for each variable **(need help!)** |
 | - Lists frontend media files | - Category-split Sections |
