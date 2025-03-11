@@ -65,6 +65,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
         echo "ROM_PATH=\"/pinmame/roms\""
         echo "SND_PATH=\"/pinmame/altsound\""
         echo "CRZ_PATH=\"/pinmame/AltColor\""
+        echo "MUS_PATH=\"/music\""
     } > "$CONFIG_FILE"
 fi
 
@@ -109,6 +110,7 @@ open_launcher_settings() {
         --field="ROM Path:":FILE "$ROM_PATH" \
         --field="AltSound Path:":FILE "$SND_PATH" \
         --field="AltColor Path:":FILE "$CRZ_PATH" \
+        --field="Music Path:":FILE "$MUS_PATH" \
         --width=500 --height=150 \
         --separator="|" 2>/dev/null)
 
@@ -133,6 +135,7 @@ open_launcher_settings() {
                     NEW_ROM_PATH \
                     NEW_SND_PATH \
                     NEW_CRZ_PATH \
+                    NEW_MUS_PATH \
                     <<< "$NEW_VALUES"
                     
     # Validate new directory and executables
@@ -167,6 +170,7 @@ open_launcher_settings() {
         echo "ROM_PATH=\"$NEW_ROM_PATH\""
         echo "SND_PATH=\"$NEW_SND_PATH\""
         echo "CRZ_PATH=\"$NEW_CRZ_PATH\""
+        echo "MUS_PATH=\"$NEW_MUS_PATH\""
     } > "$CONFIG_FILE"
 
     # Give user feedback that the paths were updated successfully
@@ -457,10 +461,11 @@ while true; do
 
         VIDEOS_STATUS="🎬 [${TABLE_VIDEO_STATUS}${BACKGLASS_VIDEO_STATUS}${DMD_VIDEO_STATUS}]"
 
-        # -------------------------------Check for ROM and AltSound/Color folders
+        # -------------------------------Check for Music, ROM and AltSound/Color folders
         ROM_STATUS="<span foreground='red'>✗</span>"
         SND_STATUS="<span foreground='gray'>–</span>"
         CRZ_STATUS="<span foreground='gray'>–</span>"
+        MUSIC_STATUS="<span foreground='gray'>–</span>"
 
         if [[ -n "$ROM_PATH" && -n "$VPX_FOLDER" ]]; then
             local_rom_dir="$VPX_FOLDER$ROM_PATH"
@@ -485,9 +490,16 @@ while true; do
             fi
         fi
 
+        if [[ -n "$MUS_PATH" && -n "$VPX_FOLDER" ]]; then
+            local_mus_dir="$VPX_FOLDER$MUS_PATH"
+            if [[ -d "$local_mus_dir" ]]; then
+                MUSIC_STATUS="📀"
+            fi
+        fi
+
         # --------------Create the array of columns------------
         FILE_LIST+=("$ICON_PATH" "$BASENAME" "$INI_STATUS $VBS_STATUS $DIRECTB2S_STATUS" \
-                    "$ROM_STATUS $ROM_NAME" "$SND_STATUS $CRZ_STATUS" "$IMAGES_STATUS $VIDEOS_STATUS") # Add to the list
+                    "$ROM_STATUS $ROM_NAME" "$SND_STATUS $CRZ_STATUS" "$MUSIC_STATUS" "$IMAGES_STATUS $VIDEOS_STATUS") # Add to the list
         FILE_MAP["$BASENAME"]="$FILE" # Map table name to file path
         done < <(find "$TABLES_DIR" -type f -name "*.vpx" | sort)
 
@@ -497,11 +509,11 @@ while true; do
     if [ ${#FILTERED_FILE_LIST[@]} -gt 0 ]; then
         # show user search-filtered list if available
         FILE_LIST_STR=$(printf "%s\n" "${FILTERED_FILE_LIST[@]}")
-        TABLE_NUM=$(( ${#FILTERED_FILE_LIST[@]} / 6 )) # Adjust for the extra columns
+        TABLE_NUM=$(( ${#FILTERED_FILE_LIST[@]} / 7 )) # Adjust for the extra columns
     else
         # show all tables
         FILE_LIST_STR=$(printf "%s\n" "${FILE_LIST[@]}")
-        TABLE_NUM=$(( ${#FILE_LIST[@]} / 6 )) # Adjust for the extra columns
+        TABLE_NUM=$(( ${#FILE_LIST[@]} / 7 )) # Adjust for the extra columns
     fi
 
     kill $LOADING_PID 2>/dev/null
@@ -517,8 +529,8 @@ while true; do
             --button="🕹️!!Launch selected table :0" --button="🚪!!Exit :252" \
             --buttons-layout=center \
             --column=":IMG" --column="Table Filename" \
-            --column="Extra Files" --column="Bios" \
-            --column="Alts" --column="Front-End Media" \
+            --column="Extra Files" --column="ROM" \
+            --column="AltS/C" --column="Music" --column="Front-End Media" \
             --print-column=2 <<< "$FILE_LIST_STR" 2>/dev/null)
     
     EXIT_CODE=$?
