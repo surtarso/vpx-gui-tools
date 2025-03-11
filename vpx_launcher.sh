@@ -330,13 +330,16 @@ handle_search_query() {
         # Handle the case where the user provides a search term.
         CURRENT_SEARCH="$SEARCH_QUERY"
         FILTERED_FILE_LIST=()
-        for (( i=0; i<${#FILE_LIST[@]}; i+=4 )); do
+        for (( i=0; i<${#FILE_LIST[@]}; i+=7 )); do
             local ICON="${FILE_LIST[i]}"
             local NAME="${FILE_LIST[i+1]}"
             local EXTRA="${FILE_LIST[i+2]}"
-            local MEDIA="${FILE_LIST[i+3]}"
+            local ROM="${FILE_LIST[i+3]}"
+            local ALT="${FILE_LIST[i+4]}"
+            local MUSIC="${FILE_LIST[i+5]}"
+            local MEDIA="${FILE_LIST[i+6]}"
             if echo "$NAME" | grep -iq "$SEARCH_QUERY"; then
-                FILTERED_FILE_LIST+=("$ICON" "$NAME" "$EXTRA" "$MEDIA")
+                FILTERED_FILE_LIST+=("$ICON" "$NAME" "$EXTRA" "$ROM" "$ALT" "$MUSIC" "$MEDIA")
             fi
         done
 
@@ -383,6 +386,9 @@ while true; do
         
         BASENAME=$(basename "$FILE" .vpx) # Strip the extension
         VPX_FOLDER=$(dirname "$FILE")
+        # T_NAME="BASENAME minus '(shit here)'"
+        # T_BRAND="BASENAME ('only this' YEAR)"
+        # T_YEAR="BASENAME (brand '1997')"
 
         # ------------------------------------Check for icons
         ICON_PATH=$(find "$(dirname "$FILE")" -iname "$(basename "$ICON_PATH")" -print -quit)
