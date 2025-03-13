@@ -11,7 +11,7 @@
 | - Extract and edit VBS scripts | - Create and edit single table ini's |
 | - Search and folder shortcuts | - Open any ini you want! |
 | - Show if files have diff*** | - Wont override code comments |
-<p><i>*If you need a dual monitor fullscreen frontend as simple as possible, <a href="https://github.com/surtarso/asap-cabinet-fe/">look here</a>.</i></p>
+<p><i>*If you need a dual monitor fullscreen frontend as simple as possible, <a href="https://github.com/surtarso/ASAPCabinetFE/">look here</a>.</i></p>
 <p></p><i>**If you need help installing VPX check the <a href="https://github.com/surtarso/vpx-frontend/wiki/Visual-Pinball-X-on-Debian-Linux">wiki</a>.</i></p>
 <p></p><i>***Shows only INI diffs. Not yet implemented for .vbs scripts.</i></p>
 
