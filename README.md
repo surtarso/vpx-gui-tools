@@ -1,19 +1,24 @@
 <h1 align="center">Simple VPX GUI Tools for Linux</h1>
-<p align="center">A minimal GUI tool for launching VPX tables*, editing INI settings, extracting VBS scripts and more with "just a mouse click", to be used with <a href="https://github.com/vpinball/vpinball">VPinballX_GL</a>**.</p>
+<p align="center">A minimal GUI tool for launching VPX tables, editing INI settings, extracting VBS scripts and more with "just a mouse click", to be used with <a href="https://github.com/vpinball/vpinball">VPinballX_GL</a>.</p>
 <p align="center">Just <a href="https://github.com/surtarso/vpx-frontend/releases/">download a release file</a> and run anywhere you want.</p>
 
-| **[VPX GUI Launcher](vpx_launcher.sh)** | **[INI Editor](vpx_ini_editor.py)** |
-|-------------------------------------|---------------------------------------|
-| ![image](https://github.com/user-attachments/assets/7697daaf-fa62-4010-b1d3-7cb050555bef) | ![INI Editor](https://github.com/user-attachments/assets/010727f1-3e8a-4d2e-ac69-938a0b6bac7e) |
-| **Launcher Features:**  | **Editor Features:**  |
-| - Lists tables and extra files  | - Explanations for each variable **(need help!)** |
-| - Lists frontend media files | - Category-split Sections |
-| - Extract and edit VBS scripts | - Create and edit single table ini's |
-| - Search and folder shortcuts | - Open any ini you want! |
-| - Show if files have diff*** | - Wont override code comments |
-<p><i>*If you need a dual monitor fullscreen frontend as simple as possible, <a href="https://github.com/surtarso/ASAPCabinetFE/">look here</a>.</i></p>
-<p></p><i>**If you need help installing VPX check the <a href="https://github.com/surtarso/vpx-frontend/wiki/Visual-Pinball-X-on-Debian-Linux">wiki</a>.</i></p>
-<p></p><i>***Shows only INI diffs. Not yet implemented for .vbs scripts.</i></p>
+| **[VPX GUI Launcher](vpx_launcher.sh)** | 
+|-------------------------------------|
+| ![image](https://github.com/user-attachments/assets/7697daaf-fa62-4010-b1d3-7cb050555bef) | 
+
+## **Launcher Features:** 
+ - Lists tables and extra files 
+ - Lists frontend media files
+ - Extract and edit VBS scripts
+ - Search and folder shortcuts
+ - Show if files have diff*
+<p></p><i>*Shows only INI diffs. Not yet implemented for .vbs scripts.</i></p>
+
+>[!TIP]
+>If you need a dual monitor frontend 'as simple as possible', check [here](https://github.com/surtarso/ASAPCabinetFE/).
+>
+>If you need help installing VPX check the [wiki](https://github.com/surtarso/vpx-frontend/wiki/Visual-Pinball-X-on-Debian-Linux).
+
 
 ## **Installation & Usage**  
 
@@ -58,22 +63,33 @@ You can download a release file here: https://github.com/surtarso/vpx-frontend/r
    ```
 
 6. **Select a table and press play!**
+>[!NOTE]
+>   - The **INI Editor** will open `~/vpinball/VPinballX.ini` by default if no table is selected.
+>   - Selecting a table and pressing the **INI Editor** button will attempt to open the table ini file if it exists or ask to create one.
+>   - You can always manually search for the .ini you want to open.
+>   - The **Extract VBS** will extract by default if no script is found and open the script with your preferred editor.
+>   - The **Open Folder** button will open the selected table' dir or root dir if no table selected.
+>   - To clear the **Search term** just press the button again.
 
-   #### Obs: 
-   - The **INI Editor** will open `~/vpinball/VPinballX.ini` by default if no table is selected.
-   - Selecting a table and pressing the **INI Editor** button will attempt to open the table ini file if it exists or ask to create one.
-   - You can always manually search for the .ini you want to open.
-   - The **Extract VBS** will extract by default if no script is found and open the script with your preferred editor.
-   - The **Open Folder** button will open the selected table' dir or root dir if no table selected.
-   - To clear the **Search term** just press the button again.
+# **Standalone INI Editor**  
+| **[INI Editor](vpx_ini_editor.py)** |
+|---------------------------------------|
+| ![INI Editor](https://github.com/user-attachments/assets/010727f1-3e8a-4d2e-ac69-938a0b6bac7e) |
 
-## **Standalone INI Editor**  
+## **Editor Features:**  
+ - Explanations for each variable **(need help!)** 
+ - Category-split Sections 
+ - Create and edit single table ini's 
+ - Open any ini you want! 
+ - Wont override code comments 
+
 You can run the INI Editor separately without the launcher with:  
 ```bash
 python3 vpx_ini_editor.py
 
 python3 vpx_ini_editor.py /path/to/anyfile.ini
-```  
+```
+>[!NOTE]
 It only requires **Tkinter** and does not depend on `yad`.
 
 ## Contribute
