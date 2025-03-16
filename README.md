@@ -40,8 +40,16 @@ You can download a release file here: https://github.com/surtarso/vpx-frontend/r
    ```
    
 5. **Configure paths and args**
-   
+
+
    ![image](https://github.com/user-attachments/assets/f3d4ca55-99b2-4b96-be17-027d30a7e3c4)
+
+>[!CAUTION]
+>This script expects you to have a specific naming convention.
+>
+>/tables/[table folder]/[table file (brand YYYY)].vpx
+>
+>E.g. /tables/Mars (Original)/Mars (Stern 2024).vpx
 
    - Set table folder, it will look recursevely for .vpx files.
    - Set any initial args you may need. (or leave empty)
@@ -61,7 +69,7 @@ You can download a release file here: https://github.com/surtarso/vpx-frontend/r
    DRI_PRIME=1 gamemoderun /home/tarso/Games/vpinball/build/VPinballX_GL -play /home/tarso/Games/vpinball/build/tables/tomandjerry/tomandjerry.vpx --fullscreen`
    ```
 
-6. **Select a table and press play!**
+7. **Select a table and press play!**
 >[!NOTE]
 >   - The **INI Editor** will open `~/vpinball/VPinballX.ini` by default if no table is selected.
 >   - Selecting a table and pressing the **INI Editor** button will attempt to open the table ini file if it exists or ask to create one.
