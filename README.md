@@ -14,9 +14,9 @@
 <p></p><i>*Shows only INI diffs. Not yet implemented for .vbs scripts.</i></p>
 
 >[!TIP]
->If you need a dual monitor frontend 'as simple as possible', check [here](https://github.com/surtarso/ASAPCabinetFE/).
+>If you need help installing VPX check the [WIKI](https://github.com/surtarso/vpx-frontend/wiki/Visual-Pinball-X-on-Debian-Linux).
 >
->If you need help installing VPX check the [wiki](https://github.com/surtarso/vpx-frontend/wiki/Visual-Pinball-X-on-Debian-Linux).
+>If you need a dual monitor frontend 'as simple as possible', check [ASAPCabinetFE](https://github.com/surtarso/ASAPCabinetFE/).
 
 
 ## **Installation & Usage**  
