@@ -142,6 +142,7 @@ open_launcher_settings() {
                     NEW_SND_PATH \
                     NEW_CRZ_PATH \
                     NEW_MUS_PATH \
+                    NEW_PUP_PATH \
                     <<< "$NEW_VALUES"
                     
     # Validate new directory and executables
@@ -309,7 +310,7 @@ handle_vbs_scripts() {
             # If the VBS file doesn't exist, extract it
             eval "\"$COMMAND_TO_RUN\" -ExtractVBS \"$SELECTED_FILE\"" &
             wait $!
-
+            
             # After extraction, try opening the new VBS file with xdg-open
             if ! xdg-open "$vbs_script" 2>/dev/null; then
                 # If xdg-open fails (no default handler), fallback to a text editor
@@ -409,116 +410,134 @@ while true; do
         T_YEAR=$(echo -e "$BASENAME" | sed -E 's/.*([0-9]{4}).*/\1/')
 
         # ------------------------------------Check for INI, VBS(?), directb2s
-        local_ini_file=$(find "$VPX_FOLDER" -iname "$(basename "$FILE" .vpx).ini" -print -quit)
-        local_vbs_file=$(find "$VPX_FOLDER" -iname "$(basename "$FILE" .vpx).vbs" -print -quit)
-        local_b2s_file=$(find "$VPX_FOLDER" -iname "$(basename "$FILE" .vpx).directb2s" -print -quit)
-
-        INI_STATUS="<span foreground='gray'>Ini </span>"
-        VBS_STATUS="<span foreground='gray'>Vbs </span>"
-        DIRECTB2S_STATUS="<span foreground='red'>B2s</span>" # Default to missing, change if found
-
-        if [[ -f "$local_ini_file" ]]; then
-            INI_STATUS="<span foreground='white'>Ini </span>"
-            if [[ -f "$VPINBALLX_INI" ]]; then
-                if [[ "$(diff "$local_ini_file" "$VPINBALLX_INI")" != "" ]]; then
-                INI_STATUS="<span foreground='yellow'>Ini </span>"
+        set_extras_status() {
+            local base_name="$1"
+            local extension="$2"
+            local status_var="$3"
+            local display_name
+            # Set display name: "B2s" for directb2s, capitalized extension otherwise
+            if [[ "$extension" == "directb2s" ]]; then
+                display_name="B2s"
+            else
+                display_name="${extension^}"
+            fi
+            local found_file=$(find "$VPX_FOLDER" -iname "${base_name}.${extension}" -print -quit)
+            if [[ -f "$found_file" ]]; then
+                # File exists: set status to white
+                eval "$status_var='<span foreground=\"white\">${display_name} </span>'"
+                # Special case for INI: check if it differs from VPINBALLX_INI
+                if [[ "$extension" == "ini" && -f "$VPINBALLX_INI" ]]; then
+                    if [[ "$(diff "$found_file" "$VPINBALLX_INI")" != "" ]]; then
+                        eval "$status_var='<span foreground=\"yellow\">${display_name} </span>'"
+                    fi
+                fi
+            else
+                # File doesn't exist: gray for INI/VBS, red for B2S
+                if [[ "$extension" == "directb2s" ]]; then
+                    eval "$status_var='<span foreground=\"red\">${display_name}</span>'"
+                else
+                    eval "$status_var='<span foreground=\"gray\">${display_name} </span>'"
                 fi
             fi
-        fi
+        }
 
-        if [[ -f "$local_vbs_file" ]]; then
-            VBS_STATUS="<span foreground='white'>Vbs </span>"
-        fi
-
-        if [[ -f "$local_b2s_file" ]]; then
-            DIRECTB2S_STATUS="<span foreground='white'>B2s</span>"
-        fi
+        # Set statuses for INI, VBS, and B2S files
+        base_name=$(basename "$FILE" .vpx)
+        set_extras_status "$base_name" "ini" "INI_STATUS"
+        set_extras_status "$base_name" "vbs" "VBS_STATUS"
+        set_extras_status "$base_name" "directb2s" "DIRECTB2S_STATUS"
 
         # --------------------------------------------Check for images
-        local_wheel=$(find "$VPX_FOLDER" -iname "$(basename "$WHEEL_IMAGE")" -print -quit)
-        local_table=$(find "$VPX_FOLDER" -iname "$(basename "$TABLE_IMAGE")" -print -quit)
-        local_backglass=$(find "$VPX_FOLDER" -iname "$(basename "$BACKGLASS_IMAGE")" -print -quit)
-        local_marquee=$(find "$VPX_FOLDER" -iname "$(basename "$MARQUEE_IMAGE")" -print -quit)
+        image_types=("Wheel" "Table" "B2S" "Marquee")
+        image_vars=("WHEEL_IMAGE" "TABLE_IMAGE" "BACKGLASS_IMAGE" "MARQUEE_IMAGE")
+        status_parts=()
 
-        WHEEL_STATUS="<span foreground='red'>Wheel,</span>"
-        TABLE_STATUS="<span foreground='red'>Table,</span>"
-        BACKGLASS_STATUS="<span foreground='red'>B2S,</span>"
-        MARQUEE_STATUS="<span foreground='red'>Marquee</span>"
+        for i in "${!image_types[@]}"; do
+            type="${image_types[$i]}"
+            image_var="${image_vars[$i]}"
+            found_file=$(find "$VPX_FOLDER" -iname "$(basename "${!image_var}")" -print -quit)
+            if [[ -f "$found_file" ]]; then
+                color="green"
+            else
+                color="red"
+            fi
+            # Add comma for all except the last item
+            if [[ $i -lt $((${#image_types[@]} - 1)) ]]; then
+                status_parts+=("<span foreground='${color}'>${type},</span>")
+            else
+                status_parts+=("<span foreground='${color}'>${type}</span>")
+            fi
+        done
 
-        if [[ -f "$local_wheel" ]]; then
-            WHEEL_STATUS="<span foreground='green'>Wheel,</span>"
-        fi
-        if [[ -f "$local_table" ]]; then
-            TABLE_STATUS="<span foreground='green'>Table,</span>"
-        fi
-        if [[ -f "$local_backglass" ]]; then
-            BACKGLASS_STATUS="<span foreground='green'>B2S,</span>"
-        fi
-        if [[ -f "$local_marquee" ]]; then
-            MARQUEE_STATUS="<span foreground='green'>Marquee</span>"
-        fi
-
-        IMAGES_STATUS="🖼️ [${WHEEL_STATUS}${TABLE_STATUS}${BACKGLASS_STATUS}${MARQUEE_STATUS}] "
+        IMAGES_STATUS="🖼️ [${status_parts[*]}] "
 
         # -----------------------------------------------Check for videos
-        local_table_video=$(find "$VPX_FOLDER" -iname "$(basename "$TABLE_VIDEO")" -print -quit)
-        local_backglass_video=$(find "$VPX_FOLDER" -iname "$(basename "$BACKGLASS_VIDEO")" -print -quit)
-        local_dmd_video=$(find "$VPX_FOLDER" -iname "$(basename "$DMD_VIDEO")" -print -quit)
+        # Check for videos
+        video_types=("Table" "B2S" "DMD")
+        video_vars=("TABLE_VIDEO" "BACKGLASS_VIDEO" "DMD_VIDEO")
+        video_status_parts=()
 
-        TABLE_VIDEO_STATUS="<span foreground='red'>Table,</span>"
-        BACKGLASS_VIDEO_STATUS="<span foreground='red'>B2S,</span>"
-        DMD_VIDEO_STATUS="<span foreground='red'>DMD</span>"
+        for i in "${!video_types[@]}"; do
+            type="${video_types[$i]}"
+            video_var="${video_vars[$i]}"
+            found_file=$(find "$VPX_FOLDER" -iname "$(basename "${!video_var}")" -print -quit)
+            if [[ -f "$found_file" ]]; then
+                color="green"
+            else
+                color="red"
+            fi
+            # Add comma for all except the last item
+            if [[ $i -lt $((${#video_types[@]} - 1)) ]]; then
+                video_status_parts+=("<span foreground='${color}'>${type},</span>")
+            else
+                video_status_parts+=("<span foreground='${color}'>${type}</span>")
+            fi
+        done
 
-        if [[ -f "$local_table_video" ]]; then
-            TABLE_VIDEO_STATUS="<span foreground='green'>Table,</span>"
-        fi
-        if [[ -f "$local_backglass_video" ]]; then
-            BACKGLASS_VIDEO_STATUS="<span foreground='green'>B2S,</span>"
-        fi
-        if [[ -f "$local_dmd_video" ]]; then
-            DMD_VIDEO_STATUS="<span foreground='green'>DMD</span>"
-        fi
-
-        VIDEOS_STATUS="🎬 [${TABLE_VIDEO_STATUS}${BACKGLASS_VIDEO_STATUS}${DMD_VIDEO_STATUS}]"
+        VIDEOS_STATUS="🎬 [${video_status_parts[*]}]"
 
         # -------------------------------Check for Music, ROM and AltSound/Color folders
         ROM_STATUS="<span foreground='red'>✗</span>"
         SND_STATUS="<span foreground='gray'>–</span>"
         CRZ_STATUS="<span foreground='gray'>–</span>"
-        MUSIC_STATUS="<span foreground='gray'>–</span>"
+        MUS_STATUS="<span foreground='gray'>–</span>"
         UDMD_STATUS="<span foreground='gray'>–</span>"
         PUP_STATUS="<span foreground='gray'>–</span>"
+        ROM_NAME="<span foreground='gray'>none</span>"
 
+        # Function to set status for components with path variables
+        set_status() {
+            local comp=$1        # Component name (e.g., SND, CRZ)
+            local emoji=$2       # Emoji to set if directory exists
+            local path_var="${comp}_PATH"
+            local status_var="${comp}_STATUS"
+            if [[ -n "${!path_var}" && -n "$VPX_FOLDER" ]]; then
+                local local_dir="$VPX_FOLDER${!path_var}"
+                if [[ -d "$local_dir" ]]; then
+                    eval "$status_var=\"$emoji\""
+                fi
+            fi
+        }
+
+        # Set statuses for components using the function
+        set_status "SND" "🎵"
+        set_status "CRZ" "🌈"
+        set_status "MUS" "📀"
+        set_status "PUP" "📺"
+
+        # Handle ROM separately due to ROM_NAME logic
         if [[ -n "$ROM_PATH" && -n "$VPX_FOLDER" ]]; then
             local_rom_dir="$VPX_FOLDER$ROM_PATH"
-            ROM_NAME="<span foreground='gray'>none</span>"
             if [[ -d "$local_rom_dir" ]]; then
                 ROM_STATUS="💾"
-                ROM_NAME=$(basename "$(find "$local_rom_dir" -maxdepth 1 -type f -name "*.zip" | head -n 1)" .zip)
+                zip_file=$(find "$local_rom_dir" -maxdepth 1 -type f -name "*.zip" | head -n 1)
+                if [[ -n "$zip_file" ]]; then
+                    ROM_NAME=$(basename "$zip_file" .zip)
+                fi
             fi
         fi
 
-        if [[ -n "$SND_PATH" && -n "$VPX_FOLDER" ]]; then
-            local_snd_dir="$VPX_FOLDER$SND_PATH"
-            if [[ -d "$local_snd_dir" ]]; then
-                SND_STATUS="🎵"
-            fi
-        fi
-
-        if [[ -n "$CRZ_PATH" && -n "$VPX_FOLDER" ]]; then
-            local_crz_dir="$VPX_FOLDER$CRZ_PATH"
-            if [[ -d "$local_crz_dir" ]]; then
-                CRZ_STATUS="🌈"
-            fi
-        fi
-
-        if [[ -n "$MUS_PATH" && -n "$VPX_FOLDER" ]]; then
-            local_mus_dir="$VPX_FOLDER$MUS_PATH"
-            if [[ -d "$local_mus_dir" ]]; then
-                MUSIC_STATUS="📀"
-            fi
-        fi
-
+        # Handle UDMD separately due to its unique directory search
         if [[ -n "$VPX_FOLDER" ]]; then
             local_udmd_dir=$(find "$VPX_FOLDER" -maxdepth 1 -type d -name "*.UltraDMD" | head -n 1)
             if [[ -d "$local_udmd_dir" ]]; then
@@ -526,18 +545,12 @@ while true; do
             fi
         fi
 
-        if [[ -n "$PUP_PATH" && -n "$VPX_FOLDER" ]]; then
-            local_pup_dir="$VPX_FOLDER$PUP_PATH"
-            if [[ -d "$local_pup_dir" ]]; then
-                PUP_STATUS="📺"
-            fi
-        fi
-
         # --------------Create the array of columns------------
         FILE_LIST+=("$T_YEAR" "$T_BRAND" "$T_NAME" \
                     "$INI_STATUS $VBS_STATUS $DIRECTB2S_STATUS" \
-                    "$ROM_STATUS $ROM_NAME" "$UDMD_STATUS" "$SND_STATUS" "$CRZ_STATUS" \
-                    "$PUP_STATUS" "$MUSIC_STATUS" "$IMAGES_STATUS" "$VIDEOS_STATUS" \
+                    "$ROM_STATUS $ROM_NAME" \
+                    "$UDMD_STATUS" "$SND_STATUS" "$CRZ_STATUS" "$PUP_STATUS" \
+                    "$MUS_STATUS" "$IMAGES_STATUS" "$VIDEOS_STATUS" \
                     "$BASENAME") # Add to the list
 
         FILE_MAP["$BASENAME"]="$FILE" # Map table name to file path
