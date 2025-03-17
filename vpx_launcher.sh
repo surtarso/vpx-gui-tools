@@ -6,6 +6,8 @@
 
 # TODO:
 # someshow diff .vbs with .vbs inside .vpx
+# refresh button when files are changed
+# avoid reloading the UI all the time.
 
 # add buttons to extract media (image or video)
 # - no selection: runs the full script 
@@ -33,7 +35,7 @@ fi
 # Config file path
 #LOGFILE="$HOME/.vpx-gui-tools/erros.log"
 CONFIG_FILE="$HOME/.vpx-gui-tools/settings.ini"
-DEFAULT_ICON="default_icon.ico"  # Default icon for list view
+# DEFAULT_ICON="default_icon.ico"  # Default icon for list view
 # HELP_TEXT="Files: missing, present, modified - Media: present, missing"
 # HELP_TEXT="   |   Color codes - Extra Files: <span foreground='gray'>missing</span>, \
 # <span foreground='white'>present</span>, \
@@ -41,7 +43,7 @@ DEFAULT_ICON="default_icon.ico"  # Default icon for list view
 # Front-End Media: <span foreground='green'>present</span>, \
 # <span foreground='red'>missing</span>"
 HELP_TEXT=""
-COLS=11 # number of columns on the list
+COLS=13 # number of columns on the list
 
 # Create the directory if it doesn't exist
 mkdir -p "$(dirname "$CONFIG_FILE")"
@@ -68,6 +70,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
         echo "SND_PATH=\"/pinmame/altsound\""
         echo "CRZ_PATH=\"/pinmame/AltColor\""
         echo "MUS_PATH=\"/music\""
+        echo "PUP_PATH=\"/pupvideos\""
     } > "$CONFIG_FILE"
 fi
 
@@ -113,6 +116,7 @@ open_launcher_settings() {
         --field="AltSound Path:":FILE "$SND_PATH" \
         --field="AltColor Path:":FILE "$CRZ_PATH" \
         --field="Music Path:":FILE "$MUS_PATH" \
+        --field="PupPack Path:":FILE "$PUP_PATH" \
         --width=500 --height=150 \
         --separator="|" 2>/dev/null)
 
@@ -173,6 +177,7 @@ open_launcher_settings() {
         echo "SND_PATH=\"$NEW_SND_PATH\""
         echo "CRZ_PATH=\"$NEW_CRZ_PATH\""
         echo "MUS_PATH=\"$NEW_MUS_PATH\""
+        echo "PUP_PATH=\"$NEW_PUP_PATH\""
     } > "$CONFIG_FILE"
 
     # Give user feedback that the paths were updated successfully
@@ -333,19 +338,22 @@ handle_search_query() {
         CURRENT_SEARCH="$SEARCH_QUERY"
         FILTERED_FILE_LIST=()
         for (( i=0; i<${#FILE_LIST[@]}; i+=COLS )); do
-            local ICON="${FILE_LIST[i]}"
-            local YEAR="${FILE_LIST[i+1]}"
-            local BRAND="${FILE_LIST[i+2]}"
-            local NAME="${FILE_LIST[i+3]}"
-            local EXTRA="${FILE_LIST[i+4]}"
-            local ROM="${FILE_LIST[i+5]}"
-            local ALT="${FILE_LIST[i+6]}"
-            local MUSIC="${FILE_LIST[i+7]}"
-            local IMAGES="${FILE_LIST[i+8]}"
-            local VIDEOS="${FILE_LIST[i+9]}"
-            local TFILE="${FILE_LIST[i+10]}"
+            local YEAR="${FILE_LIST[i]}"
+            local BRAND="${FILE_LIST[i+1]}"
+            local NAME="${FILE_LIST[i+2]}"
+            local EXTRA="${FILE_LIST[i+3]}"
+            local ROM="${FILE_LIST[i+4]}"
+            local UDMD="${FILE_LIST[i+5]}"
+            local ALTS="${FILE_LIST[i+6]}"
+            local ALTC="${FILE_LIST[i+7]}"
+            local MUSIC="${FILE_LIST[i+8]}"
+            local PUP="${FILE_LIST[i+9]}"
+            local IMAGES="${FILE_LIST[i+10]}"
+            local VIDEOS="${FILE_LIST[i+11]}"
+            local TFILE="${FILE_LIST[i+12]}"
             if echo "$NAME" | grep -iq "$SEARCH_QUERY"; then
-                FILTERED_FILE_LIST+=("$ICON" "$YEAR" "$BRAND" "$NAME" "$EXTRA" "$ROM" "$ALT" "$MUSIC" "$IMAGES" "$VIDEOS" "$TFILE")
+                FILTERED_FILE_LIST+=("$YEAR" "$BRAND" "$NAME" "$EXTRA" "$ROM" \
+                "$UDMD" "$ALTS" "$ALTC" "$MUSIC" "$PUP" "$IMAGES" "$VIDEOS" "$TFILE")
             fi
         done
 
@@ -399,10 +407,6 @@ while true; do
         T_BRAND=$(echo -e "$BASENAME" | sed -E 's/.*\((.*) [0-9]{4}\).*/\1/')
         # Extract year (last four-digit number in parentheses)
         T_YEAR=$(echo -e "$BASENAME" | sed -E 's/.*([0-9]{4}).*/\1/')
-
-        # ------------------------------------Check for icons
-        ICON_PATH=$(find "$(dirname "$FILE")" -iname "$(basename "$ICON_PATH")" -print -quit)
-        [[ ! -f "$ICON_PATH" ]] && ICON_PATH="$DEFAULT_ICON"
 
         # ------------------------------------Check for INI, VBS(?), directb2s
         local_ini_file=$(find "$VPX_FOLDER" -iname "$(basename "$FILE" .vpx).ini" -print -quit)
@@ -482,6 +486,8 @@ while true; do
         SND_STATUS="<span foreground='gray'>–</span>"
         CRZ_STATUS="<span foreground='gray'>–</span>"
         MUSIC_STATUS="<span foreground='gray'>–</span>"
+        UDMD_STATUS="<span foreground='gray'>–</span>"
+        PUP_STATUS="<span foreground='gray'>–</span>"
 
         if [[ -n "$ROM_PATH" && -n "$VPX_FOLDER" ]]; then
             local_rom_dir="$VPX_FOLDER$ROM_PATH"
@@ -513,11 +519,25 @@ while true; do
             fi
         fi
 
+        if [[ -n "$VPX_FOLDER" ]]; then
+            local_udmd_dir=$(find "$VPX_FOLDER" -maxdepth 1 -type d -name "*.UltraDMD" | head -n 1)
+            if [[ -d "$local_udmd_dir" ]]; then
+                UDMD_STATUS="🎞️"
+            fi
+        fi
+
+        if [[ -n "$PUP_PATH" && -n "$VPX_FOLDER" ]]; then
+            local_pup_dir="$VPX_FOLDER$PUP_PATH"
+            if [[ -d "$local_pup_dir" ]]; then
+                PUP_STATUS="📺"
+            fi
+        fi
+
         # --------------Create the array of columns------------
-        FILE_LIST+=("$ICON_PATH" "$T_YEAR" "$T_BRAND" "$T_NAME" \
+        FILE_LIST+=("$T_YEAR" "$T_BRAND" "$T_NAME" \
                     "$INI_STATUS $VBS_STATUS $DIRECTB2S_STATUS" \
-                    "$ROM_STATUS $ROM_NAME" "$SND_STATUS $CRZ_STATUS" \
-                    "$MUSIC_STATUS" "$IMAGES_STATUS" "$VIDEOS_STATUS" \
+                    "$ROM_STATUS $ROM_NAME" "$UDMD_STATUS" "$SND_STATUS" "$CRZ_STATUS" \
+                    "$PUP_STATUS" "$MUSIC_STATUS" "$IMAGES_STATUS" "$VIDEOS_STATUS" \
                     "$BASENAME") # Add to the list
 
         FILE_MAP["$BASENAME"]="$FILE" # Map table name to file path
@@ -551,10 +571,9 @@ while true; do
             --button="🕹️!!Launch selected table :0" \
             --button="🚪!!Exit :252" \
             --buttons-layout=center \
-            --column=":IMG" \
             --column="Year:NUM" --column="Manufacturer" --column="Title" \
-            --column="Extra Files" --column="ROM" --column="AltS/C" \
-            --column="Music" --column="Images" --column="Videos" \
+            --column="Extra Files" --column="ROM" --column="uDMD" --column="AltS" --column="AltC"\
+            --column="Pup" --column="Mus" --column="Images" --column="Videos" \
             --column="Filename" --markup-columns=4 \
             --hide-column="$COLS" --print-column="$COLS" <<< "$FILE_LIST_STR" 2>/dev/null)
     
