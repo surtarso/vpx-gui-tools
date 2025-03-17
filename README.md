@@ -3,7 +3,7 @@
 
 | **[VPX GUI Launcher](vpx_launcher.sh)** | 
 |-------------------------------------|
-| ![image](https://github.com/user-attachments/assets/7697daaf-fa62-4010-b1d3-7cb050555bef) | 
+| ![image](https://github.com/user-attachments/assets/d424151f-ce64-46d9-a42a-8e12e884b896) | 
 
 ## **Launcher Features:** 
  - Lists tables and extra files 
