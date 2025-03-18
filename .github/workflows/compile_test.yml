@@ -27,7 +27,7 @@ jobs:
 
     - name: Check Compilation
       run: |
-        if [ -f src/vpx_config ]; then
+        if [ -f vpx_config ]; then
           echo "Compilation successful!"
         else
           echo "Compilation failed!"
