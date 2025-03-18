@@ -27,24 +27,25 @@
    git clone --recurse-submodules https://github.com/surtarso/vpx-frontend.git
    ```
    
-3. **Install dependencies:**  
+2. **Install dependencies:**  
    ```bash
-   sudo apt install yad build-essential libsdl2-dev libsdl2-ttf-dev
-   ```
-4. **Build the INI Editor**
-   ```bash
-   ./compile.sh
+   sudo apt install yad
    ```
    
 >[!NOTE]
 *If you don’t plan to use the launcher, you can skip installing `yad`. Move to [Standalone INI Editor](#standalone-ini-editor)*
 
-5. **Run the launcher:**  
+3. **Build the INI Editor**
+   ```bash
+   ./compile.sh
+   ```
+
+4. **Run the launcher:**  
    ```bash
    ./vpx_launcher.sh
    ```
    
-6. **Configure paths and args**
+5. **Configure paths and args**
 
 ![image](https://github.com/user-attachments/assets/ee7f8834-9fba-4bd6-8525-52aaffda0916)
 
@@ -73,7 +74,7 @@
    DRI_PRIME=1 gamemoderun /home/tarso/Games/vpinball/build/VPinballX_GL -play /home/tarso/Games/vpinball/build/tables/tomandjerry/tomandjerry.vpx --fullscreen`
    ```
 
-7. **Select a table and press play!**
+6. **Select a table and press play!**
 >[!NOTE]
 >   - The **INI Editor** will open `~/vpinball/VPinballX.ini` by default if no table is selected.
 >   - Selecting a table and pressing the **INI Editor** button will attempt to open the table ini file if it exists or ask to create one.
@@ -93,7 +94,7 @@
  - Open any ini you want! 
  - Wont override code comments 
 
-Build with `./compile.sh`
+**Build with**: `./compile.sh`
 
 >[!NOTE]
 You can run the INI Editor separately without the launcher with:  
