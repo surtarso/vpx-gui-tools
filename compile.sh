@@ -1,11 +1,12 @@
 #!/bin/bash
 
+# ===========================================================================================
 # List of required packages
 packages=(
     build-essential
     libsdl2-dev
     libgl1-mesa-dev
-    jq  # Adding jq in case it's missing
+    jq
 )
 
 # Check and install missing packages
@@ -23,9 +24,11 @@ else
     sudo apt-get update && sudo apt-get install -y "${missing[@]}"
 fi
 
-# Check and update submodules
+# ===========================================================================================
+# Check and update submodules (imgui)
 git submodule update --init --recursive
 
+# ===========================================================================================
 # Fetch the latest vpxtool release info from GitHub API
 echo "Fetching latest vpxtool release..."
 
@@ -50,8 +53,9 @@ mv vpxtool src/vpxtool
 chmod +x src/vpxtool
 rm vpxtool.tar.gz
 
+# ===========================================================================================
 # Compile
-echo "Compiling the project..."
+echo "Compiling configuration..."
 g++ src/vpx_config.cpp imgui/*.cpp imgui/backends/imgui_impl_sdl2.cpp imgui/backends/imgui_impl_opengl3.cpp -std=c++17 -I/usr/include/SDL2 -D_REENTRANT -Iimgui -Iimgui/backends -lSDL2 -lGL -o vpx_config
 
 # Check if compilation succeeded
