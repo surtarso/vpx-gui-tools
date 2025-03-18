@@ -24,7 +24,7 @@
 
 1. **Download the repository** to any folder of your choice.
    ```bash
-   git clone https://github.com/surtarso/vpx-frontend.git
+   git clone --recurse-submodules https://github.com/surtarso/vpx-frontend.git
    ```
    
 3. **Install dependencies:**  
@@ -87,7 +87,7 @@
 | ![image](https://github.com/user-attachments/assets/b11bbccf-2844-4c14-b93f-0049c8b97717) |
 
 ## **Editor Features:**  
- - Explanations for each variable **(need help!)** 
+ - Explanations for each variable [**(need help!)**](https://github.com/surtarso/vpx-gui-tools/wiki/Adding-VPinballX.ini-Tooltips)
  - Category-split Sections 
  - Create and edit single table ini's 
  - Open any ini you want! 
@@ -106,5 +106,7 @@ You can run the INI Editor separately without the launcher with:
 ## Contribute
 
 Contributions to this project are welcome! The code is highly commented, so feel free to snoop around, open issues or submit pull requests.
+
+Any contribution to the INI Editor explanations project is higly apreciated! Check the [wiki](https://github.com/surtarso/vpx-gui-tools/wiki/Adding-VPinballX.ini-Tooltips).
 
 Older versions in Python + Shell can be downloaded here: https://github.com/surtarso/vpx-frontend/releases
