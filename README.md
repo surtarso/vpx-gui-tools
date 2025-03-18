@@ -18,7 +18,7 @@
 >[!TIP]
 >If you need help installing VPX check the [WIKI](https://github.com/surtarso/vpx-frontend/wiki/Visual-Pinball-X-on-Debian-Linux).
 >
->If you need a dual monitor frontend 'as simple as possible', check [ASAPCabinetFE](https://github.com/surtarso/ASAPCabinetFE/).
+>If you need a dual monitor frontend "as simple as possible", check [ASAPCabinetFE](https://github.com/surtarso/ASAPCabinetFE/).
 
 ## **Installation & Usage**  
 
@@ -49,11 +49,11 @@
 ![image](https://github.com/user-attachments/assets/ee7f8834-9fba-4bd6-8525-52aaffda0916)
 
 >[!CAUTION]
->This script expects you to have a specific naming convention.
+>_This script expects you to have a specific naming convention._
 >
 >/tables/[table folder]/[table file (brand YYYY)].vpx
 >
->E.g. /tables/Mars (Original)/Mars (Stern 2024).vpx
+>**E.g.** /tables/Mars (Original)/Mars (Stern 2024).vpx
 
    - Set table folder, it will look recursevely for .vpx files.
    - Set any initial args you may need. (or leave empty)
