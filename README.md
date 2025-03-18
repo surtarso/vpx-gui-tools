@@ -3,7 +3,7 @@
 
 | **[VPX GUI Launcher](vpx_launcher.sh)** | 
 |-------------------------------------|
-| ![image](https://github.com/user-attachments/assets/7697daaf-fa62-4010-b1d3-7cb050555bef) | 
+| ![image](https://github.com/user-attachments/assets/d424151f-ce64-46d9-a42a-8e12e884b896) | 
 
 ## **Launcher Features:** 
  - Lists tables and extra files 
@@ -31,8 +31,10 @@ You can download a release file here: https://github.com/surtarso/vpx-frontend/r
 3. **Install dependencies:**  
    ```bash
    sudo apt install yad python3 python3-tk
-   ```  
-   > *If you don’t plan to use the launcher, you can skip installing `yad`. Move to [Standalone INI Editor](#standalone-ini-editor)*
+   ```
+
+>[!NOTE]
+*If you don’t plan to use the launcher, you can skip installing `yad`. Move to [Standalone INI Editor](#standalone-ini-editor)*
 
 4. **Run the launcher:**  
    ```bash
