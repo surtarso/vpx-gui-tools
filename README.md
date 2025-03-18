@@ -24,7 +24,7 @@
 
 1. **Download the repository** to any folder of your choice.
    ```bash
-   git clone https://github.com/surtarso/vpx-frontend.git
+   git clone --recurse-submodules https://github.com/surtarso/vpx-frontend.git
    ```
    
 3. **Install dependencies:**  
