@@ -12,6 +12,7 @@ settings.json
 vpx_config
 imgui.ini
 settings.ini
+src/vpxtool
 
 # Prerequisites
 *.d
