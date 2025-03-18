@@ -295,7 +295,7 @@ void IniEditor::drawGUI() {
             // Move to the next position for the "?"
             // ImGui::SameLine(210); // Fixed offset
             ImGui::SameLine(); // No fixed offset yet, let ImGui calculate natural spacing
-            float key_end_pos = ImGui::GetCursorPosX(); // Store where the key ends
+            // float key_end_pos = ImGui::GetCursorPosX(); // Store where the key ends
             
             // Add the "?" if there's an explanation
             if (explanations.find(kv.first) != explanations.end()) {
