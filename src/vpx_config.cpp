@@ -16,6 +16,7 @@
 #include <string>
 #include <cstring>
 #include <cstdlib> // For std::getenv
+#include <filesystem>
 
 // Structure representing a configuration section (a set of key-value pairs)
 struct ConfigSection {
@@ -441,6 +442,16 @@ int main(int argc, char** argv) {
             return 1;
         }
         iniPath = std::string(homeDir) + "/.vpinball/VPinballX.ini";
+    }
+
+    // Check if the INI file exists
+    if (!std::filesystem::exists(iniPath)) {
+        std::cerr << "\033[1;31mError:\033[0m VPinballX.ini was not found at \033[1;33m" 
+                  << iniPath << "\033[0m\n"
+                  << "Please specify the location.\n"
+                  << "Use: \033[1;32m./vpx_config /path/to/VPinballX.ini\033[0m\n"
+                  << "Or \033[1;32m./vpx_config settings.ini\033[0m to edit launcher settings.\n";
+        return 1;
     }
 
     IniEditor editor(iniPath);
