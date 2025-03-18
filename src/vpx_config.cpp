@@ -419,6 +419,15 @@ void IniEditor::run() {
 // ---------------- Main Entry Point ----------------
 
 int main(int argc, char** argv) {
+    // Check for the --version flag among the arguments
+    for (int i = 1; i < argc; ++i) {
+        std::string arg(argv[i]);
+        if (arg == "--version") {
+            std::cout << "vpx_config version 1.0.0" << std::endl;
+            return 0;  // Exit after printing version info
+        }
+    }
+
     std::string iniPath;
 
     if (argc > 1) {

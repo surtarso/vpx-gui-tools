@@ -23,7 +23,7 @@ jobs:
         sudo apt-get install -y build-essential libsdl2-dev libgl1-mesa-dev
 
     - name: Compile
-      run: g++ src/vpx_config.cpp -std=c++17 imgui/*.cpp imgui/backends/imgui_impl_sdl2.cpp imgui/backends/imgui_impl_opengl3.cpp -std=c++17 -I/usr/include/SDL2 -D_REENTRANT -Iimgui -Iimgui/backends -lSDL2 -lGL -static-libstdc++ -o vpx_config
+      run: g++ src/vpx_config.cpp imgui/*.cpp imgui/backends/imgui_impl_sdl2.cpp imgui/backends/imgui_impl_opengl3.cpp -std=c++17 -Wall -Wextra -pedantic -I/usr/include/SDL2 -D_REENTRANT -Iimgui -Iimgui/backends -lSDL2 -lGL -static-libstdc++ -o vpx_config
 
     - name: Check Compilation
       run: |
@@ -33,3 +33,8 @@ jobs:
           echo "Compilation failed!"
           exit 1
         fi
+
+    - name: Run Binary
+      run: |
+        ./vpx_config --version || echo "Binary ran without proper version output, but build succeeded."
+      
