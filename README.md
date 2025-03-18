@@ -29,15 +29,16 @@
    
 3. **Install dependencies:**  
    ```bash
-   sudo apt install yad build-essential libsdl2-dev libsdl2-ttf-dev
-   ```
-4. **Build the INI Editor**
-   ```bash
-   ./compile.sh
+   sudo apt install yad
    ```
    
 >[!NOTE]
 *If you don’t plan to use the launcher, you can skip installing `yad`. Move to [Standalone INI Editor](#standalone-ini-editor)*
+
+4. **Build the INI Editor**
+   ```bash
+   ./compile.sh
+   ```
 
 5. **Run the launcher:**  
    ```bash
