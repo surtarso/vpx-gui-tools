@@ -1,9 +1,11 @@
-<h1 align="center">Simple VPX GUI Tools for Linux</h1>
-<p align="center">A minimal GUI tool for launching VPX tables, editing INI settings, extracting VBS scripts and more with "just a mouse click", to be used with <a href="https://github.com/vpinball/vpinball">VPinballX</a>.</p>
+<h1 align="center">VPX GUI Tools for Linux</h1>
+<p align="center">A GUI tool for launching VPX tables, editing INI settings, extracting VBS scripts and more with "just a mouse click", to be used with <a href="https://github.com/vpinball/vpinball">VPinballX</a>.</p>
 
-| **[VPX GUI Launcher](vpx_launcher.sh)** | 
+| **[VPX GUI Tools Launcher](vpx_launcher.sh)** | 
 |-------------------------------------|
 | ![image](https://github.com/user-attachments/assets/d424151f-ce64-46d9-a42a-8e12e884b896) | 
+
+<p align="center"><i>This tool is part of the <a href="https://github.com/vpinball/vpinball">ASAPCabinetFE</a> ecosystem.</i></p>
 
 ## **Launcher Features:** 
  - Lists tables and extra files 
@@ -17,11 +19,8 @@
 >If you need help installing VPX check the [WIKI](https://github.com/surtarso/vpx-frontend/wiki/Visual-Pinball-X-on-Debian-Linux).
 >
 >If you need a dual monitor frontend 'as simple as possible', check [ASAPCabinetFE](https://github.com/surtarso/ASAPCabinetFE/).
- libsdl2-ttf-dev
 
 ## **Installation & Usage**  
-
-You can download a release file here: https://github.com/surtarso/vpx-frontend/releases or follow the instructions below.
 
 1. **Download the repository** to any folder of your choice.
    ```bash
@@ -47,8 +46,7 @@ You can download a release file here: https://github.com/surtarso/vpx-frontend/r
    
 6. **Configure paths and args**
 
-
-   ![image](https://github.com/user-attachments/assets/f3d4ca55-99b2-4b96-be17-027d30a7e3c4)
+![image](https://github.com/user-attachments/assets/ee7f8834-9fba-4bd6-8525-52aaffda0916)
 
 >[!CAUTION]
 >This script expects you to have a specific naming convention.
@@ -108,3 +106,5 @@ You can run the INI Editor separately without the launcher with:
 ## Contribute
 
 Contributions to this project are welcome! The code is highly commented, so feel free to snoop around, open issues or submit pull requests.
+
+Older versions in Python + Shell can be downloaded here: https://github.com/surtarso/vpx-frontend/releases
