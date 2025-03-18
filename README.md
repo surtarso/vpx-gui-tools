@@ -5,7 +5,7 @@
 |-------------------------------------|
 | ![image](https://github.com/user-attachments/assets/d424151f-ce64-46d9-a42a-8e12e884b896) | 
 
-<p align="center"><i>This tool is part of the <a href="https://github.com/vpinball/vpinball">ASAPCabinetFE</a> ecosystem.</i></p>
+<p align="center"><i>This tool is part of the <a href="https://github.com/surtarso/ASAPCabinetFE">ASAPCabinetFE</a> ecosystem.</i></p>
 
 ## **Launcher Features:** 
  - Lists tables and extra files 
