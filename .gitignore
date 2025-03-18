@@ -9,5 +9,5 @@ settings.json
 .vscode/*
 .vscode/settings.json
 *.vscode
-config
+vpx_config
 imgui.ini

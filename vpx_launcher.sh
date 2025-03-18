@@ -194,46 +194,15 @@ open_launcher_settings() {
 
 ## --------------- INI SETTINGS (Standalone) -----------------
 
-# Function to check and install missing dependencies
-install_python_deps() {
-    if ! command -v python3 &>/dev/null; then
-        # Show the missing dependency dialog
-        handle_error "Missing dependency: Python3\n \
-            INI Editor cannot be run.\n\nDo you want to install it now? (Requires sudo)\n \
-            You can also install it manually (Debian):\nsudo apt install python3 python3-tk"
-
-        # If user chooses not to install, exit
-        if ! yad --title="Install Python3?" --form --buttons-layout=center \
-                --button="Yes:0" --button="No:1" 2>/dev/null; then
-            return 1
-        fi
-
-        # Attempt to install Python3
-        if ! sudo apt install -y python3 python3-tk; then
-            # If installation fails, show error and exit
-            handle_error "Error installing Python3\n \
-                Please install it manually (Debian):\n \
-                sudo apt install python3 python3-tk"
-            return 1
-        fi
-    fi
-    return 0
-}
-
 # Function to open the INI editor (either default or per table)
 open_ini_settings() {
-    # Check for Python 3 and Python3-tk dependencies
-    if ! install_python_deps; then
-        return  # If dependencies fail to install, return
-    fi
-
     # Check if a parameter (INI file) was passed
     if [ -n "$1" ]; then
         # If so, pass it to the Python script
-        python3 vpx_ini_editor.py "$1"
+        eval "./vpx_config" "\"$1\""
     else
         # Otherwise, open the default INI editor
-        python3 vpx_ini_editor.py
+        eval "./vpx_config"
     fi
 }
 

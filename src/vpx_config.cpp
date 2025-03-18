@@ -1,6 +1,6 @@
-// config.cpp
-// As Simple As Possible Cabinet Front End - Configuration
-// Reads and saves a local config.ini file while listing in sections with explanations.
+// vpx_config.cpp
+// VPinballX - Configuration GUI
+// Reads and saves VPinballX.ini file while listing in sections with explanations.
 // Tarso Galvão Mar/2025
 
 #include <SDL.h>
@@ -15,6 +15,7 @@
 #include <vector>
 #include <string>
 #include <cstring>
+#include <cstdlib> // For std::getenv
 
 // Structure representing a configuration section (a set of key-value pairs)
 struct ConfigSection {
@@ -152,15 +153,22 @@ void IniEditor::saveIniFile(const std::string& filename) {
 }
 
 void IniEditor::initExplanations() {
+    
     // STANDALONE
-    explanations["AltSound"] = "Controls sound format between 'Legacy', 'Altsound' and 'G-Sound'.\n1 - If the folder contains an “altsound.csv” or “g-sound.csv” file.\n1 - If the folder contains subfolders with names like “jingle”, “single”, “voice”, etc. and you are NOT running on PinSound sound hardware.\nNote: this only works for the unencrypted versions of the PinSound libraries, which are now quite old.\n2 - If the folder contains subfolders with names like “jingle”, “single”, “voice”, etc. and you are running on PinSound sound hardware.\nNote: This will also require you to run the PinSound Audio Studio prior to launching. This too only works for the unencrypted versions of the PinSound libraries.\n3 - ??";
+    explanations["AltSound"] = "Controls sound format between 'Legacy', 'Altsound' and 'G-Sound'.\n1 - If the folder contains an 'altsound.csv' or 'g-sound.csv' file.\n1 - If the folder contains subfolders with names like 'jingle', 'single', 'voice', etc. and you are NOT running on PinSound sound hardware.\nNote: this only works for the unencrypted versions of the PinSound libraries, which are now quite old.\n2 - If the folder contains subfolders with names like 'jingle', 'single', 'voice', etc. and you are running on PinSound sound hardware.\n.\n3 - ??";
     explanations["PinMAMEPath"] = "Specifies the directory where the PinMAME emulator is located. PinMAME is an emulator for classic pinball machines.\nDefault is ~/.pinmame: If not specified, the default location for the PinMAME folder is in the home directory.";
     explanations["PinMAMEWindow"] = "Controls the visibility of the PinMAME DMD (Dot Matrix Display) window.\n0 - Turns the DMD window off: Disables the PinMAME DMD window, which is often used for displaying the score and game information.\n1 - Turns the DMD window on: Enables the PinMAME DMD window to display relevant game information. (Default is 1)";
     explanations["PinMAMEWindowX"] = "Sets the X pixel coordinate of the top-left corner of the PinMAME DMD window on the screen.\nThis controls the horizontal position where the DMD window appears on the screen.";
     explanations["PinMAMEWindowY"] = "Sets the Y pixel coordinate of the top-left corner of the PinMAME DMD window on the screen.\nThis controls the vertical position where the DMD window appears on the screen.";
     explanations["PinMAMEWindowWidth"] = "Controls the width of the PinMAME DMD window.\nYou can resize the DMD window by specifying the width in pixels.";
     explanations["PinMAMEWindowHeight"] = "Controls the height of the PinMAME DMD window.\nYou can resize the DMD window by specifying the height in pixels.";
-    explanations["PinMAMEWindowRotation"] = "Controls the rotation of the PinMAME DMD window.\nThis setting can rotate the DMD window to a specified angle, useful for certain display setups.";
+    explanations["PinMAMEWindowRotation"] = "Controls the rotation of the PinMAME DMD window.\nThe values 0, 1, 2, and 3 correspond to rotation angles of 0°, 90°, 180°, and 270°, respectively.\nThe default value is 0, which represents no rotation."; 
+    explanations["FlexDMDWindow"] = "Controls the visibility of the FlexDMD (Dot Matrix Display) window.\n0 - Turns the DMD window off: Disables the FlexDMD window, which is often used for displaying the score and game information.\n1 - Turns the DMD window on: Enables the FlexDMD window to display relevant game information. (Default is 1)";
+    explanations["FlexDMDWindowX"] = "Sets the X pixel coordinate of the top-left corner of the FlexDMD window on the screen.\nThis controls the horizontal position where the DMD window appears on the screen.";
+    explanations["FlexDMDWindowY"] = "Sets the Y pixel coordinate of the top-left corner of the FlexDMD window on the screen.\nThis controls the vertical position where the DMD window appears on the screen.";
+    explanations["FlexDMDWindowWidth"] = "Controls the width of the FlexDMD window.\nYou can resize the DMD window by specifying the width in pixels.";
+    explanations["FlexDMDWindowHeight"] = "Controls the height of the FlexDMD window.\nYou can resize the DMD window by specifying the height in pixels.";
+    explanations["FlexDMDWindowRotation"] = "Controls the rotation of the FlexDMD window.\nThe values 0, 1, 2, and 3 correspond to rotation angles of 0°, 90°, 180°, and 270°, respectively.\nThe default value is 0, which represents no rotation.";
     explanations["B2SHideGrill"] = "Controls the visibility of the grill in the backbox of the cabinet setup.\n0 - Show grill (if it exists): Displays the grill, a common component in pinball machines.\n1 - Hide grill: Hides the grill.";
     explanations["B2SHideB2SDMD"] = "Controls the visibility of the extra DMD frame in the backbox.\n0 - Show extra DMD frame (if it exists): Displays the DMD frame around the Dot Matrix Display.\n1 - Hide extra DMD frame: Hides the DMD frame, leaving just the DMD window.";
     explanations["B2SHideB2SBackglass"] = "Controls the visibility of the backglass in a cabinet setup.\n0 - Show backglass: Displays the backglass, which often shows game artwork.\n1 - Hide backglass: Hides the backglass, potentially saving space in a multi-display setup.";
@@ -169,16 +177,48 @@ void IniEditor::initExplanations() {
     explanations["B2SBackglassY"] = "Sets the Y pixel coordinate of the top-left corner of the backglass window.\nThis allows you to position the backglass at a specific vertical position on the screen.";
     explanations["B2SBackglassWidth"] = "Controls the pixel width of the backglass window.\nThis defines how wide the backglass window will appear on the screen.";
     explanations["B2SBackglassHeight"] = "Controls the pixel height of the backglass window.\nThis defines how tall the backglass window will appear on the screen.";
-    explanations["B2SBackglassRotation"] = "Controls the rotation of the backglass window.\nSupposed to rotate the backglass, but this feature may not work in certain environments (e.g., macOS).";
-    explanations["B2SDMDX"] = "Sets the X pixel coordinate of the top-left corner of the DMD frame.\nThis controls the horizontal positioning of the DMD frame relative to the screen.";
-    explanations["B2SDMDY"] = "Sets the Y pixel coordinate of the top-left corner of the DMD frame.\nThis controls the vertical positioning of the DMD frame relative to the screen.";
-    explanations["B2SDMDWidth"] = "Controls the pixel width of the DMD frame.\nThis defines how wide the DMD frame will appear on the screen.";
-    explanations["B2SDMDHeight"] = "Controls the pixel height of the DMD frame.\nThis defines how tall the DMD frame will appear on the screen.";
-    explanations["B2SDMDRotation"] = "Controls the rotation of the DMD frame.\nSupposed to rotate the DMD frame, but this feature may not work in certain environments (e.g., macOS).";
-    explanations["B2SDMDFlipY"] = "Controls whether the DMD frame is flipped vertically.\n0 - No flip: The DMD frame appears normally.\n1 - Flip vertically: Flips the DMD frame vertically, which may be useful for specific screen orientations.";
+    explanations["B2SBackglassRotation"] = "Controls the rotation of the backglass window.\nThe values 0, 1, 2, and 3 correspond to rotation angles of 0°, 90°, 180°, and 270°, respectively.\nThe default value is 0, which represents no rotation.";
+    explanations["B2SDMDX"] = "Sets the X pixel coordinate of the top-left corner of the B2SDMD frame.\nThis controls the horizontal positioning of the B2SDMD frame relative to the screen.";
+    explanations["B2SDMDY"] = "Sets the Y pixel coordinate of the top-left corner of the B2SDMD frame.\nThis controls the vertical positioning of the B2SDMD frame relative to the screen.";
+    explanations["B2SDMDWidth"] = "Controls the pixel width of the B2SDMD frame.\nThis defines how wide the B2SDMD frame will appear on the screen.";
+    explanations["B2SDMDHeight"] = "Controls the pixel height of the B2SDMD frame.\nThis defines how tall the B2SDMD frame will appear on the screen.";
+    explanations["B2SDMDRotation"] = "Controls the rotation of the B2SDMD frame.\nThe values 0, 1, 2, and 3 correspond to rotation angles of 0°, 90°, 180°, and 270°, respectively.\nThe default value is 0, which represents no rotation.";
+    explanations["B2SDMDFlipY"] = "Controls whether the B2SDMD frame is flipped vertically.\n0 - No flip: The B2SDMD frame appears normally.\n1 - Flip vertically: Flips the B2SDMD frame vertically, which may be useful for specific screen orientations.";
+    explanations["PUPTopperWindow"] = "Controls the visibility of the PUPTopper window.\n0 - Hide PUPTopper window.\n1 - Show PUPTopper window.";
+    explanations["PUPTopperWindowX"] = "Sets the X pixel coordinate of the top-left corner of the PUPTopper window.\nThis allows you to position the PUPTopper at a specific horizontal position on the screen.";
+    explanations["PUPTopperWindowY"] = "Sets the Y pixel coordinate of the top-left corner of the PUPTopper window.\nThis allows you to position the PUPTopper at a specific vertical position on the screen.";
+    explanations["PUPTopperWindowWidth"] = "Controls the pixel width of the PUPTopper window.\nThis defines how wide the PUPTopper window will appear on the screen.";
+    explanations["PUPTopperWindowHeight"] = "Controls the pixel height of the PUPTopper window.\nThis defines how tall the PUPTopper window will appear on the screen.";
+    explanations["PUPTopperWindowRotation"] = "Controls the rotation of the PUPTopper window.\nThe values 0, 1, 2, and 3 correspond to rotation angles of 0°, 90°, 180°, and 270°, respectively.\nThe default value is 0, which represents no rotation.";
+    explanations["PUPBackglassWindow"] = "Controls the visibility of the PUPBackglass window.\n0 - Hide PUPBackglass window.\n1 - Show PUPBackglass window.";
+    explanations["PUPBackglassWindowX"] = "Sets the X pixel coordinate of the top-left corner of the PUPBackglass window.\nThis allows you to position the PUPBackglass at a specific horizontal position on the screen.";
+    explanations["PUPBackglassWindowY"] = "Sets the Y pixel coordinate of the top-left corner of the PUPBackglass window.\nThis allows you to position the PUPBackglass at a specific vertical position on the screen.";
+    explanations["PUPBackglassWindowWidth"] = "Controls the pixel width of the PUPBackglass window.\nThis defines how wide the PUPBackglass window will appear on the screen.";
+    explanations["PUPBackglassWindowHeight"] = "Controls the pixel height of the PUPBackglass window.\nThis defines how tall the PUPBackglass window will appear on the screen.";
+    explanations["PUPBackglassWindowRotation"] = "Controls the rotation of the PUPBackglass window.\nThe values 0, 1, 2, and 3 correspond to rotation angles of 0°, 90°, 180°, and 270°, respectively.\nThe default value is 0, which represents no rotation.";
+    explanations["PUPDMDWindow"] = "Controls the visibility of the PUPDMD window.\n0 - Hide PUPDMD window.\n1 - Show PUPDMD window.";
+    explanations["PUPDMDWindowX"] = "Sets the X pixel coordinate of the top-left corner of the PUPDMD window.\nThis allows you to position the PUPDMD at a specific horizontal position on the screen.";
+    explanations["PUPDMDWindowY"] = "Sets the Y pixel coordinate of the top-left corner of the PUPDMD window.\nThis allows you to position the PUPDMD at a specific vertical position on the screen.";
+    explanations["PUPDMDWindowWidth"] = "Controls the pixel width of the PUPDMD window.\nThis defines how wide the PUPDMD window will appear on the screen.";
+    explanations["PUPDMDWindowHeight"] = "Controls the pixel height of the PUPDMD window.\nThis defines how tall the PUPDMD window will appear on the screen.";
+    explanations["PUPDMDWindowRotation"] = "Controls the rotation of the PUPDMD window.\nThe values 0, 1, 2, and 3 correspond to rotation angles of 0°, 90°, 180°, and 270°, respectively.\nThe default value is 0, which represents no rotation.";
+    explanations["PUPPlayfieldWindow"] = "Controls the visibility of the PUPPlayfield window.\n0 - Hide PUPPlayfield window.\n1 - Show PUPPlayfield window.";
+    explanations["PUPPlayfieldWindowX"] = "Sets the X pixel coordinate of the top-left corner of the PUPPlayfield window.\nThis allows you to position the PUPPlayfield at a specific horizontal position on the screen.";
+    explanations["PUPPlayfieldWindowY"] = "Sets the Y pixel coordinate of the top-left corner of the PUPPlayfield window.\nThis allows you to position the PUPPlayfield at a specific vertical position on the screen.";
+    explanations["PUPPlayfieldWindowWidth"] = "Controls the pixel width of the PUPPlayfield window.\nThis defines how wide the PUPPlayfield window will appear on the screen.";
+    explanations["PUPPlayfieldWindowHeight"] = "Controls the pixel height of the PUPPlayfield window.\nThis defines how tall the PUPPlayfield window will appear on the screen.";
+    explanations["PUPPlayfieldWindowRotation"] = "Controls the rotation of the PUPPlayfield window.\nThe values 0, 1, 2, and 3 correspond to rotation angles of 0°, 90°, 180°, and 270°, respectively.\nThe default value is 0, which represents no rotation.";
+    explanations["PUPFullDMDWindow"] = "Controls the visibility of the PUPFullDMD window.\n0 - Hide PUPFullDMD window.\n1 - Show PUPFullDMD window.";
+    explanations["PUPFullDMDWindowX"] = "Sets the X pixel coordinate of the top-left corner of the PUPFullDMD window.\nThis allows you to position the PUPFullDMD at a specific horizontal position on the screen.";
+    explanations["PUPFullDMDWindowY"] = "Sets the Y pixel coordinate of the top-left corner of the PUPFullDMD window.\nThis allows you to position the PUPFullDMD at a specific vertical position on the screen.";
+    explanations["PUPFullDMDWindowWidth"] = "Controls the pixel width of the PUPFullDMD window.\nThis defines how wide the PUPFullDMD window will appear on the screen.";
+    explanations["PUPFullDMDWindowHeight"] = "Controls the pixel height of the PUPFullDMD window.\nThis defines how tall the PUPFullDMD window will appear on the screen.";
+    explanations["PUPFullDMDWindowRotation"] = "Controls the rotation of the PUPFullDMD window.\nThe values 0, 1, 2, and 3 correspond to rotation angles of 0°, 90°, 180°, and 270°, respectively.\nThe default value is 0, which represents no rotation.";
+    
     // PLAYER
     explanations["BGSet"] = "Controls the display mode for the backglass and the playfield.\n0 - Desktop (default): The default desktop mode for standard use.\n1 - Fullscreen: For cabinet use or multi-window on desktop setups.\n2 - Full Single Screen (FSS): Uses the entire screen for both playfield and backglass. Falls back to desktop view if unavailable.";
     explanations["SyncMode"] = "Controls the synchronization method for the video display.\n0 - None: No synchronization, potentially resulting in tearing or stuttering.\n1 - Vertical Sync: Synchronizes the video output with the display refresh rate, preventing screen tearing at the cost of input latency.\n2 - Adaptive Sync: Syncs video output to the display refresh rate, except for late frames, which may result in occasional tearing.\n3 - Frame Pacing (default): Synchronizes the simulation with the video frame rate while keeping input latency low and dynamically adjusting frame rates.";
+    explanations["OverrideTableEmissionScale"] = "Replace table's scene lighting emission scale setup, eventually based on automatic Day/Night computed from geographic position.";
     explanations["MaxFramerate"] = "Sets the maximum frame rate for the game.\nDefaults to the playfield display refresh rate, ensuring a smooth experience.\n0 - Unbound frame rate: Removes any frame rate cap, allowing the game to run as fast as possible based on hardware.\nThe frame rate will never go below 24fps, ensuring at least minimal smoothness.";
     explanations["FXAA"] = "Controls the method used for anti-aliasing to smooth out jagged edges in the game visuals.\n0 - Disabled: No anti-aliasing applied, which may result in jagged edges.\n1 - Fast FXAA: Fast FXAA (Fast Approximate Anti-Aliasing) method for anti-aliasing, offering a good balance between performance and visual quality.\n2 - Standard FXAA: Standard FXAA method, offering better anti-aliasing than fast FXAA but with slightly more performance cost.\n3 - Quality FXAA: High-quality FXAA, providing better image smoothing at the cost of performance.\n4 - Fast NFAA: Fast NVIDIA Fast Approximate Anti-Aliasing (NFAA), a technique for smoother visuals on NVIDIA hardware.\n5 - Standard DLLA: Standard Dynamic Line Anti-Aliasing, a method designed for dynamic rendering of lines and edges.\n6 - Quality SMAA: High-quality Subpixel Morphological Anti-Aliasing (SMAA), a more advanced anti-aliasing method with high visual quality.";
     explanations["Sharpen"] = "Controls the sharpening effect applied to the game's visuals.\n0 - Disabled: No sharpening effect applied to the visuals.\n1 - CAS: Contrast Adaptive Sharpening, a method to enhance image details by adjusting contrast and edges.\n2 - Bilateral CAS: Bilateral Contrast Adaptive Sharpening, a variant of CAS that reduces noise and artifacts in the image while sharpening.";
@@ -199,7 +239,7 @@ void IniEditor::drawGUI() {
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize, ImGuiCond_Always);
     
-    ImGui::Begin("ASAPCabinetFE Configuration", nullptr, 
+    ImGui::Begin("VPinballX Configuration", nullptr, 
                  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 
     if (ImGui::BeginCombo("Section", currentSection.c_str())) {
@@ -223,21 +263,31 @@ void IniEditor::drawGUI() {
         for (auto& kv : iniData[currentSection].keyValues) { // Iterate over vector instead of map
             ImGui::PushID(kv.first.c_str());
             
+            // Display the key
             ImGui::Text("%s", kv.first.c_str());
             
-            ImGui::SameLine(150);
+            // Move to the next position for the "?"
+            // ImGui::SameLine(210); // Fixed offset
+            ImGui::SameLine(); // No fixed offset yet, let ImGui calculate natural spacing
+            float key_end_pos = ImGui::GetCursorPosX(); // Store where the key ends
+            
+            // Add the "?" if there's an explanation
             if (explanations.find(kv.first) != explanations.end()) {
-                ImGui::TextColored(ImVec4(0, 1, 0, 1), "[?]");
+                ImGui::TextColored(ImVec4(0, 1, 0, 1), "?");
                 if (ImGui::IsItemHovered()) {
                     ImGui::BeginTooltip();
-                    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 20.0f); // Approx 300px with typical font size
+                    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 20.0f);
                     ImGui::TextWrapped("%s", explanations[kv.first].c_str());
                     ImGui::PopTextWrapPos();
                     ImGui::EndTooltip();
                 }
             }
             
-            ImGui::SameLine(200);
+            // Set a minimum offset for the value field, ensuring it doesn't overlap
+            // float value_start_pos = key_end_pos + 20.0f; // Adjust this padding as needed (e.g., 20px after "?")
+            ImGui::SameLine(225); // Position the input field
+            
+            // Input field for the value
             char buf[256];
             std::strncpy(buf, kv.second.c_str(), sizeof(buf));
             buf[sizeof(buf) - 1] = '\0';
@@ -286,10 +336,10 @@ void IniEditor::run() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
-    SDL_Window* window = SDL_CreateWindow("ASAPCabinetFE Configuration",
+    SDL_Window* window = SDL_CreateWindow("VPinballX Configuration",
                                           SDL_WINDOWPOS_CENTERED,
                                           SDL_WINDOWPOS_CENTERED,
-                                          800, 600,
+                                          600, 500,
                                           SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
@@ -342,8 +392,23 @@ void IniEditor::run() {
 
 // ---------------- Main Entry Point ----------------
 
-int main(int, char**) {
-    IniEditor editor("config.ini");
+int main(int argc, char** argv) {
+    std::string iniPath;
+
+    if (argc > 1) {
+        // Use provided argument as the INI file path
+        iniPath = argv[1];
+    } else {
+        // Default to ~/.vpinball/VPinballX.ini
+        const char* homeDir = std::getenv("HOME");
+        if (!homeDir) {
+            std::cerr << "Error: HOME environment variable not set.\n";
+            return 1;
+        }
+        iniPath = std::string(homeDir) + "/.vpinball/VPinballX.ini";
+    }
+
+    IniEditor editor(iniPath);
     editor.run();
     return 0;
 }
