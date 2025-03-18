@@ -20,7 +20,30 @@ jobs:
     - name: Install System Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libsdl2-dev libgl1-mesa-dev
+        sudo apt-get install -y build-essential libsdl2-dev libgl1-mesa-dev jq
+
+    - name: Download Latest vpxtool Binary
+      run: |
+        # Fetch the latest release info from GitHub API
+        LATEST_RELEASE=$(curl -s https://api.github.com/repos/francisdb/vpxtool/releases/latest)
+        
+        # Extract the download URL for the Linux binary
+        DOWNLOAD_URL=$(echo $LATEST_RELEASE | jq -r '.assets[] | select(.name | test("Linux-x86_64")) | .browser_download_url')
+
+        # Download and extract vpxtool binary
+        if [ -z "$DOWNLOAD_URL" ]; then
+          echo "Error: Could not find the latest vpxtool Linux binary URL!"
+          exit 1
+        fi
+
+        # Download the binary tarball
+        wget $DOWNLOAD_URL -O vpxtool.tar.gz
+
+        # Extract the binary and move it to /src
+        tar -xzvf vpxtool.tar.gz
+        mv vpxtool /src/vpxtool
+        chmod +x /src/vpxtool
+        rm vpxtool.tar.gz
 
     - name: Compile
       run: g++ src/vpx_config.cpp imgui/*.cpp imgui/backends/imgui_impl_sdl2.cpp imgui/backends/imgui_impl_opengl3.cpp -std=c++17 -Wall -Wextra -pedantic -I/usr/include/SDL2 -D_REENTRANT -Iimgui -Iimgui/backends -lSDL2 -lGL -static-libstdc++ -o vpx_config
@@ -34,7 +57,8 @@ jobs:
           exit 1
         fi
 
-    - name: Run Binary
+    - name: Run Binaries
       run: |
         ./vpx_config --version || echo "Binary ran without proper version output, but build succeeded."
+        ./src/vpxtool --version || echo "Binary ran without proper version output, but was downloaded."
       
