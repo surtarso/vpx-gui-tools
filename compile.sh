@@ -25,6 +25,7 @@ packages=(
     libsdl2-dev
     libgl1-mesa-dev
     jq
+    curl
 )
 
 # Check and install missing packages
@@ -60,12 +61,6 @@ echo -e "Submodules updated $OK"
 
 # ===========================================================================================
 echo -e "${YELLOW}Fetching latest vpxtool release...${NC}"
-
-# Check if curl is installed
-if ! command -v curl &>/dev/null; then
-    echo -e "curl is required but not installed $FAIL"
-    exit 1
-fi
 
 LATEST_RELEASE=$(curl -s https://api.github.com/repos/francisdb/vpxtool/releases/latest || {
     echo -e "Failed to fetch release info $FAIL"
