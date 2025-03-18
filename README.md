@@ -79,7 +79,6 @@ You can download a release file here: https://github.com/surtarso/vpx-frontend/r
 >[!NOTE]
 >   - The **INI Editor** will open `~/vpinball/VPinballX.ini` by default if no table is selected.
 >   - Selecting a table and pressing the **INI Editor** button will attempt to open the table ini file if it exists or ask to create one.
->   - You can always manually search for the .ini you want to open.
 >   - The **Extract VBS** will extract by default if no script is found and open the script with your preferred editor.
 >   - The **Open Folder** button will open the selected table' dir or root dir if no table selected.
 >   - To clear the **Search term** just press the button again.
