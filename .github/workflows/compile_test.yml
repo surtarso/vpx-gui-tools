@@ -1,0 +1,35 @@
+name: C++ Compile Test
+
+on:
+  push:
+    branches: [ "main" ]
+    paths: [ ".github/workflows/compile_test.yml", "src/vpx_config.cpp" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  compile_config:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libsdl2-dev libgl1-mesa-dev libglu1-mesa-dev libglew-dev libfreetype6-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
+
+    - name: Compile
+      run: g++ src/vpx_config.cpp -std=c++17 imgui/*.cpp imgui/backends/imgui_impl_sdl2.cpp imgui/backends/imgui_impl_opengl3.cpp -std=c++17 -I/usr/include/SDL2 -D_REENTRANT -Iimgui -Iimgui/backends -lSDL2 -lGL -static-libstdc++ -o vpx_config
+
+    - name: Check Compilation
+      run: |
+        if [ -f src/vpx_config ]; then
+          echo "Compilation successful!"
+        else
+          echo "Compilation failed!"
+          exit 1
+        fi
