@@ -11,3 +11,4 @@ settings.json
 *.vscode
 vpx_config
 imgui.ini
+settings.ini

@@ -34,7 +34,7 @@ fi
 ## --------------------- CONFIGURATION ---------------------
 # Config file path
 #LOGFILE="$HOME/.vpx-gui-tools/erros.log"
-CONFIG_FILE="$HOME/.vpx-gui-tools/settings.ini"
+CONFIG_FILE="settings.ini"
 # DEFAULT_ICON="default_icon.ico"  # Default icon for list view
 # HELP_TEXT="Files: missing, present, modified - Media: present, missing"
 # HELP_TEXT="   |   Color codes - Extra Files: <span foreground='gray'>missing</span>, \
@@ -45,38 +45,46 @@ CONFIG_FILE="$HOME/.vpx-gui-tools/settings.ini"
 HELP_TEXT=""
 COLS=13 # number of columns on the list
 
-# Create the directory if it doesn't exist
-mkdir -p "$(dirname "$CONFIG_FILE")"
-
 # Load or create the config file with default values
 if [ ! -f "$CONFIG_FILE" ]; then
-    {
-        echo "TABLES_DIR=\"$HOME/Games/vpinball/build/tables/\""
-        echo "START_ARGS=\"$START_ARGS\""
-        echo "COMMAND_TO_RUN=\"$HOME/Games/vpinball/build/VPinballX_GL\""
-        echo "END_ARGS=\"$END_ARGS\""
-        echo "VPINBALLX_INI=\"$HOME/.vpinball/VPinballX.ini\""
-        echo "FALLBACK_EDITOR=\"code\""
-        echo "WINDOW_WIDTH=\"1024\""
-        echo "WINDOW_HEIGHT=\"768\""
-        echo "WHEEL_IMAGE=\"/images/wheel.png\""
-        echo "TABLE_IMAGE=\"/images/table.png\""
-        echo "BACKGLASS_IMAGE=\"/images/backglass.png\""
-        echo "MARQUEE_IMAGE=\"/images/marquee.png\""
-        echo "TABLE_VIDEO=\"/video/table.mp4\""
-        echo "BACKGLASS_VIDEO=\"/video/backglass.mp4\""
-        echo "DMD_VIDEO=\"/video/dmd.mp4\""
-        echo "ROM_PATH=\"/pinmame/roms\""
-        echo "SND_PATH=\"/pinmame/altsound\""
-        echo "CRZ_PATH=\"/pinmame/AltColor\""
-        echo "MUS_PATH=\"/music\""
-        echo "PUP_PATH=\"/pupvideos\""
-    } > "$CONFIG_FILE"
+    cat <<EOF > settings.ini
+[LauncherSettings]
+TablesDir = $HOME/Games/VPX_tables/
+StartArgs = 
+CommandToRun = $HOME/Games/vpinball/build/VPinballX_GL
+EndArgs = 
+VPinballXIni = $HOME/.vpinball/VPinballX.ini
+FallbackEditor = code
+WindowWidth = 1024
+WindowHeight = 768
+WheelImage = /images/wheel.png
+TableImage = /images/table.png
+BackglassImage = /images/backglass.png
+MarqueeImage = /images/marquee.png
+TableVideo = /video/table.mp4
+BackglassVideo = /video/backglass.mp4
+DMDVideo = /video/dmd.mp4
+ROMPath = /pinmame/roms
+AltSoundPath = /pinmame/altsound
+AltColorPath = /pinmame/AltColor
+MusicPath = /music
+PUPPackPath = /pupvideos
+EOF
 fi
-
-# (Re)Load the config file
-# shellcheck disable=SC1090
-source "$CONFIG_FILE"
+load_config() {
+    if [ -f "$CONFIG_FILE" ]; then
+        # Read each line and ignore section headers ([LauncherSettings])
+        while IFS='=' read -r key value; do
+            key=$(echo "$key" | tr -d ' ')  # Remove spaces in keys
+            value=$(echo "$value" | sed 's/^ *//;s/ *$//')  # Trim spaces in values
+            eval "$key=\"$value\""
+            echo "$key=\"$value\"" >/dev/null 2>&1
+        done < <(grep -v '^\[.*\]' "$CONFIG_FILE")
+    else
+        echo "Error: Config file not found!"
+        exit 1
+    fi
+}
 
 ## ----------------------- FUNCTIONS -----------------------
 # Function to show an error dialog and return the chosen action
@@ -88,108 +96,11 @@ handle_error() {
     
     local exit_code=$?
     if [[ $exit_code -eq 1 ]]; then
-        open_launcher_settings
+        eval "./vpx_config settings.ini"
+        load_config
+    else
+        exit 0
     fi
-}
-
-## -------------------- LAUNCHER SETTINGS ---------------------
-
-open_launcher_settings() {
-    # Show settings dialog
-    NEW_VALUES=$(yad --form --title="Settings" \
-        --field="Tables Directory:":DIR "$TABLES_DIR" \
-        --field="Initial Arguments:":FILE "$START_ARGS" \
-        --field="VPX Executable:":FILE "$COMMAND_TO_RUN" \
-        --field="Final Arguments:":FILE "$END_ARGS" \
-        --field="VPinballX.ini Path:":FILE "$VPINBALLX_INI" \
-        --field="Fallback Editor:":FILE "$FALLBACK_EDITOR" \
-        --field="Launcher Width:":FILE "$WINDOW_WIDTH" \
-        --field="Launcher Height:":FILE "$WINDOW_HEIGHT" \
-        --field="Wheel Image:":FILE "$WHEEL_IMAGE" \
-        --field="Table Image:":FILE "$TABLE_IMAGE" \
-        --field="Backglass Image:":FILE "$BACKGLASS_IMAGE" \
-        --field="Marquee Image:":FILE "$MARQUEE_IMAGE" \
-        --field="Table Video:":FILE "$TABLE_VIDEO" \
-        --field="Backglass Video:":FILE "$BACKGLASS_VIDEO" \
-        --field="DMD Video:":FILE "$DMD_VIDEO" \
-        --field="ROM Path:":FILE "$ROM_PATH" \
-        --field="AltSound Path:":FILE "$SND_PATH" \
-        --field="AltColor Path:":FILE "$CRZ_PATH" \
-        --field="Music Path:":FILE "$MUS_PATH" \
-        --field="PupPack Path:":FILE "$PUP_PATH" \
-        --width=500 --height=150 \
-        --separator="|" 2>/dev/null)
-
-    if [ -z "$NEW_VALUES" ]; then return; fi
-
-    # Extract new values from user input using awk
-    IFS="|" read -r NEW_TABLES_DIR \
-                    NEW_START_ARGS \
-                    NEW_COMMAND \
-                    NEW_END_ARGS \
-                    NEW_VPINBALLX_INI \
-                    NEW_FALLBACK_EDITOR \
-                    NEW_WINDOW_WIDTH \
-                    NEW_WINDOW_HEIGHT \
-                    NEW_WHEEL_IMAGE \
-                    NEW_TABLE_IMAGE \
-                    NEW_BACKGLASS_IMAGE \
-                    NEW_MARQUEE_IMAGE \
-                    NEW_TABLE_VIDEO \
-                    NEW_BACKGLASS_VIDEO \
-                    NEW_DMD_VIDEO \
-                    NEW_ROM_PATH \
-                    NEW_SND_PATH \
-                    NEW_CRZ_PATH \
-                    NEW_MUS_PATH \
-                    NEW_PUP_PATH \
-                    <<< "$NEW_VALUES"
-                    
-    # Validate new directory and executables
-    if [ ! -d "$NEW_TABLES_DIR" ] || ! find "$NEW_TABLES_DIR" -type f -name "*.vpx" | grep -q .; then
-        handle_error "Error: No .vpx files found in the directory!"
-        return
-    elif [ ! -x "$NEW_COMMAND" ]; then
-        handle_error "Error: VPX executable '$NEW_COMMAND' does not exist or is not executable!"
-        return
-    elif ! command -v "$NEW_FALLBACK_EDITOR" >/dev/null 2>&1; then
-        handle_error "Error: Fallback editor '$NEW_FALLBACK_EDITOR' cannot be opened!"
-        return
-    fi
-
-    # Save settings to configuration file
-    {
-        echo "TABLES_DIR=\"$NEW_TABLES_DIR\""
-        echo "START_ARGS=\"$NEW_START_ARGS\""
-        echo "COMMAND_TO_RUN=\"$NEW_COMMAND\""
-        echo "END_ARGS=\"$NEW_END_ARGS\""
-        echo "VPINBALLX_INI=\"$NEW_VPINBALLX_INI\""
-        echo "FALLBACK_EDITOR=\"$NEW_FALLBACK_EDITOR\""
-        echo "WINDOW_WIDTH=\"$NEW_WINDOW_WIDTH\""
-        echo "WINDOW_HEIGHT=\"$NEW_WINDOW_HEIGHT\""
-        echo "WHEEL_IMAGE=\"$NEW_WHEEL_IMAGE\""
-        echo "TABLE_IMAGE=\"$NEW_TABLE_IMAGE\""
-        echo "BACKGLASS_IMAGE=\"$NEW_BACKGLASS_IMAGE\""
-        echo "MARQUEE_IMAGE=\"$NEW_MARQUEE_IMAGE\""
-        echo "TABLE_VIDEO=\"$NEW_TABLE_VIDEO\""
-        echo "BACKGLASS_VIDEO=\"$NEW_BACKGLASS_VIDEO\""
-        echo "DMD_VIDEO=\"$NEW_DMD_VIDEO\""
-        echo "ROM_PATH=\"$NEW_ROM_PATH\""
-        echo "SND_PATH=\"$NEW_SND_PATH\""
-        echo "CRZ_PATH=\"$NEW_CRZ_PATH\""
-        echo "MUS_PATH=\"$NEW_MUS_PATH\""
-        echo "PUP_PATH=\"$NEW_PUP_PATH\""
-    } > "$CONFIG_FILE"
-
-    # Give user feedback that the paths were updated successfully
-    yad --info --title="Settings" \
-        --text="Paths updated successfully!" \
-        --buttons-layout=center --button="OK:0" \
-        --width=300 --height=100 2>/dev/null
-
-    # Reload the config file to apply changes
-    # shellcheck disable=SC1090
-    source "$CONFIG_FILE"
 }
 
 ## --------------- INI SETTINGS (Standalone) -----------------
@@ -221,8 +132,8 @@ create_table_ini() {
             --width=400 --height=150 --buttons-layout=center \
             --button="Yes:0" --button="No:1" 2>/dev/null; then
 
-        # User selected "Yes" → Copy the default VPINBALLX_INI to the new location
-        cp "$VPINBALLX_INI" "$ini_file"
+        # User selected "Yes" → Copy the default VPinballXIni to the new location
+        cp "$VPinballXIni" "$ini_file"
 
         # Inform the user that the new INI file was created
         yad --info --title="INI File Created" \
@@ -242,12 +153,12 @@ launch_ini_editor() {
     # Check if a table was selected
     if [[ -z "$SELECTED_TABLE" ]]; then
         # No table selected, open default INI settings
-        if [[ ! -f "$VPINBALLX_INI" ]]; then
+        if [[ ! -f "$VPinballXIni" ]]; then
             # VPinballX.ini not found, show error and ask user to set the correct path
             handle_error "VPinballX.ini not found!\nPlease set the correct path in the settings."
         else
             # Open the default INI settings
-            open_ini_settings "$VPINBALLX_INI"
+            open_ini_settings "$VPinballXIni"
         fi
     else
         # Table selected, ensure the INI file exists (create if missing)
@@ -273,18 +184,18 @@ handle_vbs_scripts() {
             if ! xdg-open "$vbs_script" 2>/dev/null; then
                 # If xdg-open fails (no default handler), fallback to a text editor
                 handle_error "No default handler found, opening with fallback editor"
-                $FALLBACK_EDITOR "$vbs_script" &
+                $FallbackEditor "$vbs_script" &
             fi
         else
             # If the VBS file doesn't exist, extract it
-            eval "\"$COMMAND_TO_RUN\" -ExtractVBS \"$SELECTED_FILE\"" &
+            eval "\"$CommandToRun\" -ExtractVBS \"$SELECTED_FILE\"" &
             wait $!
             
             # After extraction, try opening the new VBS file with xdg-open
             if ! xdg-open "$vbs_script" 2>/dev/null; then
                 # If xdg-open fails (no default handler), fallback to a text editor
                 handle_error "No default handler found, opening with fallback editor"
-                $FALLBACK_EDITOR "$vbs_script" &
+                $FallbackEditor "$vbs_script" &
             fi
         fi
     fi
@@ -338,13 +249,13 @@ handle_search_query() {
 
 ## ----------------- PRE-LAUNCH CHECKS ------------------
 # Validate .vpx files and executable before launch
-if ! find "$TABLES_DIR" -type f -name "*.vpx" | grep -q .; then
-    handle_error "No .vpx files found in $TABLES_DIR."
+if ! find "$TablesDir" -type f -name "*.vpx" | grep -q .; then
+    handle_error "No .vpx files found in $TablesDir."
     [[ $? -eq 252 ]] && exit 0
 fi
 
-if [[ ! -x "$COMMAND_TO_RUN" ]]; then
-    handle_error "The executable '$COMMAND_TO_RUN' does not exist or is not executable!"
+if [[ ! -x "$CommandToRun" ]]; then
+    handle_error "The executable '$CommandToRun' does not exist or is not executable!"
     [[ $? -eq 252 ]] && exit 0
 fi
 
@@ -394,9 +305,9 @@ while true; do
             if [[ -f "$found_file" ]]; then
                 # File exists: set status to white
                 eval "$status_var='<span foreground=\"white\">${display_name} </span>'"
-                # Special case for INI: check if it differs from VPINBALLX_INI
-                if [[ "$extension" == "ini" && -f "$VPINBALLX_INI" ]]; then
-                    if [[ "$(diff "$found_file" "$VPINBALLX_INI")" != "" ]]; then
+                # Special case for INI: check if it differs from VPinballXIni
+                if [[ "$extension" == "ini" && -f "$VPinballXIni" ]]; then
+                    if [[ "$(diff "$found_file" "$VPinballXIni")" != "" ]]; then
                         eval "$status_var='<span foreground=\"yellow\">${display_name} </span>'"
                     fi
                 fi
@@ -418,7 +329,7 @@ while true; do
 
         # --------------------------------------------Check for images
         image_types=("Wheel" "Table" "B2S" "Marquee")
-        image_vars=("WHEEL_IMAGE" "TABLE_IMAGE" "BACKGLASS_IMAGE" "MARQUEE_IMAGE")
+        image_vars=("WheelImage" "TableImage" "BackglassImage" "MarqueeImage")
         status_parts=()
 
         for i in "${!image_types[@]}"; do
@@ -443,7 +354,7 @@ while true; do
         # -----------------------------------------------Check for videos
         # Check for videos
         video_types=("Table" "B2S" "DMD")
-        video_vars=("TABLE_VIDEO" "BACKGLASS_VIDEO" "DMD_VIDEO")
+        video_vars=("TableVideo" "BackglassVideo" "DMDVideo")
         video_status_parts=()
 
         for i in "${!video_types[@]}"; do
@@ -466,20 +377,20 @@ while true; do
         VIDEOS_STATUS="🎬 [${video_status_parts[*]}]"
 
         # -------------------------------Check for Music, ROM and AltSound/Color folders
-        ROM_STATUS="<span foreground='red'>✗</span>"
-        SND_STATUS="<span foreground='gray'>–</span>"
-        CRZ_STATUS="<span foreground='gray'>–</span>"
-        MUS_STATUS="<span foreground='gray'>–</span>"
-        UDMD_STATUS="<span foreground='gray'>–</span>"
-        PUP_STATUS="<span foreground='gray'>–</span>"
-        ROM_NAME="<span foreground='gray'>none</span>"
+        RomStatus="<span foreground='red'>✗</span>"
+        AltSoundStatus="<span foreground='gray'>–</span>"
+        AltColorStatus="<span foreground='gray'>–</span>"
+        MusicStatus="<span foreground='gray'>–</span>"
+        UltraDMDStatus="<span foreground='gray'>–</span>"
+        PUPPackStatus="<span foreground='gray'>–</span>"
+        RomName="<span foreground='gray'>none</span>"
 
         # Function to set status for components with path variables
         set_status() {
             local comp=$1        # Component name (e.g., SND, CRZ)
             local emoji=$2       # Emoji to set if directory exists
-            local path_var="${comp}_PATH"
-            local status_var="${comp}_STATUS"
+            local path_var="${comp}Path"
+            local status_var="${comp}Status"
             if [[ -n "${!path_var}" && -n "$VPX_FOLDER" ]]; then
                 local local_dir="$VPX_FOLDER${!path_var}"
                 if [[ -d "$local_dir" ]]; then
@@ -489,19 +400,19 @@ while true; do
         }
 
         # Set statuses for components using the function
-        set_status "SND" "🎵"
-        set_status "CRZ" "🌈"
-        set_status "MUS" "📀"
-        set_status "PUP" "📺"
+        set_status "AltSound" "🎵"
+        set_status "AltColor" "🌈"
+        set_status "Music" "📀"
+        set_status "PUPPack" "📺"
 
-        # Handle ROM separately due to ROM_NAME logic
-        if [[ -n "$ROM_PATH" && -n "$VPX_FOLDER" ]]; then
-            local_rom_dir="$VPX_FOLDER$ROM_PATH"
+        # Handle ROM separately due to RomName logic
+        if [[ -n "$ROMPath" && -n "$VPX_FOLDER" ]]; then
+            local_rom_dir="$VPX_FOLDER$ROMPath"
             if [[ -d "$local_rom_dir" ]]; then
-                ROM_STATUS="💾"
+                RomStatus="💾"
                 zip_file=$(find "$local_rom_dir" -maxdepth 1 -type f -name "*.zip" | head -n 1)
                 if [[ -n "$zip_file" ]]; then
-                    ROM_NAME=$(basename "$zip_file" .zip)
+                    RomName=$(basename "$zip_file" .zip)
                 fi
             fi
         fi
@@ -510,20 +421,20 @@ while true; do
         if [[ -n "$VPX_FOLDER" ]]; then
             local_udmd_dir=$(find "$VPX_FOLDER" -maxdepth 1 -type d -name "*.UltraDMD" | head -n 1)
             if [[ -d "$local_udmd_dir" ]]; then
-                UDMD_STATUS="🎞️"
+                UltraDMDStatus="🎞️"
             fi
         fi
 
         # --------------Create the array of columns------------
         FILE_LIST+=("$T_YEAR" "$T_BRAND" "$T_NAME" \
                     "$INI_STATUS $VBS_STATUS $DIRECTB2S_STATUS" \
-                    "$ROM_STATUS $ROM_NAME" \
-                    "$UDMD_STATUS" "$SND_STATUS" "$CRZ_STATUS" "$PUP_STATUS" \
-                    "$MUS_STATUS" "$IMAGES_STATUS" "$VIDEOS_STATUS" \
+                    "$RomStatus $RomName" \
+                    "$UltraDMDStatus" "$AltSoundStatus" "$AltColorStatus" "$PUPPackStatus" \
+                    "$MusicStatus" "$IMAGES_STATUS" "$VIDEOS_STATUS" \
                     "$BASENAME") # Add to the list
 
         FILE_MAP["$BASENAME"]="$FILE" # Map table name to file path
-        done < <(find "$TABLES_DIR" -type f -name "*.vpx" | sort)
+        done < <(find "$TablesDir" -type f -name "*.vpx" | sort)
 
     TABLE_NUM=0 # Initialize table(s) found count
 
@@ -544,7 +455,7 @@ while true; do
     #Keep filename as last and ajust COLS variable with the number of total columns
         SELECTED_TABLE=$(LC_ALL=en_US.UTF-8 yad --list --title="VPX GUI Tools" \
             --text="Table(s) found: $TABLE_NUM $HELP_TEXT" \
-            --width="$WINDOW_WIDTH" --height="$WINDOW_HEIGHT" --search=true \
+            --width="$WindowWidth" --height="$WindowHeight" --search=true \
             --button="⚙!!Settings :1" \
             --button="INI Editor!!Create and edit INI files:2" \
             --button="Extract VBS!!Extract and edit VBS scripts:10" \
@@ -570,7 +481,11 @@ while true; do
 
     case $EXIT_CODE in
         252) exit 0 ;;  # User canceled
-        1) open_launcher_settings ;;  # ⚙ Settings
+        1)  
+            # ⚙ Settings
+            eval "./vpx_config settings.ini"
+            load_config
+            ;;  
         2)  
             # Open INI Editor (default or per table)
             INI_FILE="${SELECTED_FILE%.vpx}.ini"
@@ -583,7 +498,7 @@ while true; do
             ;;
         20)
             # Open the tables folder if no table selected
-            if [[ -z "$SELECTED_TABLE" ]]; then xdg-open "$TABLES_DIR" >/dev/null 2>&1; \
+            if [[ -z "$SELECTED_TABLE" ]]; then xdg-open "$TablesDir" >/dev/null 2>&1; \
             else xdg-open "$(dirname "$SELECTED_FILE")" >/dev/null 2>&1; fi
             continue
             ;;
@@ -602,7 +517,7 @@ while true; do
                 handle_error "No table selected!\nPlease select a table before launching."
             else
                 # Normal launch (no terminal)
-                eval "$START_ARGS \"$COMMAND_TO_RUN\" -play \"$SELECTED_FILE\" $END_ARGS" &
+                eval "$StartArgs \"$CommandToRun\" -play \"$SELECTED_FILE\" $EndArgs" &
                 wait $!
             fi
     esac
