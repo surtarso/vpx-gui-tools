@@ -4,3 +4,10 @@ grid/*
 cabinet/*
 vpx-gui-tools.run
 .vscode*
+settings.json
+.vscode
+.vscode/*
+.vscode/settings.json
+*.vscode
+config
+imgui.ini
