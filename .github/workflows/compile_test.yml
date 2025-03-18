@@ -41,8 +41,8 @@ jobs:
 
         # Extract the binary and move it to /src
         tar -xzvf vpxtool.tar.gz
-        mv vpxtool /src/vpxtool
-        chmod +x /src/vpxtool
+        mv vpxtool src/vpxtool
+        chmod +x src/vpxtool
         rm vpxtool.tar.gz
 
     - name: Compile
