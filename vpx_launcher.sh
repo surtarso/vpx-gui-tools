@@ -71,6 +71,7 @@ MusicPath = /music
 PUPPackPath = /pupvideos
 EOF
 fi
+
 load_config() {
     if [ -f "$CONFIG_FILE" ]; then
         # Read each line and ignore section headers ([LauncherSettings])
@@ -85,6 +86,8 @@ load_config() {
         exit 1
     fi
 }
+
+load_config
 
 ## ----------------------- FUNCTIONS -----------------------
 # Function to show an error dialog and return the chosen action
@@ -248,6 +251,7 @@ handle_search_query() {
 }
 
 ## ----------------- PRE-LAUNCH CHECKS ------------------
+
 # Validate .vpx files and executable before launch
 if ! find "$TablesDir" -type f -name "*.vpx" | grep -q .; then
     handle_error "No .vpx files found in $TablesDir."
