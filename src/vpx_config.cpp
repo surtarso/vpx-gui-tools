@@ -153,7 +153,8 @@ void IniEditor::saveIniFile(const std::string& filename) {
 }
 
 void IniEditor::initExplanations() {
-    
+    //-------------------------------------------------------------------------------------------
+    //--------------------------- START OF VPinballX.ini EXPLANATIONS ---------------------------
     // STANDALONE
     explanations["AltSound"] = "Controls sound format between 'Legacy', 'Altsound' and 'G-Sound'.\n1 - If the folder contains an 'altsound.csv' or 'g-sound.csv' file.\n1 - If the folder contains subfolders with names like 'jingle', 'single', 'voice', etc. and you are NOT running on PinSound sound hardware.\nNote: this only works for the unencrypted versions of the PinSound libraries, which are now quite old.\n2 - If the folder contains subfolders with names like 'jingle', 'single', 'voice', etc. and you are running on PinSound sound hardware.\n.\n3 - ??";
     explanations["PinMAMEPath"] = "Specifies the directory where the PinMAME emulator is located. PinMAME is an emulator for classic pinball machines.\nDefault is ~/.pinmame: If not specified, the default location for the PinMAME folder is in the home directory.";
@@ -233,6 +234,31 @@ void IniEditor::initExplanations() {
     explanations["ForceMotionBlurOff"] = "Controls whether motion blur is applied to the ball during gameplay. Motion blur can make fast-moving objects appear smoother but may reduce visual clarity.\n0 - Enabled: Ball motion blur is enabled, making the ball's movement appear smoother.\n1 - Disabled: Ball motion blur is disabled, resulting in sharper visuals but potentially making fast-moving objects look more jagged.";
     explanations["ForceAnisotropicFiltering"] = "Determines whether anisotropic filtering (AF) is enabled or disabled. AF improves the quality of textures viewed at steep angles, making them appear sharper and clearer.\n0 - Disabled: Anisotropic filtering is disabled, leading to potentially blurry textures at certain angles.\n1 - Enabled: Anisotropic filtering is enabled, improving the quality of textures, especially at angles.";
     explanations["BAMHeadTracking"] = "Makes the game appear as a 3D image without the need for 3D glasse.\nNote: BAM Head Tracking uses a PS3 Eye Camera and a 3 point Infrared LED hat.\n0 - Disabled.\n1 - Enabled.";
+
+    //----------------------------- END OF VPinballX.INI EXPLANATIONS ---------------------------
+    //-------------------------------------------------------------------------------------------
+    
+    // VPX GUI Tools Launcher Variables Explanations (Don't change these!)
+    explanations["TablesDir"] = "Path to the directory where all VPX table files (.vpx) are stored.\nSearch is recursive.";
+    explanations["StartArgs"] = "Additional command-line arguments to pass when launching VPX (optional).";
+    explanations["CommandToRun"] = "Full path to the VPinballX executable used to launch tables.";
+    explanations["EndArgs"] = "Additional command-line arguments to append when launching VPX (optional).";
+    explanations["VPinballXIni"] = "Path to the main VPinballX configuration file.";
+    explanations["FallbackEditor"] = "Default text editor used if the user wants to edit configuration files.";
+    explanations["WindowWidth"] = "Width (in pixels) of the GUI window for the launcher.";
+    explanations["WindowHeight"] = "Height (in pixels) of the GUI window for the launcher.";
+    explanations["WheelImage"] = "Path to the image used for the table selection wheel,\nrelative to TablesDir/<table_folder>/.";
+    explanations["TableImage"] = "Path to the image representing the selected table,\nrelative to TablesDir/<table_folder>/.";
+    explanations["BackglassImage"] = "Path to the image representing the table's backglass,\nrelative to TablesDir/<table_folder>/.";
+    explanations["MarqueeImage"] = "Path to the image used as the marquee display,\nrelative to TablesDir/<table_folder>/.";
+    explanations["TableVideo"] = "Path to the video preview for the selected table,\nrelative to TablesDir/<table_folder>/.";
+    explanations["BackglassVideo"] = "Path to the video preview of the table's backglass,\nrelative to TablesDir/<table_folder>/.";
+    explanations["DMDVideo"] = "Path to the video preview of the table's DMD display,\nrelative to TablesDir/<table_folder>/.";
+    explanations["ROMPath"] = "Directory containing the ROM files for PinMAME emulation,\nrelative to TablesDir/<table_folder>/.";
+    explanations["AltSoundPath"] = "Directory for alternative sound packs used by PinMAME,\nrelative to TablesDir/<table_folder>/.";
+    explanations["AltColorPath"] = "Directory for alternative color DMD packs used by PinMAME,\nrelative to TablesDir/<table_folder>/.";
+    explanations["MusicPath"] = "Directory where custom music files are stored,\nrelative to TablesDir/<table_folder>/.";
+    explanations["PUPPackPath"] = "Directory where PinUP Player (PUP) packs are stored,\nrelative to TablesDir/<table_folder>/.";
 }
 
 void IniEditor::drawGUI() {
