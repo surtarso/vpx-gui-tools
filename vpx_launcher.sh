@@ -584,7 +584,7 @@ while true; do
             --button="🕹️!!Launch selected table :0" \
             --button="🚪!!Exit :252" \
             --buttons-layout=center \
-            --column="Year:NUM" --column="Manufacturer" --column="Title" \
+            --column="Year:NUM" --column="Author" --column="Title" \
             --column="Extra Files" --column="ROM" --column="uDMD" --column="AltS" --column="AltC"\
             --column="Pup" --column="Mus" --column="Images" --column="Videos" \
             --column="Filename" --markup-columns=4 \

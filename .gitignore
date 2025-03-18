@@ -3,3 +3,4 @@ create_icons.sh
 grid/*
 cabinet/*
 vpx-gui-tools.run
+.vscode*
