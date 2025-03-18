@@ -4,7 +4,7 @@
 packages=(
     build-essential
     libsdl2-dev
-    libsdl2-ttf-dev
+    libgl1-mesa-dev
 )
 
 # Check and install missing packages
