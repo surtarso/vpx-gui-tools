@@ -17,7 +17,7 @@
 >If you need help installing VPX check the [WIKI](https://github.com/surtarso/vpx-frontend/wiki/Visual-Pinball-X-on-Debian-Linux).
 >
 >If you need a dual monitor frontend 'as simple as possible', check [ASAPCabinetFE](https://github.com/surtarso/ASAPCabinetFE/).
-
+ libsdl2-ttf-dev
 
 ## **Installation & Usage**  
 
@@ -30,18 +30,22 @@ You can download a release file here: https://github.com/surtarso/vpx-frontend/r
    
 3. **Install dependencies:**  
    ```bash
-   sudo apt install yad python3 python3-tk
+   sudo apt install yad build-essential libsdl2-dev libsdl2-ttf-dev
    ```
-
+4. **Build the INI Editor**
+   ```bash
+   ./compile.sh
+   ```
+   
 >[!NOTE]
 *If you don’t plan to use the launcher, you can skip installing `yad`. Move to [Standalone INI Editor](#standalone-ini-editor)*
 
-4. **Run the launcher:**  
+5. **Run the launcher:**  
    ```bash
    ./vpx_launcher.sh
    ```
    
-5. **Configure paths and args**
+6. **Configure paths and args**
 
 
    ![image](https://github.com/user-attachments/assets/f3d4ca55-99b2-4b96-be17-027d30a7e3c4)
@@ -83,7 +87,7 @@ You can download a release file here: https://github.com/surtarso/vpx-frontend/r
 # **Standalone INI Editor**  
 | **[INI Editor](vpx_ini_editor.py)** |
 |---------------------------------------|
-| ![INI Editor](https://github.com/user-attachments/assets/010727f1-3e8a-4d2e-ac69-938a0b6bac7e) |
+| ![image](https://github.com/user-attachments/assets/b11bbccf-2844-4c14-b93f-0049c8b97717) |
 
 ## **Editor Features:**  
  - Explanations for each variable **(need help!)** 
@@ -92,14 +96,15 @@ You can download a release file here: https://github.com/surtarso/vpx-frontend/r
  - Open any ini you want! 
  - Wont override code comments 
 
+Build with `./compile.sh`
+
+>[!NOTE]
 You can run the INI Editor separately without the launcher with:  
 ```bash
-python3 vpx_ini_editor.py
+./vpx_config
 
-python3 vpx_ini_editor.py /path/to/anyfile.ini
+./vpx_config /path/to/anyfile.ini
 ```
->[!NOTE]
-It only requires **Tkinter** and does not depend on `yad`.
 
 ## Contribute
 
