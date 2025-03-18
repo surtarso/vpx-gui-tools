@@ -24,6 +24,8 @@ jobs:
 
     - name: Download Latest vpxtool Binary
       run: |
+        set -x
+
         # Fetch the latest release info from GitHub API
         LATEST_RELEASE=$(curl -s https://api.github.com/repos/francisdb/vpxtool/releases/latest)
         
@@ -36,18 +38,23 @@ jobs:
           exit 1
         fi
 
-        # Download the binary tarball
+        echo "Downloading the binary tarball"
         wget $DOWNLOAD_URL -O vpxtool.tar.gz
 
-        # Extract the binary and move it to /src
+        echo "Extracting the binary and moving it to /src"
         tar -xzvf vpxtool.tar.gz
         mv vpxtool src/vpxtool
         chmod +x src/vpxtool
         rm vpxtool.tar.gz
 
-    - name: Compile
-      run: g++ src/vpx_config.cpp imgui/*.cpp imgui/backends/imgui_impl_sdl2.cpp imgui/backends/imgui_impl_opengl3.cpp -std=c++17 -Wall -Wextra -pedantic -I/usr/include/SDL2 -D_REENTRANT -Iimgui -Iimgui/backends -lSDL2 -lGL -static-libstdc++ -o vpx_config
+        set +x
 
+    - name: Compile
+      run: |
+        set -x
+        g++ src/vpx_config.cpp imgui/*.cpp imgui/backends/imgui_impl_sdl2.cpp imgui/backends/imgui_impl_opengl3.cpp -std=c++17 -Wall -Wextra -pedantic -I/usr/include/SDL2 -D_REENTRANT -Iimgui -Iimgui/backends -lSDL2 -lGL -static-libstdc++ -o vpx_config
+        set +x
+        
     - name: Check Compilation
       run: |
         if [ -f vpx_config ]; then
