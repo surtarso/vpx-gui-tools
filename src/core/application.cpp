@@ -5,12 +5,14 @@
 #include <iostream>
 #include <filesystem>
 
-Application::Application()
-    : tableManager(config.tablesDir, config.romPath, config.altSoundPath, config.altColorPath, config.musicPath, config.pupPackPath,
+Application::Application(const std::string& basePath)
+    : basePath(basePath),
+      config(basePath),  // Pass basePath to ConfigManager
+      tableManager(config.tablesDir, config.romPath, config.altSoundPath, config.altColorPath, config.musicPath, config.pupPackPath,
                    config.wheelImage, config.tableImage, config.backglassImage, config.marqueeImage, config.tableVideo,
                    config.backglassVideo, config.dmdVideo),
       iniEditor(config.vpinballXIni, false),
-      configEditor("resources/settings.ini", true),
+      configEditor(basePath + "resources/settings.ini", true),
       launcher(config.tablesDir, config.startArgs, config.commandToRun, config.endArgs, config.vpinballXIni, &tableManager) {}
 
 Application::~Application() {}
@@ -49,11 +51,11 @@ void Application::run() {
         0, 0             // Terminator
     };
 
-    const char* symbolaPath = "resources/Symbola.ttf";
+    std::string symbolaPath = basePath + "resources/Symbola.ttf";
     ImFont* emojiFont = nullptr;
     if (std::filesystem::exists(symbolaPath)) {
         std::cout << "Found Symbola.ttf at " << symbolaPath << std::endl;
-        emojiFont = io.Fonts->AddFontFromFileTTF(symbolaPath, 14.0f, nullptr, glyphRanges);
+        emojiFont = io.Fonts->AddFontFromFileTTF(symbolaPath.c_str(), 14.0f, nullptr, glyphRanges);
         if (emojiFont) {
             std::cout << "Successfully loaded Symbola.ttf with glyph ranges" << std::endl;
         } else {

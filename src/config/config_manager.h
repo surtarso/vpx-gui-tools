@@ -5,7 +5,7 @@
 
 class ConfigManager {
 public:
-    ConfigManager();
+    ConfigManager(const std::string& basePath);
     void loadSettings();
 
     // Configuration settings (public for simplicity; could use getters)
@@ -15,7 +15,7 @@ public:
     std::string endArgs;
     std::string vpinballXIni;
     std::string fallbackEditor;
-    std::string vpxTool;        // Added new member
+    std::string vpxTool;
     int windowWidth = 1024;
     int windowHeight = 768;
     std::string wheelImage;
@@ -30,6 +30,10 @@ public:
     std::string altColorPath;
     std::string musicPath;
     std::string pupPackPath;
+
+private:
+    std::string basePath;
+    std::string prependBasePath(const std::string& relativePath) const;
 };
 
 #endif // CONFIG_MANAGER_H

@@ -6,18 +6,20 @@
 #include "tools/ini_editor.h"
 #include "launcher/launcher.h"
 #include <SDL.h>
+#include <string>
 
 class Application {
 public:
-    Application();
+    Application(const std::string& basePath);
     ~Application();
     void run();
 
 private:
+    std::string basePath;  // Store executable directory
     ConfigManager config;
     TableManager tableManager;
-    IniEditor iniEditor;      // For VPinballX.ini
-    IniEditor configEditor;   // Added for settings.ini
+    IniEditor iniEditor;
+    IniEditor configEditor;
     Launcher launcher;
     bool editingIni = false;
     bool editingSettings = false;
