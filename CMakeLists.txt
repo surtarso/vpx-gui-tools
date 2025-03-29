@@ -34,7 +34,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/external/imgui
     ${CMAKE_SOURCE_DIR}/external/imgui/backends
     # json
-    ${CMAKE_SOURCE_DIR}/external/json/include/nlohmann/
+    ${CMAKE_SOURCE_DIR}/external/json/single_include/nlohmann/
     # Where version.h is generated
     ${CMAKE_BINARY_DIR}
 )
