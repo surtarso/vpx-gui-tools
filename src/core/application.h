@@ -16,9 +16,11 @@ public:
 private:
     ConfigManager config;
     TableManager tableManager;
-    IniEditor iniEditor;
+    IniEditor iniEditor;      // For VPinballX.ini
+    IniEditor configEditor;   // Added for settings.ini
     Launcher launcher;
     bool editingIni = false;
+    bool editingSettings = false;
     bool exitRequested = false;
 
     SDL_Window* window;

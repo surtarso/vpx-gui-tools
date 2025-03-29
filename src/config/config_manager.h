@@ -15,6 +15,7 @@ public:
     std::string endArgs;
     std::string vpinballXIni;
     std::string fallbackEditor;
+    std::string vpxTool;        // Added new member
     int windowWidth = 1024;
     int windowHeight = 768;
     std::string wheelImage;

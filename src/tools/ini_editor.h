@@ -8,10 +8,10 @@
 
 class IniEditor {
 public:
-    IniEditor(const std::string& initialFile);
+    IniEditor(const std::string& initialFile, bool isConfigEditor = false);
     void loadIniFile(const std::string& filename);
     void saveIniFile();
-    void draw();
+    void draw(bool& isOpen);  // Added isOpen parameter to control visibility
 
     std::string getCurrentFile() const { return currentIniFile; }
     bool isEditing() const { return true; } // Always editable for now
@@ -27,6 +27,7 @@ private:
     std::map<size_t, std::pair<std::string, std::string>> lineToKey;
     bool showSavedMessage = false;
     double savedMessageTimer = 0.0;
+    bool isConfigEditor;
 
     void initExplanations();
 };

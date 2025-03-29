@@ -9,7 +9,7 @@ class Launcher {
 public:
     Launcher(const std::string& tablesDir, const std::string& startArgs, const std::string& commandToRun,
              const std::string& endArgs, const std::string& vpinballXIni);
-    void draw(std::vector<TableEntry>& tables, bool& editingIni);
+    void draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested); // Added quitRequested
     int getSelectedTable() const { return selectedTable; }
 
 private:

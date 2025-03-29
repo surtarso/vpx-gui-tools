@@ -1,9 +1,12 @@
 #include "tools/ini_editor.h"
+#include "utils/vpx_tooltips.h"
+#include "utils/config_tooltips.h"
 #include "imgui.h"
 #include <fstream>
 #include <iostream>
 
-IniEditor::IniEditor(const std::string& initialFile) : currentIniFile(initialFile) {
+IniEditor::IniEditor(const std::string& initialFile, bool isConfigEditor) 
+    : currentIniFile(initialFile), isConfigEditor(isConfigEditor) {
     initExplanations();
     loadIniFile(initialFile);
     if (!sections.empty()) currentSection = sections[0];
@@ -73,38 +76,55 @@ void IniEditor::saveIniFile() {
     }
 }
 
-void IniEditor::draw() {
+void IniEditor::draw(bool& isOpen) {
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize, ImGuiCond_Always);
-    ImGui::Begin("VPinballX Configuration", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+    ImGui::Begin(isConfigEditor ? "Settings Configuration" : "VPinballX Configuration", 
+                 nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 
     if (ImGui::BeginCombo("Section", currentSection.c_str())) {
         for (const auto& section : sections) {
-            if (ImGui::Selectable(section.c_str(), currentSection == section)) currentSection = section;
+            bool is_selected = (currentSection == section);
+            if (ImGui::Selectable(section.c_str(), is_selected)) currentSection = section;
+            if (is_selected) ImGui::SetItemDefaultFocus();
         }
         ImGui::EndCombo();
     }
 
-    ImGui::BeginChild("KeyValues", ImVec2(0, ImGui::GetContentRegionAvail().y - ImGui::GetFrameHeight() - ImGui::GetStyle().ItemSpacing.y), true);
+    float buttonHeight = ImGui::GetFrameHeight() + ImGui::GetStyle().ItemSpacing.y;
+    float availableHeight = ImGui::GetContentRegionAvail().y;
+    float childHeight = availableHeight - buttonHeight;
+    if (childHeight < 0) childHeight = 0;
+
+    ImGui::BeginChild("KeyValues", ImVec2(0, childHeight), true);
     if (iniData.count(currentSection)) {
         for (auto& kv : iniData[currentSection].keyValues) {
             ImGui::PushID(kv.first.c_str());
+            
             ImGui::Text("%s", kv.first.c_str());
-            ImGui::SameLine(225);
-            char buf[256];
-            strncpy(buf, kv.second.c_str(), sizeof(buf));
-            buf[sizeof(buf) - 1] = '\0';
-            if (ImGui::InputText("", buf, sizeof(buf))) kv.second = buf;
+            ImGui::SameLine();
+            
             if (explanations.count(kv.first)) {
-                ImGui::SameLine(200);
                 ImGui::TextColored(ImVec4(0, 1, 0, 1), "?");
                 if (ImGui::IsItemHovered()) {
                     ImGui::BeginTooltip();
+                    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 20.0f);  // Set a reasonable wrapping width
                     ImGui::TextWrapped("%s", explanations[kv.first].c_str());
+                    ImGui::PopTextWrapPos();
                     ImGui::EndTooltip();
                 }
             }
+            
+            ImGui::SameLine(225);  // Consistent spacing for input field
+            char buf[256];
+            strncpy(buf, kv.second.c_str(), sizeof(buf));
+            buf[sizeof(buf) - 1] = '\0';
+            ImGui::PushItemWidth(-1);  // Make input field stretch to available width
+            if (ImGui::InputText("", buf, sizeof(buf))) kv.second = buf;
+            ImGui::PopItemWidth();
+            
             ImGui::PopID();
+            ImGui::NewLine();  // Add spacing between entries
         }
     }
     ImGui::EndChild();
@@ -113,6 +133,10 @@ void IniEditor::draw() {
         saveIniFile();
         showSavedMessage = true;
         savedMessageTimer = ImGui::GetTime();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Close")) {
+        isOpen = false;
     }
     ImGui::SameLine();
     if (showSavedMessage) {
@@ -124,6 +148,5 @@ void IniEditor::draw() {
 }
 
 void IniEditor::initExplanations() {
-    explanations["VPRegPath"] = "This can be used to override the VPinball table settings directory location.";
-    explanations["PinMAMEPath"] = "Specifies the directory where the PinMAME emulator is located.";
+    explanations = isConfigEditor ? CONFIG_TOOLTIPS : VPX_TOOLTIPS;
 }

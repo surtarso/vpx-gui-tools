@@ -60,3 +60,16 @@ endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
+
+# Copy resources to the build directory after building the executable
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    # settings:
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/resources ${CMAKE_BINARY_DIR}/resources
+    # vpxtool:
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    ${CMAKE_SOURCE_DIR}/external/vpxtool ${CMAKE_BINARY_DIR}/resources/vpxtool
+    # logs:
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+    ${CMAKE_BINARY_DIR}/resources/logs
+)
