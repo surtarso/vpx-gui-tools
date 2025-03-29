@@ -1,0 +1,28 @@
+buttons:
+make ini editor open table's ini when selected
+
+make the extract vbs button use vpxtool,
+make it open a default text editor (or fallback) to open the vbs if one is already present.
+
+ultradmds not showing yet
+
+enter to lauch tables
+double click to open table folder
+
+add everything to ini to configure easy
+
+table:
+make ini change color if theres a diff
+make vbs change color if theres a diff (using vpxtool)
+show romnameon rom column
+
+year/brand/name get from vpxtool json (maybe some others too)
+
+add coloring to row as in:
+if a table fails to launch, paint it red
+default is clear, if launches normally, make sure its clear (to remove red)
+
+year = release date
+brand = author
+name = tablename
+rom = romname
