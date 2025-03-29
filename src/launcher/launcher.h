@@ -2,7 +2,7 @@
 #define LAUNCHER_H
 
 #include "utils/structures.h"
-#include "tables/table_manager.h"  // Need TableManager for pointer
+#include "tables/table_manager.h"
 #include <string>
 #include <vector>
 
@@ -26,7 +26,7 @@ private:
     std::string vpinballXIni;
     std::string searchQuery;
     int selectedTable = -1;
-    TableManager* tableManager;  // Pointer to TableManager instance
+    TableManager* tableManager;
 };
 
 #endif // LAUNCHER_H

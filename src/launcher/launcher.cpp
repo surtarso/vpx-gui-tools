@@ -5,8 +5,8 @@
 #include <algorithm>
 
 Launcher::Launcher(const std::string& tablesDir, const std::string& startArgs, const std::string& commandToRun,
-    const std::string& endArgs, const std::string& vpinballXIni, TableManager* tm)
-: tablesDir(tablesDir), startArgs(startArgs), commandToRun(commandToRun), endArgs(endArgs), vpinballXIni(vpinballXIni), tableManager(tm) {}
+                   const std::string& endArgs, const std::string& vpinballXIni, TableManager* tm)
+    : tablesDir(tablesDir), startArgs(startArgs), commandToRun(commandToRun), endArgs(endArgs), vpinballXIni(vpinballXIni), tableManager(tm) {}
 
 void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested) {
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
@@ -25,20 +25,24 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
     float buttonHeight = ImGui::GetFrameHeight() + ImGui::GetStyle().ItemSpacing.y * 2;
     float availableHeight = ImGui::GetIO().DisplaySize.y - headerHeight - buttonHeight;
 
-    ImGui::BeginChild("TableContainer", ImVec2(0, availableHeight), true);
-    if (ImGui::BeginTable("Tables", 12, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_HighlightHoveredColumn | ImGuiTableFlags_Sortable)) {
-        ImGui::TableSetupColumn("Year", ImGuiTableColumnFlags_DefaultSort);
-        ImGui::TableSetupColumn("Brand");
-        ImGui::TableSetupColumn("Name");
-        ImGui::TableSetupColumn("Extra Files");
-        ImGui::TableSetupColumn("ROM");
-        ImGui::TableSetupColumn("uDMD");
-        ImGui::TableSetupColumn("AltS");
-        ImGui::TableSetupColumn("AltC");
-        ImGui::TableSetupColumn("PUP");
-        ImGui::TableSetupColumn("Music");
-        ImGui::TableSetupColumn("Images");
-        ImGui::TableSetupColumn("Videos");
+    // Enable horizontal scrolling with ScrollX
+    ImGui::BeginChild("TableContainer", ImVec2(0, availableHeight), true, ImGuiWindowFlags_HorizontalScrollbar);
+    if (ImGui::BeginTable("Tables", 12, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | 
+                          ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable)) {
+        // Set column widths (icon columns narrower)
+        ImGui::TableSetupColumn("Year", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed, 60.0f);
+        ImGui::TableSetupColumn("Brand", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 200.0f);  // Stretch for readability
+        ImGui::TableSetupColumn("Extra Files", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+        ImGui::TableSetupColumn("ROM", ImGuiTableColumnFlags_WidthFixed, 40.0f);
+        ImGui::TableSetupColumn("uDMD", ImGuiTableColumnFlags_WidthFixed, 30.0f);    // Icon-only, narrow
+        ImGui::TableSetupColumn("AltS", ImGuiTableColumnFlags_WidthFixed, 30.0f);    // Icon-only
+        ImGui::TableSetupColumn("AltC", ImGuiTableColumnFlags_WidthFixed, 30.0f);    // Icon-only
+        ImGui::TableSetupColumn("PUP", ImGuiTableColumnFlags_WidthFixed, 30.0f);     // Icon-only
+        ImGui::TableSetupColumn("Music", ImGuiTableColumnFlags_WidthFixed, 30.0f);   // Icon-only
+        ImGui::TableSetupColumn("Images", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+        ImGui::TableSetupColumn("Videos", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+        ImGui::TableSetupScrollFreeze(0, 1);  // Freeze header row
         ImGui::TableHeadersRow();
 
         // Handle sorting
@@ -47,9 +51,8 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
                 const ImGuiTableColumnSortSpecs* spec = &sortSpecs->Specs[0];
                 int columnIdx = spec->ColumnIndex;
                 bool isAscending = spec->SortDirection == ImGuiSortDirection_Ascending;
-                // Pass sort specs to TableManager instead of sorting here
                 tableManager->setSortSpecs(columnIdx, isAscending);
-                sortSpecs->SpecsDirty = false;  // Mark as handled
+                sortSpecs->SpecsDirty = false;
             }
         }
 
