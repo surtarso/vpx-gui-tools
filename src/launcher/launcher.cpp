@@ -122,7 +122,7 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
     ImGui::PopItemWidth();
 
     // Quit button isolated on the right
-    ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::CalcTextSize("✖ Quit").x - ImGui::GetStyle().ItemSpacing.x * 2 - ImGui::GetStyle().WindowPadding.x);
+    ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::CalcTextSize("✖ Quit").x - ImGui::GetStyle().ItemSpacing.x * 2);
     if (ImGui::Button("✖ Quit")) {
         quitRequested = true;
     }
