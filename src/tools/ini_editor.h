@@ -15,7 +15,7 @@ public:
 
     std::string getCurrentFile() const { return currentIniFile; }
     bool isEditing() const { return true; } // Always editable for now
-    void setEditing(bool editing) { } // Placeholder for toggling
+    //void setEditing(bool editing) { } // Placeholder for toggling
 
 private:
     std::map<std::string, ConfigSection> iniData;
