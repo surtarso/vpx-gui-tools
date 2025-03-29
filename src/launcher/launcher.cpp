@@ -68,6 +68,14 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
                 if (ImGui::Selectable(rowLabel, &isSelected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap)) {
                     selectedTable = static_cast<int>(i);
                 }
+                // Double-click to open folder
+                if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0) && selectedTable >= 0) {
+                    openFolder(tables[selectedTable].filepath);
+                }
+                // Enter to launch
+                if (isSelected && ImGui::IsKeyPressed(ImGuiKey_Enter) && selectedTable >= 0) {
+                    launchTable(tables[selectedTable].filepath);
+                }
                 
                 ImGui::TableSetColumnIndex(1); ImGui::Text("%s", tables[i].brand.c_str());
                 ImGui::TableSetColumnIndex(2); ImGui::Text("%s", tables[i].name.c_str());
