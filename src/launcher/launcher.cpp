@@ -13,13 +13,10 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize, ImGuiCond_Always);
     ImGui::Begin("VPX GUI Tools", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
 
-    ImGui::Text("Table(s) found: %zu", tables.size());
-    char searchBuf[256];
-    strncpy(searchBuf, searchQuery.c_str(), sizeof(searchBuf) - 1);
-    searchBuf[sizeof(searchBuf) - 1] = '\0';
-    if (ImGui::InputText("Search", searchBuf, sizeof(searchBuf))) {
-        searchQuery = searchBuf;
-    }
+    // Tables found at the top left
+    char tablesFoundText[32];
+    snprintf(tablesFoundText, sizeof(tablesFoundText), "Table(s) found: %zu", tables.size());
+    ImGui::Text("%s", tablesFoundText);
 
     float headerHeight = ImGui::GetCursorPosY();
     float buttonHeight = ImGui::GetFrameHeight() + ImGui::GetStyle().ItemSpacing.y * 2;
@@ -29,23 +26,21 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
     ImGui::BeginChild("TableContainer", ImVec2(0, availableHeight), true, ImGuiWindowFlags_HorizontalScrollbar);
     if (ImGui::BeginTable("Tables", 12, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | 
                           ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable)) {
-        // Set column widths (icon columns narrower)
         ImGui::TableSetupColumn("Year", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed, 60.0f);
         ImGui::TableSetupColumn("Brand", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 200.0f);  // Stretch for readability
+        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 200.0f);
         ImGui::TableSetupColumn("Extra Files", ImGuiTableColumnFlags_WidthFixed, 80.0f);
         ImGui::TableSetupColumn("ROM", ImGuiTableColumnFlags_WidthFixed, 40.0f);
-        ImGui::TableSetupColumn("uDMD", ImGuiTableColumnFlags_WidthFixed, 30.0f);    // Icon-only, narrow
-        ImGui::TableSetupColumn("AltS", ImGuiTableColumnFlags_WidthFixed, 30.0f);    // Icon-only
-        ImGui::TableSetupColumn("AltC", ImGuiTableColumnFlags_WidthFixed, 30.0f);    // Icon-only
-        ImGui::TableSetupColumn("PUP", ImGuiTableColumnFlags_WidthFixed, 30.0f);     // Icon-only
-        ImGui::TableSetupColumn("Music", ImGuiTableColumnFlags_WidthFixed, 30.0f);   // Icon-only
+        ImGui::TableSetupColumn("uDMD", ImGuiTableColumnFlags_WidthFixed, 30.0f);
+        ImGui::TableSetupColumn("AltS", ImGuiTableColumnFlags_WidthFixed, 30.0f);
+        ImGui::TableSetupColumn("AltC", ImGuiTableColumnFlags_WidthFixed, 30.0f);
+        ImGui::TableSetupColumn("PUP", ImGuiTableColumnFlags_WidthFixed, 30.0f);
+        ImGui::TableSetupColumn("Music", ImGuiTableColumnFlags_WidthFixed, 30.0f);
         ImGui::TableSetupColumn("Images", ImGuiTableColumnFlags_WidthFixed, 100.0f);
         ImGui::TableSetupColumn("Videos", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-        ImGui::TableSetupScrollFreeze(0, 1);  // Freeze header row
+        ImGui::TableSetupScrollFreeze(0, 1);
         ImGui::TableHeadersRow();
 
-        // Handle sorting
         if (ImGuiTableSortSpecs* sortSpecs = ImGui::TableGetSortSpecs()) {
             if (sortSpecs->SpecsDirty) {
                 const ImGuiTableColumnSortSpecs* spec = &sortSpecs->Specs[0];
@@ -58,25 +53,20 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
 
         for (size_t i = 0; i < tables.size(); ++i) {
             ImGui::TableNextRow();
-            
             ImGui::PushID(static_cast<int>(i));
             bool isSelected = (selectedTable == static_cast<int>(i));
             if (ImGui::TableSetColumnIndex(0)) {
                 char rowLabel[1024];
                 snprintf(rowLabel, sizeof(rowLabel), "%s##%zu", tables[i].year.c_str(), i);
-                
                 if (ImGui::Selectable(rowLabel, &isSelected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap)) {
                     selectedTable = static_cast<int>(i);
                 }
-                // Double-click to open folder
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0) && selectedTable >= 0) {
                     openFolder(tables[selectedTable].filepath);
                 }
-                // Enter to launch
                 if (isSelected && ImGui::IsKeyPressed(ImGuiKey_Enter) && selectedTable >= 0) {
                     launchTable(tables[selectedTable].filepath);
                 }
-                
                 ImGui::TableSetColumnIndex(1); ImGui::Text("%s", tables[i].brand.c_str());
                 ImGui::TableSetColumnIndex(2); ImGui::Text("%s", tables[i].name.c_str());
                 ImGui::TableSetColumnIndex(3); ImGui::Text("%s", tables[i].extraFiles.c_str());
@@ -95,6 +85,7 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
     }
     ImGui::EndChild();
 
+    // Buttons with search bar between Play and Quit
     if (ImGui::Button("⛭")) {
         editingSettings = true;
     }
@@ -111,10 +102,26 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
         openFolder(selectedTable >= 0 ? tables[selectedTable].filepath : tablesDir);
     }
     ImGui::SameLine();
+    float playButtonPosX = ImGui::GetCursorPosX();  // Capture Play button's left edge
+    float playButtonWidth = ImGui::CalcTextSize("▶ Play").x + ImGui::GetStyle().FramePadding.x * 2;  // Button width
     if (ImGui::Button("▶ Play") && selectedTable >= 0) {
         launchTable(tables[selectedTable].filepath);
     }
+    ImGui::SameLine();
+    // Search bar after Play button with placeholder
+    float padding = ImGui::GetStyle().ItemSpacing.x;
+    ImGui::SetCursorPosX(playButtonPosX + playButtonWidth + padding);  // Align to Play's right edge + padding
+    float searchBarWidth = 350.0f;
+    char searchBuf[300];
+    strncpy(searchBuf, searchQuery.c_str(), sizeof(searchBuf) - 1);
+    searchBuf[sizeof(searchBuf) - 1] = '\0';
+    ImGui::PushItemWidth(searchBarWidth);
+    if (ImGui::InputTextWithHint("##Search", "Search", searchBuf, sizeof(searchBuf))) {
+        searchQuery = searchBuf;
+    }
+    ImGui::PopItemWidth();
 
+    // Quit button isolated on the right
     ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::CalcTextSize("✖ Quit").x - ImGui::GetStyle().ItemSpacing.x * 2 - ImGui::GetStyle().WindowPadding.x);
     if (ImGui::Button("✖ Quit")) {
         quitRequested = true;
