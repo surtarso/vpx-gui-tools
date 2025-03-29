@@ -13,17 +13,18 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
     ImGui::Begin("VPX GUI Tools", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
 
     ImGui::Text("Table(s) found: %zu", tables.size());
-    char searchBuf[256] = "";
+    char searchBuf[256];
+    strncpy(searchBuf, searchQuery.c_str(), sizeof(searchBuf) - 1);  // Initialize with current query
+    searchBuf[sizeof(searchBuf) - 1] = '\0';  // Ensure null-terminated
     if (ImGui::InputText("Search", searchBuf, sizeof(searchBuf))) {
-        searchQuery = searchBuf;
+        searchQuery = searchBuf;  // Update searchQuery on any change
     }
 
     // Calculate available height minus space for header, search, and buttons
     float headerHeight = ImGui::GetCursorPosY();
-    float buttonHeight = ImGui::GetFrameHeight() + ImGui::GetStyle().ItemSpacing.y * 2; // Space for buttons and padding
+    float buttonHeight = ImGui::GetFrameHeight() + ImGui::GetStyle().ItemSpacing.y * 2;
     float availableHeight = ImGui::GetIO().DisplaySize.y - headerHeight - buttonHeight;
 
-    // Child window for the table with no extra scrollbar, relying on table's built-in scroll
     ImGui::BeginChild("TableContainer", ImVec2(0, availableHeight), true);
     if (ImGui::BeginTable("Tables", 12, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_HighlightHoveredColumn)) {
         ImGui::TableSetupColumn("Year");
@@ -71,7 +72,6 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
     }
     ImGui::EndChild();
 
-    // Buttons area
     if (ImGui::Button("Settings")) {
         editingSettings = true;
     }
@@ -92,7 +92,6 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
         launchTable(tables[selectedTable].filepath);
     }
 
-    // Position Quit button on the far right
     ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::CalcTextSize("Quit").x - ImGui::GetStyle().ItemSpacing.x * 2 - ImGui::GetStyle().WindowPadding.x);
     if (ImGui::Button("Quit")) {
         quitRequested = true;

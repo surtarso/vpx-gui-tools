@@ -9,8 +9,9 @@ class Launcher {
 public:
     Launcher(const std::string& tablesDir, const std::string& startArgs, const std::string& commandToRun,
              const std::string& endArgs, const std::string& vpinballXIni);
-    void draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested); // Added quitRequested
+    void draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested);
     int getSelectedTable() const { return selectedTable; }
+    std::string getSearchQuery() const { return searchQuery; }  // Added getter
 
 private:
     void launchTable(const std::string& filepath);
@@ -22,7 +23,7 @@ private:
     std::string commandToRun;
     std::string endArgs;
     std::string vpinballXIni;
-    std::string searchQuery;
+    std::string searchQuery; 
     int selectedTable = -1;
 };
 

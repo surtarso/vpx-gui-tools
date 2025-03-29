@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <iostream>
 #include <algorithm>
+#include <cctype>
 
 TableManager::TableManager(const std::string& tablesDir, const std::string& romPath, const std::string& altSoundPath,
                            const std::string& altColorPath, const std::string& musicPath, const std::string& pupPackPath,
@@ -70,11 +71,11 @@ void TableManager::loadTables() {
 
                 std::string romDir = folder + romPath;
                 table.rom = std::filesystem::exists(romDir) ? "ROM" : "";
-                table.udmd = std::filesystem::exists(folder + "/UltraDMD") ? "uDMD" : "";
-                table.alts = std::filesystem::exists(folder + altSoundPath) ? "AltS" : "";
-                table.altc = std::filesystem::exists(folder + altColorPath) ? "AltC" : "";
-                table.pup = std::filesystem::exists(folder + pupPackPath) ? "PUP" : "";
-                table.music = std::filesystem::exists(folder + musicPath) ? "Mus" : "";
+                table.udmd = std::filesystem::exists(folder + "/UltraDMD") ? u8"✪" : "";  // Circled White Star (U+272A)
+                table.alts = std::filesystem::exists(folder + altSoundPath) ? u8"♫" : "";  // Beamed Eighth Notes (U+266B)
+                table.altc = std::filesystem::exists(folder + altColorPath) ? u8"☀" : "";  // Sun (U+2600)
+                table.pup = std::filesystem::exists(folder + pupPackPath) ? u8"▣" : "";    // Square with Fill (U+25A3)
+                table.music = std::filesystem::exists(folder + musicPath) ? u8"♪" : "";    // Eighth Note (U+266A)
 
                 table.images = std::string(std::filesystem::exists(folder + wheelImage) ? "Wheel " : "") +
                                std::string(std::filesystem::exists(folder + tableImage) ? "Table " : "") +
@@ -96,8 +97,21 @@ void TableManager::loadTables() {
 
 void TableManager::filterTables(const std::string& query) {
     filteredTables.clear();
+    if (query.empty()) {
+        filteredTables = tables;  // Reset to full list when query is empty
+        return;
+    }
+
+    // Convert query to lowercase for case-insensitive search
+    std::string lowerQuery = query;
+    std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
+
     for (const auto& table : tables) {
-        if (table.name.find(query) != std::string::npos || query.empty()) {
+        // Convert table name to lowercase for comparison
+        std::string lowerName = table.name;
+        std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
+
+        if (lowerName.find(lowerQuery) != std::string::npos) {
             filteredTables.push_back(table);
         }
     }
