@@ -14,6 +14,7 @@ public:
                  const std::string& dmdVideo);
     void loadTables();
     void filterTables(const std::string& query);
+    void setSortSpecs(int columnIdx, bool ascending);  // New method to set sort state
 
     std::vector<TableEntry>& getTables() { return filteredTables; }
 
@@ -34,6 +35,8 @@ private:
 
     std::vector<TableEntry> tables;
     std::vector<TableEntry> filteredTables;
+    int sortColumn = 0;       // Default sort by Year (column 0)
+    bool sortAscending = true; // Default ascending
 };
 
 #endif // TABLE_MANAGER_H

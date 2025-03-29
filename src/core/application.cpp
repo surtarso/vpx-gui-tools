@@ -11,7 +11,7 @@ Application::Application()
                    config.backglassVideo, config.dmdVideo),
       iniEditor(config.vpinballXIni, false),
       configEditor("resources/settings.ini", true),
-      launcher(config.tablesDir, config.startArgs, config.commandToRun, config.endArgs, config.vpinballXIni) {}
+      launcher(config.tablesDir, config.startArgs, config.commandToRun, config.endArgs, config.vpinballXIni, &tableManager) {}
 
 Application::~Application() {}
 
@@ -41,16 +41,14 @@ void Application::run() {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
 
-    // Define glyph ranges for Unicode symbols (16-bit, within 0xFFFF)
     static const ImWchar glyphRanges[] = {
         0x0020, 0x007F,  // Basic Latin
         0x2600, 0x26FF,  // Miscellaneous Symbols (☀, ♫, ♪)
-        0x25A0, 0x25FF,  // Geometric Shapes (■)
+        0x25A0, 0x25FF,  // Geometric Shapes (■, ▣)
         0x2700, 0x27BF,  // Dingbats (✪)
         0, 0             // Terminator
     };
 
-    // Load Symbola
     const char* symbolaPath = "resources/Symbola.ttf";
     ImFont* emojiFont = nullptr;
     if (std::filesystem::exists(symbolaPath)) {
@@ -65,7 +63,6 @@ void Application::run() {
         std::cerr << "Symbola.ttf not found at " << symbolaPath << std::endl;
     }
 
-    // Fallback to DejaVuSans
     const char* fallbackFontPath = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
     if (!emojiFont && std::filesystem::exists(fallbackFontPath)) {
         std::cout << "Falling back to DejaVuSans.ttf at " << fallbackFontPath << std::endl;
@@ -77,13 +74,11 @@ void Application::run() {
         }
     }
 
-    // Final fallback to default font
     if (io.Fonts->Fonts.empty()) {
         std::cout << "All custom font loading failed. Using ImGui default font." << std::endl;
         io.Fonts->AddFontDefault();
     }
 
-    // Build font atlas
     bool fontAtlasBuilt = io.Fonts->Build();
     if (!fontAtlasBuilt) {
         std::cerr << "Failed to build font atlas. Clearing fonts and using default." << std::endl;
@@ -117,7 +112,6 @@ void Application::run() {
             }
         }
         else {
-            // Use the launcher's search query to filter tables
             tableManager.filterTables(launcher.getSearchQuery());
             launcher.draw(tableManager.getTables(), editingIni, editingSettings, exitRequested);
         }

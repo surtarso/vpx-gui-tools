@@ -2,10 +2,11 @@
 #include "imgui.h"
 #include <filesystem>
 #include <cstdlib>
+#include <algorithm>
 
 Launcher::Launcher(const std::string& tablesDir, const std::string& startArgs, const std::string& commandToRun,
-                   const std::string& endArgs, const std::string& vpinballXIni)
-    : tablesDir(tablesDir), startArgs(startArgs), commandToRun(commandToRun), endArgs(endArgs), vpinballXIni(vpinballXIni) {}
+    const std::string& endArgs, const std::string& vpinballXIni, TableManager* tm)
+: tablesDir(tablesDir), startArgs(startArgs), commandToRun(commandToRun), endArgs(endArgs), vpinballXIni(vpinballXIni), tableManager(tm) {}
 
 void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested) {
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
@@ -14,20 +15,19 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
 
     ImGui::Text("Table(s) found: %zu", tables.size());
     char searchBuf[256];
-    strncpy(searchBuf, searchQuery.c_str(), sizeof(searchBuf) - 1);  // Initialize with current query
-    searchBuf[sizeof(searchBuf) - 1] = '\0';  // Ensure null-terminated
+    strncpy(searchBuf, searchQuery.c_str(), sizeof(searchBuf) - 1);
+    searchBuf[sizeof(searchBuf) - 1] = '\0';
     if (ImGui::InputText("Search", searchBuf, sizeof(searchBuf))) {
-        searchQuery = searchBuf;  // Update searchQuery on any change
+        searchQuery = searchBuf;
     }
 
-    // Calculate available height minus space for header, search, and buttons
     float headerHeight = ImGui::GetCursorPosY();
     float buttonHeight = ImGui::GetFrameHeight() + ImGui::GetStyle().ItemSpacing.y * 2;
     float availableHeight = ImGui::GetIO().DisplaySize.y - headerHeight - buttonHeight;
 
     ImGui::BeginChild("TableContainer", ImVec2(0, availableHeight), true);
-    if (ImGui::BeginTable("Tables", 12, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_HighlightHoveredColumn)) {
-        ImGui::TableSetupColumn("Year");
+    if (ImGui::BeginTable("Tables", 12, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_HighlightHoveredColumn | ImGuiTableFlags_Sortable)) {
+        ImGui::TableSetupColumn("Year", ImGuiTableColumnFlags_DefaultSort);
         ImGui::TableSetupColumn("Brand");
         ImGui::TableSetupColumn("Name");
         ImGui::TableSetupColumn("Extra Files");
@@ -40,6 +40,18 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
         ImGui::TableSetupColumn("Images");
         ImGui::TableSetupColumn("Videos");
         ImGui::TableHeadersRow();
+
+        // Handle sorting
+        if (ImGuiTableSortSpecs* sortSpecs = ImGui::TableGetSortSpecs()) {
+            if (sortSpecs->SpecsDirty) {
+                const ImGuiTableColumnSortSpecs* spec = &sortSpecs->Specs[0];
+                int columnIdx = spec->ColumnIndex;
+                bool isAscending = spec->SortDirection == ImGuiSortDirection_Ascending;
+                // Pass sort specs to TableManager instead of sorting here
+                tableManager->setSortSpecs(columnIdx, isAscending);
+                sortSpecs->SpecsDirty = false;  // Mark as handled
+            }
+        }
 
         for (size_t i = 0; i < tables.size(); ++i) {
             ImGui::TableNextRow();

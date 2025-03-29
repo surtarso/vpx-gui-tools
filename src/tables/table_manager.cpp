@@ -71,11 +71,11 @@ void TableManager::loadTables() {
 
                 std::string romDir = folder + romPath;
                 table.rom = std::filesystem::exists(romDir) ? "ROM" : "";
-                table.udmd = std::filesystem::exists(folder + "/UltraDMD") ? u8"✪" : "";  // Circled White Star (U+272A)
-                table.alts = std::filesystem::exists(folder + altSoundPath) ? u8"♫" : "";  // Beamed Eighth Notes (U+266B)
-                table.altc = std::filesystem::exists(folder + altColorPath) ? u8"☀" : "";  // Sun (U+2600)
-                table.pup = std::filesystem::exists(folder + pupPackPath) ? u8"▣" : "";    // Square with Fill (U+25A3)
-                table.music = std::filesystem::exists(folder + musicPath) ? u8"♪" : "";    // Eighth Note (U+266A)
+                table.udmd = std::filesystem::exists(folder + "/UltraDMD") ? u8"✪" : "";
+                table.alts = std::filesystem::exists(folder + altSoundPath) ? u8"♫" : "";
+                table.altc = std::filesystem::exists(folder + altColorPath) ? u8"☀" : "";
+                table.pup = std::filesystem::exists(folder + pupPackPath) ? u8"▣" : "";
+                table.music = std::filesystem::exists(folder + musicPath) ? u8"♪" : "";
 
                 table.images = std::string(std::filesystem::exists(folder + wheelImage) ? "Wheel " : "") +
                                std::string(std::filesystem::exists(folder + tableImage) ? "Table " : "") +
@@ -93,26 +93,59 @@ void TableManager::loadTables() {
         std::cerr << "Filesystem error in loadTables: " << e.what() << std::endl;
     }
     filteredTables = tables;
+    filterTables("");  // Apply initial sort
 }
 
 void TableManager::filterTables(const std::string& query) {
     filteredTables.clear();
     if (query.empty()) {
-        filteredTables = tables;  // Reset to full list when query is empty
-        return;
-    }
-
-    // Convert query to lowercase for case-insensitive search
-    std::string lowerQuery = query;
-    std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
-
-    for (const auto& table : tables) {
-        // Convert table name to lowercase for comparison
-        std::string lowerName = table.name;
-        std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
-
-        if (lowerName.find(lowerQuery) != std::string::npos) {
-            filteredTables.push_back(table);
+        filteredTables = tables;
+    } else {
+        std::string lowerQuery = query;
+        std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
+        for (const auto& table : tables) {
+            std::string lowerName = table.name;
+            std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
+            if (lowerName.find(lowerQuery) != std::string::npos) {
+                filteredTables.push_back(table);
+            }
         }
     }
+
+    // Apply sorting to filteredTables
+    std::sort(filteredTables.begin(), filteredTables.end(), [this](const TableEntry& a, const TableEntry& b) {
+        switch (sortColumn) {
+            case 0:  // Year
+                return sortAscending ? a.year < b.year : a.year > b.year;
+            case 1:  // Brand
+                return sortAscending ? a.brand < b.brand : a.brand > b.brand;
+            case 2:  // Name
+                return sortAscending ? a.name < b.name : a.name > b.name;
+            case 3:  // Extra Files
+                return sortAscending ? a.extraFiles < b.extraFiles : a.extraFiles > b.extraFiles;
+            case 4:  // ROM
+                return sortAscending ? a.rom < b.rom : a.rom > b.rom;
+            case 5:  // uDMD
+                return sortAscending ? a.udmd < b.udmd : a.udmd > b.udmd;
+            case 6:  // AltS
+                return sortAscending ? a.alts < b.alts : a.alts > b.alts;
+            case 7:  // AltC
+                return sortAscending ? a.altc < b.altc : a.altc > b.altc;
+            case 8:  // PUP
+                return sortAscending ? a.pup < b.pup : a.pup > b.pup;
+            case 9:  // Music
+                return sortAscending ? a.music < b.music : a.music > b.music;
+            case 10: // Images
+                return sortAscending ? a.images < b.images : a.images > b.images;
+            case 11: // Videos
+                return sortAscending ? a.videos < b.videos : a.videos > b.videos;
+            default:
+                return false;
+        }
+    });
+}
+
+void TableManager::setSortSpecs(int columnIdx, bool ascending) {
+    sortColumn = columnIdx;
+    sortAscending = ascending;
 }

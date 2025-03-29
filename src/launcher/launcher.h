@@ -2,16 +2,17 @@
 #define LAUNCHER_H
 
 #include "utils/structures.h"
+#include "tables/table_manager.h"  // Need TableManager for pointer
 #include <string>
 #include <vector>
 
 class Launcher {
 public:
     Launcher(const std::string& tablesDir, const std::string& startArgs, const std::string& commandToRun,
-             const std::string& endArgs, const std::string& vpinballXIni);
+             const std::string& endArgs, const std::string& vpinballXIni, TableManager* tm = nullptr);
     void draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested);
     int getSelectedTable() const { return selectedTable; }
-    std::string getSearchQuery() const { return searchQuery; }  // Added getter
+    std::string getSearchQuery() const { return searchQuery; }
 
 private:
     void launchTable(const std::string& filepath);
@@ -23,8 +24,9 @@ private:
     std::string commandToRun;
     std::string endArgs;
     std::string vpinballXIni;
-    std::string searchQuery; 
+    std::string searchQuery;
     int selectedTable = -1;
+    TableManager* tableManager;  // Pointer to TableManager instance
 };
 
 #endif // LAUNCHER_H
