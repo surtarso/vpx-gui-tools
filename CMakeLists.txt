@@ -8,12 +8,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Define source files
 set(SOURCES
     src/main.cpp
+    src/application.cpp
+    src/config_manager.cpp
+    src/ini_editor.cpp
+    src/launcher.cpp
+    src/table_manager.cpp
     external/imgui/imgui.cpp
     external/imgui/imgui_draw.cpp
     external/imgui/imgui_tables.cpp
     external/imgui/imgui_widgets.cpp
     external/imgui/backends/imgui_impl_sdl2.cpp
-    external/imgui/backends/imgui_impl_opengl3.cpp
+    external/imgui/backends/imgui_impl_sdlrenderer2.cpp
 )
 
 # Define the executable
@@ -28,11 +33,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 # Find and link dependencies
 find_package(SDL2 REQUIRED)
-find_package(OpenGL REQUIRED)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     SDL2::SDL2
-    OpenGL::GL
 )
 
 # Compile options
