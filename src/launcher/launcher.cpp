@@ -87,7 +87,7 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
     }
     ImGui::EndChild();
 
-    if (ImGui::Button("Settings")) {
+    if (ImGui::Button("⛭")) {
         editingSettings = true;
     }
     ImGui::SameLine();
@@ -103,12 +103,12 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
         openFolder(selectedTable >= 0 ? tables[selectedTable].filepath : tablesDir);
     }
     ImGui::SameLine();
-    if (ImGui::Button("Launch") && selectedTable >= 0) {
+    if (ImGui::Button("▶") && selectedTable >= 0) {
         launchTable(tables[selectedTable].filepath);
     }
 
-    ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::CalcTextSize("Quit").x - ImGui::GetStyle().ItemSpacing.x * 2 - ImGui::GetStyle().WindowPadding.x);
-    if (ImGui::Button("Quit")) {
+    ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::CalcTextSize("✖").x - ImGui::GetStyle().ItemSpacing.x * 2 - ImGui::GetStyle().WindowPadding.x);
+    if (ImGui::Button("✖")) {
         quitRequested = true;
     }
 
