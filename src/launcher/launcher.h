@@ -1,7 +1,7 @@
 #ifndef LAUNCHER_H
 #define LAUNCHER_H
 
-#include "structures.h"
+#include "utils/structures.h"
 #include <string>
 #include <vector>
 

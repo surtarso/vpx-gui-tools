@@ -1,7 +1,7 @@
-#include "application.h"
+#include "core/application.h"
 #include <imgui.h>
 #include "imgui_impl_sdl2.h"
-#include "imgui_impl_sdlrenderer2.h" // Note: Ensure this file exists in your ImGui setup
+#include "imgui_impl_sdlrenderer2.h"
 #include <iostream>
 
 Application::Application()
@@ -19,7 +19,7 @@ void Application::run() {
         return;
     }
 
-    // Create window without OpenGL flag
+    // Create window
     window = SDL_CreateWindow("VPX GUI Tools", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                               config.windowWidth, config.windowHeight, SDL_WINDOW_RESIZABLE);
     if (!window) {

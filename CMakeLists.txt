@@ -8,11 +8,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Define source files
 set(SOURCES
     src/main.cpp
-    src/application.cpp
-    src/config_manager.cpp
-    src/ini_editor.cpp
-    src/launcher.cpp
-    src/table_manager.cpp
+    src/core/application.cpp
+    src/config/config_manager.cpp
+    src/tools/ini_editor.cpp
+    src/launcher/launcher.cpp
+    src/tables/table_manager.cpp
     external/imgui/imgui.cpp
     external/imgui/imgui_draw.cpp
     external/imgui/imgui_tables.cpp
@@ -27,6 +27,12 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 # Include directories
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/core
+    ${CMAKE_SOURCE_DIR}/src/config
+    ${CMAKE_SOURCE_DIR}/src/launcher
+    ${CMAKE_SOURCE_DIR}/src/tools
+    ${CMAKE_SOURCE_DIR}/src/tables
+    ${CMAKE_SOURCE_DIR}/src/utils
     ${CMAKE_SOURCE_DIR}/external/imgui
     ${CMAKE_SOURCE_DIR}/external/imgui/backends
 )

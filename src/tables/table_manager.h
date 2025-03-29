@@ -1,7 +1,7 @@
 #ifndef TABLE_MANAGER_H
 #define TABLE_MANAGER_H
 
-#include "structures.h"
+#include "utils/structures.h"
 #include <vector>
 #include <string>
 

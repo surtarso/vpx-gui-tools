@@ -1,10 +1,10 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
-#include "config_manager.h"
-#include "table_manager.h"
-#include "ini_editor.h"
-#include "launcher.h"
+#include "config/config_manager.h"
+#include "tables/table_manager.h"
+#include "tools/ini_editor.h"
+#include "launcher/launcher.h"
 #include <SDL.h>
 
 class Application {

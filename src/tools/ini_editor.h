@@ -1,7 +1,7 @@
 #ifndef INI_EDITOR_H
 #define INI_EDITOR_H
 
-#include "structures.h"
+#include "utils/structures.h"
 #include <string>
 #include <vector>
 #include <map>
