@@ -1,13 +1,4 @@
-buttons:
-make ini editor open table's ini when selected
-
-make the extract vbs button use vpxtool,
-make it open a default text editor (or fallback) to open the vbs if one is already present.
-
 ultradmds not showing yet
-
-enter to lauch tables
-double click to open table folder
 
 add everything to ini to configure easy
 
@@ -35,7 +26,6 @@ extracting, launching, loading etc...
 add color diff for images/videos as:
 not present, red, present, green
 
-if possible color the icons too.
+show active folder on menu top bar while on ini editor
 
-
-'tables found' should be on the left side of the search bar on the same line.
+loading for initial vpxtool build (later)
