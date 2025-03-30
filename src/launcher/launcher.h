@@ -29,9 +29,9 @@ private:
     std::string vpinballXIni;
     std::string searchQuery;
     int selectedTable = -1;
-    std::string selectedIniPath;
     bool createIniConfirmed = false;
     TableManager* tableManager;
+    std::string selectedIniPath;
 };
 
 #endif // LAUNCHER_H
