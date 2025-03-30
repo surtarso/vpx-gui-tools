@@ -4,16 +4,9 @@
 #include <cstdlib>
 #include <algorithm>
 
-// --- Constructor ---
-Launcher::Launcher(const std::string& tablesDir, const std::string& startArgs, const std::string& commandToRun,
-                   const std::string& endArgs, const std::string& vpinballXIni, const std::string& vpxTool,
-                   const std::string& fallbackEditor, const std::string& vbsSubCmd, const std::string& playSubCmd,
-                   TableManager* tm)
-    : tablesDir(tablesDir), startArgs(startArgs), commandToRun(commandToRun), endArgs(endArgs), 
-      vpinballXIni(vpinballXIni), vpxTool(vpxTool), fallbackEditor(fallbackEditor), vbsSubCmd(vbsSubCmd),
-      playSubCmd(playSubCmd), tableManager(tm), selectedIniPath(vpinballXIni) {}
+Launcher::Launcher(IConfigProvider& config, TableManager* tm)
+    : config(config), tableManager(tm), selectedIniPath(config.getVPinballXIni()) {}
 
-// --- Main UI Drawing ---
 void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested, bool& showCreateIniPrompt) {
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize, ImGuiCond_Always);
@@ -94,7 +87,6 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
     }
     ImGui::EndChild();
 
-    // --- Button Bar ---
     if (ImGui::Button("⛭")) {
         editingSettings = true;
     }
@@ -110,7 +102,7 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
                 showCreateIniPrompt = true;
             }
         } else {
-            selectedIniPath = vpinballXIni;
+            selectedIniPath = config.getVPinballXIni();
             editingIni = true;
         }
     }
@@ -133,7 +125,7 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
     }
     ImGui::SameLine();
     if (ImGui::Button("Open Folder")) {
-        openFolder(selectedTable >= 0 ? tables[selectedTable].filepath : tablesDir);
+        openFolder(selectedTable >= 0 ? tables[selectedTable].filepath : config.getTablesDir());
     }
     ImGui::SameLine();
     float playButtonPosX = ImGui::GetCursorPosX();
@@ -162,24 +154,21 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
     ImGui::End();
 }
 
-// --- Table Launching ---
 void Launcher::launchTable(const std::string& filepath) {
-    std::string cmd = startArgs + " \"" + commandToRun + "\" " + playSubCmd + " \"" + filepath + "\" " + endArgs;
+    std::string cmd = config.getStartArgs() + " \"" + config.getCommandToRun() + "\" " + config.getPlaySubCmd() + " \"" + filepath + "\" " + config.getEndArgs();
     system(cmd.c_str());
 }
 
-// --- VBS Extraction ---
 void Launcher::extractVBS(const std::string& filepath) {
-    std::string cmd = "\"" + vpxTool + "\" " + vbsSubCmd + " \"" + filepath + "\"";
+    std::string cmd = "\"" + config.getVpxTool() + "\" " + config.getVbsSubCmd() + " \"" + filepath + "\"";
     system(cmd.c_str());
 }
 
-// --- Open File in External Editor ---
 bool Launcher::openInExternalEditor(const std::string& filepath) {
     std::string cmd = "xdg-open \"" + filepath + "\"";
     if (system(cmd.c_str()) != 0) {
-        if (!fallbackEditor.empty()) {
-            cmd = "\"" + fallbackEditor + "\" \"" + filepath + "\"";
+        if (!config.getFallbackEditor().empty()) {
+            cmd = "\"" + config.getFallbackEditor() + "\" \"" + filepath + "\"";
             return system(cmd.c_str()) == 0;
         }
         return false;
@@ -187,9 +176,8 @@ bool Launcher::openInExternalEditor(const std::string& filepath) {
     return true;
 }
 
-// --- Open Folder ---
 void Launcher::openFolder(const std::string& filepath) {
-    std::string folder = filepath.empty() ? tablesDir : filepath.substr(0, filepath.find_last_of('/'));
+    std::string folder = filepath.empty() ? config.getTablesDir() : filepath.substr(0, filepath.find_last_of('/'));
     std::string cmd = "xdg-open \"" + folder + "\"";
     system(cmd.c_str());
 }

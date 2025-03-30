@@ -15,7 +15,6 @@ std::string ConfigManager::prependBasePath(const std::string& relativePath) cons
     return basePath + relativePath;
 }
 
-// --- Load Configuration Settings ---
 void ConfigManager::loadSettings() {
     const char* homeDir = std::getenv("HOME");
     std::string defaultIniPath = std::string(homeDir ? homeDir : "") + "/.vpinball/VPinballX.ini";
@@ -33,20 +32,20 @@ void ConfigManager::loadSettings() {
             << "WindowWidth=1024\n"
             << "WindowHeight=768\n"
             << "\n[Images]\n"
-            << "WheelImage=images/wheel.png\n"
-            << "TableImage=images/table.png\n"
-            << "BackglassImage=images/backglass.png\n"
-            << "MarqueeImage=images/marquee.png\n"
+            << "WheelImage=/images/wheel.png\n"
+            << "TableImage=/images/table.png\n"
+            << "BackglassImage=/images/backglass.png\n"
+            << "MarqueeImage=/images/marquee.png\n"
             << "\n[Videos]\n"
-            << "TableVideo=video/table.mp4\n"
-            << "BackglassVideo=video/backglass.mp4\n"
-            << "DMDVideo=video/dmd.mp4\n"
+            << "TableVideo=/video/table.mp4\n"
+            << "BackglassVideo=/video/backglass.mp4\n"
+            << "DMDVideo=/video/dmd.mp4\n"
             << "\n[ExtraFolders]\n"
-            << "ROMPath=pinmame/roms\n"
-            << "AltSoundPath=pinmame/altsound\n"
-            << "AltColorPath=pinmame/AltColor\n"
-            << "MusicPath=music\n"
-            << "PUPPackPath=pupvideos\n"
+            << "ROMPath=/pinmame/roms\n"
+            << "AltSoundPath=/pinmame/altsound\n"
+            << "AltColorPath=/pinmame/AltColor\n"
+            << "MusicPath=/music\n"
+            << "PUPPackPath=/pupvideos\n"
             << "\n[Tools]\n"
             << "FallbackEditor=code\n"
             << "VpxTool=resources/vpxtool\n"
@@ -55,7 +54,8 @@ void ConfigManager::loadSettings() {
             << "IndexerSubCmd=index -r\n"
             << "DiffSubCmd=diff\n"
             << "RomSubCmd=romname\n"
-            << "VbsSubCmd=extractvbs\n";
+            << "VbsSubCmd=extractvbs\n"
+            << "PlaySubCmd=-Play\n";
         out.close();
     }
 
@@ -71,18 +71,24 @@ void ConfigManager::loadSettings() {
         vpxTool = prependBasePath("resources/vpxtool");
         vbsSubCmd = "extractvbs";
         playSubCmd = "-Play";
-        wheelImage = prependBasePath("images/wheel.png");
-        tableImage = prependBasePath("images/table.png");
-        backglassImage = prependBasePath("images/backglass.png");
-        marqueeImage = prependBasePath("images/marquee.png");
-        tableVideo = prependBasePath("video/table.mp4");
-        backglassVideo = prependBasePath("video/backglass.mp4");
-        dmdVideo = prependBasePath("video/dmd.mp4");
-        romPath = "pinmame/roms";
-        altSoundPath = "pinmame/altsound";
-        altColorPath = "pinmame/AltColor";
-        musicPath = "music";
-        pupPackPath = "pupvideos";
+        windowWidth = 1024;
+        windowHeight = 768;
+        wheelImage = prependBasePath("/images/wheel.png");
+        tableImage = prependBasePath("/images/table.png");
+        backglassImage = prependBasePath("/images/backglass.png");
+        marqueeImage = prependBasePath("/images/marquee.png");
+        tableVideo = prependBasePath("/video/table.mp4");
+        backglassVideo = prependBasePath("/video/backglass.mp4");
+        dmdVideo = prependBasePath("/video/dmd.mp4");
+        romPath = "/pinmame/roms";
+        altSoundPath = "/pinmame/altsound";
+        altColorPath = "/pinmame/AltColor";
+        musicPath = "/music";
+        pupPackPath = "/pupvideos";
+        vpxtoolIndexFile = "vpxtool_index.json";
+        indexerSubCmd = "index -r";
+        diffSubCmd = "diff";
+        romSubCmd = "romname";
         return;
     }
 
@@ -116,15 +122,15 @@ void ConfigManager::loadSettings() {
             else if (key == "WindowHeight") windowHeight = std::stoi(value);
         } 
         else if (currentSection == "Images") {
-            if (key == "WheelImage") wheelImage = prependBasePath(value);
-            else if (key == "TableImage") tableImage = prependBasePath(value);
-            else if (key == "BackglassImage") backglassImage = prependBasePath(value);
-            else if (key == "MarqueeImage") marqueeImage = prependBasePath(value);
+            if (key == "WheelImage") wheelImage = value; // Relative to table folder
+            else if (key == "TableImage") tableImage = value;
+            else if (key == "BackglassImage") backglassImage = value;
+            else if (key == "MarqueeImage") marqueeImage = value;
         } 
         else if (currentSection == "Videos") {
-            if (key == "TableVideo") tableVideo = prependBasePath(value);
-            else if (key == "BackglassVideo") backglassVideo = prependBasePath(value);
-            else if (key == "DMDVideo") dmdVideo = prependBasePath(value);
+            if (key == "TableVideo") tableVideo = value;
+            else if (key == "BackglassVideo") backglassVideo = value;
+            else if (key == "DMDVideo") dmdVideo = value;
         } 
         else if (currentSection == "ExtraFolders") {
             if (key == "ROMPath") romPath = value;
@@ -134,7 +140,11 @@ void ConfigManager::loadSettings() {
             else if (key == "PUPPackPath") pupPackPath = value;
         }
         else if (currentSection == "Internal") {
-            if (key == "VbsSubCmd") vbsSubCmd = value;
+            if (key == "VpxtoolIndexFile") vpxtoolIndexFile = value;
+            else if (key == "IndexerSubCmd") indexerSubCmd = value;
+            else if (key == "DiffSubCmd") diffSubCmd = value;
+            else if (key == "RomSubCmd") romSubCmd = value;
+            else if (key == "VbsSubCmd") vbsSubCmd = value;
             else if (key == "PlaySubCmd") playSubCmd = value;
         }
     }

@@ -5,21 +5,16 @@
 #include <iostream>
 #include <filesystem>
 
-// --- Constructor ---
 Application::Application(const std::string& basePath)
     : basePath(basePath),
       config(basePath),
-      tableManager(config.tablesDir, config.romPath, config.altSoundPath, config.altColorPath, config.musicPath, config.pupPackPath,
-                   config.wheelImage, config.tableImage, config.backglassImage, config.marqueeImage, config.tableVideo,
-                   config.backglassVideo, config.dmdVideo),
-      iniEditor(config.vpinballXIni, false),
+      tableManager(config),
+      iniEditor(config.getVPinballXIni(), false),
       configEditor(basePath + "resources/settings.ini", true),
-      launcher(config.tablesDir, config.startArgs, config.commandToRun, config.endArgs, config.vpinballXIni, 
-               config.vpxTool, config.fallbackEditor, config.vbsSubCmd, config.playSubCmd, &tableManager) {}
+      launcher(config, &tableManager) {}
 
 Application::~Application() {}
 
-// --- Main Application Loop ---
 void Application::run() {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
         std::cerr << "SDL_Init Error: " << SDL_GetError() << std::endl;
@@ -27,7 +22,7 @@ void Application::run() {
     }
 
     window = SDL_CreateWindow("VPX GUI Tools", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                              config.windowWidth, config.windowHeight, SDL_WINDOW_RESIZABLE);
+                              config.getWindowWidth(), config.getWindowHeight(), SDL_WINDOW_RESIZABLE);
     if (!window) {
         std::cerr << "SDL_CreateWindow Error: " << SDL_GetError() << std::endl;
         SDL_Quit();
@@ -67,7 +62,7 @@ void Application::run() {
     ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer2_Init(renderer);
 
-    std::string lastIniPath = config.vpinballXIni;
+    std::string lastIniPath = config.getVPinballXIni();
 
     while (!exitRequested) {
         SDL_Event event;
@@ -101,14 +96,13 @@ void Application::run() {
             launcher.draw(tableManager.getTables(), editingIni, editingSettings, exitRequested, showCreateIniPrompt);
         }
 
-        // --- INI Creation Popup ---
         if (showCreateIniPrompt) {
             ImGui::OpenPopup("Create INI File?");
             if (ImGui::BeginPopupModal("Create INI File?", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
                 ImGui::Text("No INI file found for this table.\nWould you like to create one?");
                 if (ImGui::Button("Yes")) {
                     std::string newIniPath = launcher.getSelectedIniPath();
-                    std::filesystem::copy(config.vpinballXIni, newIniPath, std::filesystem::copy_options::skip_existing);
+                    std::filesystem::copy(config.getVPinballXIni(), newIniPath, std::filesystem::copy_options::skip_existing);
                     iniEditor.loadIniFile(newIniPath);
                     lastIniPath = newIniPath;
                     editingIni = true;
@@ -124,7 +118,6 @@ void Application::run() {
             }
         }
 
-        // --- No Table Selected Popup ---
         if (ImGui::BeginPopupModal("No Table Selected", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::Text("No table selected.\nPlease select a table first.");
             if (ImGui::Button("OK")) {
