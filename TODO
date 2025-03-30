@@ -5,7 +5,7 @@ TODO:
 - add everything to ini to configure easy
 
 table:
-- show romnameon rom column
+- show romname on rom column
 
 - add coloring to row as in:
 set if a table fails to launch, paint it red
@@ -26,5 +26,3 @@ not present, red, present, green
 - launcher related settings apply on save
 
 - hamburguer menu for advanced options, like all vpxtool args etc
-
-- shrink music column
