@@ -15,7 +15,7 @@ Application::Application(const std::string& basePath)
       iniEditor(config.vpinballXIni, false),
       configEditor(basePath + "resources/settings.ini", true),
       launcher(config.tablesDir, config.startArgs, config.commandToRun, config.endArgs, config.vpinballXIni, 
-               config.vpxTool, config.fallbackEditor, config.vbsSubCmd, &tableManager) {}
+               config.vpxTool, config.fallbackEditor, config.vbsSubCmd, config.playSubCmd, &tableManager) {}
 
 Application::~Application() {}
 

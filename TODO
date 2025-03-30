@@ -18,6 +18,7 @@ brand = author
 name = tablename
 rom = romname
 
+capture any typing and auto-focus search box
 
 get some feedback on shit
 extracting, launching, loading etc...
@@ -29,3 +30,8 @@ not present, red, present, green
 show active folder on menu top bar while on ini editor
 
 loading for initial vpxtool build (later)
+refresh button for changes (run vpxtool index again and refresh dirs)
+
+launcher related settings apply on save
+
+hamburguer menu for advanced options, like all vpxtool args etc

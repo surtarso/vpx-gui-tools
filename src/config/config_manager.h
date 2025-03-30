@@ -16,7 +16,8 @@ public:
     std::string vpinballXIni;
     std::string fallbackEditor;
     std::string vpxTool;
-    std::string vbsSubCmd;  // New: for "extractvbs"
+    std::string vbsSubCmd;  // for "extractvbs"
+    std::string playSubCmd; // for "play"
     int windowWidth = 1024;
     int windowHeight = 768;
     std::string wheelImage;

@@ -70,6 +70,7 @@ void ConfigManager::loadSettings() {
         fallbackEditor = "code";
         vpxTool = prependBasePath("resources/vpxtool");
         vbsSubCmd = "extractvbs";
+        playSubCmd = "-Play";
         wheelImage = prependBasePath("images/wheel.png");
         tableImage = prependBasePath("images/table.png");
         backglassImage = prependBasePath("images/backglass.png");
@@ -134,6 +135,7 @@ void ConfigManager::loadSettings() {
         }
         else if (currentSection == "Internal") {
             if (key == "VbsSubCmd") vbsSubCmd = value;
+            else if (key == "PlaySubCmd") playSubCmd = value;
         }
     }
     file.close();

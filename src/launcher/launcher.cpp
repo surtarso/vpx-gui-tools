@@ -7,10 +7,11 @@
 // --- Constructor ---
 Launcher::Launcher(const std::string& tablesDir, const std::string& startArgs, const std::string& commandToRun,
                    const std::string& endArgs, const std::string& vpinballXIni, const std::string& vpxTool,
-                   const std::string& fallbackEditor, const std::string& vbsSubCmd, TableManager* tm)
+                   const std::string& fallbackEditor, const std::string& vbsSubCmd, const std::string& playSubCmd,
+                   TableManager* tm)
     : tablesDir(tablesDir), startArgs(startArgs), commandToRun(commandToRun), endArgs(endArgs), 
       vpinballXIni(vpinballXIni), vpxTool(vpxTool), fallbackEditor(fallbackEditor), vbsSubCmd(vbsSubCmd),
-      tableManager(tm), selectedIniPath(vpinballXIni) {}
+      playSubCmd(playSubCmd), tableManager(tm), selectedIniPath(vpinballXIni) {}
 
 // --- Main UI Drawing ---
 void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested, bool& showCreateIniPrompt) {
@@ -119,15 +120,15 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
             std::string vbsFile = tables[selectedTable].filepath;
             vbsFile = vbsFile.substr(0, vbsFile.find_last_of('.')) + ".vbs";
             if (std::filesystem::exists(vbsFile)) {
-                openInExternalEditor(vbsFile);  // Open existing VBS
+                openInExternalEditor(vbsFile);
             } else {
-                extractVBS(tables[selectedTable].filepath);  // Extract VBS
+                extractVBS(tables[selectedTable].filepath);
                 if (std::filesystem::exists(vbsFile)) {
-                    openInExternalEditor(vbsFile);  // Open after extraction
+                    openInExternalEditor(vbsFile);
                 }
             }
         } else {
-            ImGui::OpenPopup("No Table Selected");  // Trigger popup
+            ImGui::OpenPopup("No Table Selected");
         }
     }
     ImGui::SameLine();
@@ -163,7 +164,7 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
 
 // --- Table Launching ---
 void Launcher::launchTable(const std::string& filepath) {
-    std::string cmd = startArgs + " \"" + commandToRun + "\" -play \"" + filepath + "\" " + endArgs;
+    std::string cmd = startArgs + " \"" + commandToRun + "\" " + playSubCmd + " \"" + filepath + "\" " + endArgs;
     system(cmd.c_str());
 }
 
