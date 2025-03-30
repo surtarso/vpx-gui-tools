@@ -15,6 +15,7 @@ std::string ConfigManager::prependBasePath(const std::string& relativePath) cons
     return basePath + relativePath;
 }
 
+// --- Load Configuration Settings ---
 void ConfigManager::loadSettings() {
     const char* homeDir = std::getenv("HOME");
     std::string defaultIniPath = std::string(homeDir ? homeDir : "") + "/.vpinball/VPinballX.ini";
@@ -23,9 +24,9 @@ void ConfigManager::loadSettings() {
     if (!std::filesystem::exists(configFile)) {
         std::ofstream out(configFile);
         out << "[VPinballX]\n"
-            << "TablesDir=tables\n"  // Relative to exe dir
+            << "TablesDir=tables\n"
             << "StartArgs=\n"
-            << "CommandToRun=vpinballx\n"  // Assume in PATH or adjust to absolute
+            << "CommandToRun=vpinballx\n"
             << "EndArgs=\n"
             << "VPinballXIni=" << defaultIniPath << "\n"
             << "\n[LauncherWindow]\n"
@@ -61,7 +62,6 @@ void ConfigManager::loadSettings() {
     std::ifstream file(configFile);
     if (!file.is_open()) {
         std::cerr << "Could not open " << configFile << std::endl;
-        // Set defaults
         tablesDir = prependBasePath("tables");
         startArgs = "";
         commandToRun = "vpinballx";
@@ -69,6 +69,7 @@ void ConfigManager::loadSettings() {
         vpinballXIni = defaultIniPath;
         fallbackEditor = "code";
         vpxTool = prependBasePath("resources/vpxtool");
+        vbsSubCmd = "extractvbs";
         wheelImage = prependBasePath("images/wheel.png");
         tableImage = prependBasePath("images/table.png");
         backglassImage = prependBasePath("images/backglass.png");
@@ -101,7 +102,7 @@ void ConfigManager::loadSettings() {
         if (currentSection == "VPinballX") {
             if (key == "TablesDir") tablesDir = prependBasePath(value);
             else if (key == "StartArgs") startArgs = value;
-            else if (key == "CommandToRun") commandToRun = prependBasePath(value);  // Allow relative or absolute
+            else if (key == "CommandToRun") commandToRun = prependBasePath(value);
             else if (key == "EndArgs") endArgs = value;
             else if (key == "VPinballXIni") vpinballXIni = prependBasePath(value);
         } 
@@ -125,11 +126,14 @@ void ConfigManager::loadSettings() {
             else if (key == "DMDVideo") dmdVideo = prependBasePath(value);
         } 
         else if (currentSection == "ExtraFolders") {
-            if (key == "ROMPath") romPath = value;  // Relative to tablesDir
+            if (key == "ROMPath") romPath = value;
             else if (key == "AltSoundPath") altSoundPath = value;
             else if (key == "AltColorPath") altColorPath = value;
             else if (key == "MusicPath") musicPath = value;
             else if (key == "PUPPackPath") pupPackPath = value;
+        }
+        else if (currentSection == "Internal") {
+            if (key == "VbsSubCmd") vbsSubCmd = value;
         }
     }
     file.close();

@@ -25,6 +25,7 @@ private:
     bool editingSettings = false;
     bool exitRequested = false;
     bool showCreateIniPrompt = false;
+    bool showNoTablePopup = false;  // New
     SDL_Window* window;
     SDL_GLContext gl_context;
 };

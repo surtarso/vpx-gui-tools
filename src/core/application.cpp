@@ -5,6 +5,7 @@
 #include <iostream>
 #include <filesystem>
 
+// --- Constructor ---
 Application::Application(const std::string& basePath)
     : basePath(basePath),
       config(basePath),
@@ -13,10 +14,12 @@ Application::Application(const std::string& basePath)
                    config.backglassVideo, config.dmdVideo),
       iniEditor(config.vpinballXIni, false),
       configEditor(basePath + "resources/settings.ini", true),
-      launcher(config.tablesDir, config.startArgs, config.commandToRun, config.endArgs, config.vpinballXIni, &tableManager) {}
+      launcher(config.tablesDir, config.startArgs, config.commandToRun, config.endArgs, config.vpinballXIni, 
+               config.vpxTool, config.fallbackEditor, config.vbsSubCmd, &tableManager) {}
 
 Application::~Application() {}
 
+// --- Main Application Loop ---
 void Application::run() {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
         std::cerr << "SDL_Init Error: " << SDL_GetError() << std::endl;
@@ -64,7 +67,7 @@ void Application::run() {
     ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer2_Init(renderer);
 
-    std::string lastIniPath = config.vpinballXIni;  // Track last loaded INI to detect changes
+    std::string lastIniPath = config.vpinballXIni;
 
     while (!exitRequested) {
         SDL_Event event;
@@ -78,7 +81,6 @@ void Application::run() {
         ImGui::NewFrame();
 
         if (editingIni) {
-            // Reload INI if the selected path has changed
             std::string currentIniPath = launcher.getSelectedIniPath();
             if (currentIniPath != lastIniPath) {
                 iniEditor.loadIniFile(currentIniPath);
@@ -99,6 +101,7 @@ void Application::run() {
             launcher.draw(tableManager.getTables(), editingIni, editingSettings, exitRequested, showCreateIniPrompt);
         }
 
+        // --- INI Creation Popup ---
         if (showCreateIniPrompt) {
             ImGui::OpenPopup("Create INI File?");
             if (ImGui::BeginPopupModal("Create INI File?", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -107,7 +110,7 @@ void Application::run() {
                     std::string newIniPath = launcher.getSelectedIniPath();
                     std::filesystem::copy(config.vpinballXIni, newIniPath, std::filesystem::copy_options::skip_existing);
                     iniEditor.loadIniFile(newIniPath);
-                    lastIniPath = newIniPath;  // Update last loaded path
+                    lastIniPath = newIniPath;
                     editingIni = true;
                     showCreateIniPrompt = false;
                     ImGui::CloseCurrentPopup();
@@ -119,6 +122,15 @@ void Application::run() {
                 }
                 ImGui::EndPopup();
             }
+        }
+
+        // --- No Table Selected Popup ---
+        if (ImGui::BeginPopupModal("No Table Selected", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("No table selected.\nPlease select a table first.");
+            if (ImGui::Button("OK")) {
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
         }
 
         ImGui::Render();

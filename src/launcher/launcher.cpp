@@ -4,11 +4,15 @@
 #include <cstdlib>
 #include <algorithm>
 
+// --- Constructor ---
 Launcher::Launcher(const std::string& tablesDir, const std::string& startArgs, const std::string& commandToRun,
-                   const std::string& endArgs, const std::string& vpinballXIni, TableManager* tm)
+                   const std::string& endArgs, const std::string& vpinballXIni, const std::string& vpxTool,
+                   const std::string& fallbackEditor, const std::string& vbsSubCmd, TableManager* tm)
     : tablesDir(tablesDir), startArgs(startArgs), commandToRun(commandToRun), endArgs(endArgs), 
-      vpinballXIni(vpinballXIni), tableManager(tm), selectedIniPath(vpinballXIni) {}
+      vpinballXIni(vpinballXIni), vpxTool(vpxTool), fallbackEditor(fallbackEditor), vbsSubCmd(vbsSubCmd),
+      tableManager(tm), selectedIniPath(vpinballXIni) {}
 
+// --- Main UI Drawing ---
 void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested, bool& showCreateIniPrompt) {
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize, ImGuiCond_Always);
@@ -60,9 +64,9 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
                 bool wasClicked = ImGui::Selectable(rowLabel, &isSelected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap);
                 if (wasClicked) {
                     if (selectedTable == static_cast<int>(i)) {
-                        selectedTable = -1;  // Deselect if already selected
+                        selectedTable = -1;
                     } else {
-                        selectedTable = static_cast<int>(i);  // Select new row
+                        selectedTable = static_cast<int>(i);
                     }
                 }
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0) && selectedTable >= 0) {
@@ -89,6 +93,7 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
     }
     ImGui::EndChild();
 
+    // --- Button Bar ---
     if (ImGui::Button("⛭")) {
         editingSettings = true;
     }
@@ -109,8 +114,21 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
         }
     }
     ImGui::SameLine();
-    if (ImGui::Button("Extract VBS") && selectedTable >= 0) {
-        extractVBS(tables[selectedTable].filepath);
+    if (ImGui::Button("Extract VBS")) {
+        if (selectedTable >= 0) {
+            std::string vbsFile = tables[selectedTable].filepath;
+            vbsFile = vbsFile.substr(0, vbsFile.find_last_of('.')) + ".vbs";
+            if (std::filesystem::exists(vbsFile)) {
+                openInExternalEditor(vbsFile);  // Open existing VBS
+            } else {
+                extractVBS(tables[selectedTable].filepath);  // Extract VBS
+                if (std::filesystem::exists(vbsFile)) {
+                    openInExternalEditor(vbsFile);  // Open after extraction
+                }
+            }
+        } else {
+            ImGui::OpenPopup("No Table Selected");  // Trigger popup
+        }
     }
     ImGui::SameLine();
     if (ImGui::Button("Open Folder")) {
@@ -143,16 +161,32 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
     ImGui::End();
 }
 
+// --- Table Launching ---
 void Launcher::launchTable(const std::string& filepath) {
     std::string cmd = startArgs + " \"" + commandToRun + "\" -play \"" + filepath + "\" " + endArgs;
     system(cmd.c_str());
 }
 
+// --- VBS Extraction ---
 void Launcher::extractVBS(const std::string& filepath) {
-    std::string cmd = "\"" + commandToRun + "\" -ExtractVBS \"" + filepath + "\"";
+    std::string cmd = "\"" + vpxTool + "\" " + vbsSubCmd + " \"" + filepath + "\"";
     system(cmd.c_str());
 }
 
+// --- Open File in External Editor ---
+bool Launcher::openInExternalEditor(const std::string& filepath) {
+    std::string cmd = "xdg-open \"" + filepath + "\"";
+    if (system(cmd.c_str()) != 0) {
+        if (!fallbackEditor.empty()) {
+            cmd = "\"" + fallbackEditor + "\" \"" + filepath + "\"";
+            return system(cmd.c_str()) == 0;
+        }
+        return false;
+    }
+    return true;
+}
+
+// --- Open Folder ---
 void Launcher::openFolder(const std::string& filepath) {
     std::string folder = filepath.empty() ? tablesDir : filepath.substr(0, filepath.find_last_of('/'));
     std::string cmd = "xdg-open \"" + folder + "\"";
