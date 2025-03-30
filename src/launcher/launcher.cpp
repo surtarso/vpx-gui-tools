@@ -2,8 +2,6 @@
 #include "imgui.h"
 #include <filesystem>
 
-
-
 Launcher::Launcher(IConfigProvider& config, TableManager* tm)
     : config(config), tableManager(tm), tableView(tm, config), tableActions(config), createIniConfirmed(false), selectedIniPath(config.getVPinballXIni()) {}
 
@@ -15,6 +13,12 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
     if (tableManager->isLoading()) {
         ImGui::Text("Loading tables...");
     } else {
+        ImGuiIO& io = ImGui::GetIO();
+        bool shouldFocusSearch = false;
+        if (!io.WantTextInput && ImGui::IsKeyPressed(ImGuiKey_Space, false)) { // Focus on spacebar press
+            shouldFocusSearch = true;
+        }
+
         char tablesFoundText[32];
         snprintf(tablesFoundText, sizeof(tablesFoundText), "Table(s) found: %zu", tables.size());
         ImGui::Text("%s", tablesFoundText);
@@ -76,7 +80,28 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
         strncpy(searchBuf, searchQuery.c_str(), sizeof(searchBuf) - 1);
         searchBuf[sizeof(searchBuf) - 1] = '\0';
         ImGui::PushItemWidth(searchBarWidth);
-        if (ImGui::InputTextWithHint("##Search", "Search", searchBuf, sizeof(searchBuf))) searchQuery = searchBuf;
+
+        // Focus the search bar if flagged from the previous frame
+        if (shouldFocusSearch) {
+            ImGui::SetKeyboardFocusHere();
+        }
+
+        // Render the search bar
+        if (ImGui::InputTextWithHint("##Search", "Search", searchBuf, sizeof(searchBuf))) {
+            searchQuery = searchBuf;
+        }
+
+        // Add 'x' button to clear the search bar
+        ImGui::SameLine();
+        if (ImGui::Button("x")) {
+            searchQuery.clear(); // Clear the search query
+        }
+
+        // Clear search bar with ESC
+        if (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+            searchQuery.clear(); // Clear the search query
+        }
+
         ImGui::PopItemWidth();
 
         ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::CalcTextSize("✖ Quit").x - ImGui::GetStyle().ItemSpacing.x * 2);

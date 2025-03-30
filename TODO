@@ -9,8 +9,6 @@ not present, red, present, green
 set if a table fails to launch, paint it red
 default is clear, if launches normally, make sure its clear (to remove red)
 
-- capture any typing and auto-focus search box
-
 - get some feedback on shit
 extracting, launching, loading etc...
 
