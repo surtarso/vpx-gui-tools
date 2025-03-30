@@ -14,6 +14,7 @@ struct TableEntry {
     std::string year;
     std::string brand;
     std::string name;
+    std::string version;    // New: Table version from vpxtool
     std::string extraFiles; // INI, VBS, B2S status
     std::string rom;        // ROM status and name
     std::string udmd;       // UltraDMD status
@@ -25,8 +26,8 @@ struct TableEntry {
     std::string videos;     // Video status
     std::string filename;   // Full basename
     std::string filepath;   // Full file path
-    bool vbsModified = false; // New: VBS differs from internal
-    bool iniModified = false; // New: INI differs from default
+    bool vbsModified = false; // VBS differs from internal
+    bool iniModified = false; // INI differs from default
 };
 
 #endif // STRUCTURES_H

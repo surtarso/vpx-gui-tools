@@ -1,37 +1,30 @@
-ultradmds not showing yet
+TODO:
 
-add everything to ini to configure easy
+- ultradmds not showing yet
+
+- add everything to ini to configure easy
 
 table:
-make ini change color if theres a diff
-make vbs change color if theres a diff (using vpxtool)
-show romnameon rom column
+- show romnameon rom column
 
-year/brand/name get from vpxtool json (maybe some others too)
-
-add coloring to row as in:
-if a table fails to launch, paint it red
+- add coloring to row as in:
+set if a table fails to launch, paint it red
 default is clear, if launches normally, make sure its clear (to remove red)
 
-year = release date
-brand = author
-name = tablename
-rom = romname
+- capture any typing and auto-focus search box
 
-capture any typing and auto-focus search box
-
-get some feedback on shit
+- get some feedback on shit
 extracting, launching, loading etc...
 
-
-add color diff for images/videos as:
+- add color diff for images/videos as:
 not present, red, present, green
 
-show active folder on menu top bar while on ini editor
+- show active folder on menu top bar while on ini editor
 
-loading for initial vpxtool build (later)
-refresh button for changes (run vpxtool index again and refresh dirs)
+- refresh button for changes (run vpxtool index again and refresh dirs)
 
-launcher related settings apply on save
+- launcher related settings apply on save
 
-hamburguer menu for advanced options, like all vpxtool args etc
+- hamburguer menu for advanced options, like all vpxtool args etc
+
+- shrink music column

@@ -9,7 +9,7 @@ public:
     ConfigManager(const std::string& basePath);
     void loadSettings();
 
-    // IConfigProvider interface
+    std::string getBasePath() const override { return basePath; } // New
     std::string getTablesDir() const override { return tablesDir; }
     std::string getStartArgs() const override { return startArgs; }
     std::string getCommandToRun() const override { return commandToRun; }
@@ -42,7 +42,6 @@ private:
     std::string basePath;
     std::string prependBasePath(const std::string& relativePath) const;
 
-    // Configuration settings
     std::string tablesDir;
     std::string startArgs;
     std::string commandToRun;
