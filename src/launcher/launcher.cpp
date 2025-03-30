@@ -32,11 +32,11 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
             ImGui::TableSetupColumn("Version", ImGuiTableColumnFlags_WidthFixed, 50.0f);
             ImGui::TableSetupColumn("Extra", ImGuiTableColumnFlags_WidthFixed, 100.0f);
             ImGui::TableSetupColumn("ROM", ImGuiTableColumnFlags_WidthFixed, 80.0f);
-            ImGui::TableSetupColumn("uDMD", ImGuiTableColumnFlags_WidthFixed, 20.0f); // Icon-only: 20px
-            ImGui::TableSetupColumn("AltS", ImGuiTableColumnFlags_WidthFixed, 20.0f); // Icon-only: 20px
-            ImGui::TableSetupColumn("AltC", ImGuiTableColumnFlags_WidthFixed, 20.0f); // Icon-only: 20px
-            ImGui::TableSetupColumn("PUP", ImGuiTableColumnFlags_WidthFixed, 20.0f);  // Icon-only: 20px
-            ImGui::TableSetupColumn("Music", ImGuiTableColumnFlags_WidthFixed, 20.0f); // Icon-only: 20px
+            ImGui::TableSetupColumn("uDMD", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 20.0f);
+            ImGui::TableSetupColumn("AltS", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 20.0f);
+            ImGui::TableSetupColumn("AltC", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 20.0f);
+            ImGui::TableSetupColumn("PUP", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 20.0f);
+            ImGui::TableSetupColumn("Music", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 20.0f);
             ImGui::TableSetupColumn("Images", ImGuiTableColumnFlags_WidthFixed, 100.0f);
             ImGui::TableSetupColumn("Videos", ImGuiTableColumnFlags_WidthFixed, 100.0f);
             ImGui::TableSetupScrollFreeze(0, 1);
@@ -87,11 +87,31 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
                         if (tables[i].extraFiles.find("B2S") != std::string::npos) ImGui::Text("B2S");
                     }
                     ImGui::TableSetColumnIndex(5); ImGui::Text("%s", tables[i].rom.c_str());
-                    ImGui::TableSetColumnIndex(6); ImGui::Text("%s", tables[i].udmd.c_str());
-                    ImGui::TableSetColumnIndex(7); ImGui::Text("%s", tables[i].alts.c_str());
-                    ImGui::TableSetColumnIndex(8); ImGui::Text("%s", tables[i].altc.c_str());
-                    ImGui::TableSetColumnIndex(9); ImGui::Text("%s", tables[i].pup.c_str());
-                    ImGui::TableSetColumnIndex(10); ImGui::Text("%s", tables[i].music.c_str());
+                    ImGui::TableSetColumnIndex(6); {
+                        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f);
+                        ImGui::Text("%s", tables[i].udmd.c_str());
+                        ImGui::PopTextWrapPos();
+                    }
+                    ImGui::TableSetColumnIndex(7); {
+                        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f);
+                        ImGui::Text("%s", tables[i].alts.c_str());
+                        ImGui::PopTextWrapPos();
+                    }
+                    ImGui::TableSetColumnIndex(8); {
+                        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f);
+                        ImGui::Text("%s", tables[i].altc.c_str());
+                        ImGui::PopTextWrapPos();
+                    }
+                    ImGui::TableSetColumnIndex(9); {
+                        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f);
+                        ImGui::Text("%s", tables[i].pup.c_str());
+                        ImGui::PopTextWrapPos();
+                    }
+                    ImGui::TableSetColumnIndex(10); {
+                        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f);
+                        ImGui::Text("%s", tables[i].music.c_str());
+                        ImGui::PopTextWrapPos();
+                    }
                     ImGui::TableSetColumnIndex(11); ImGui::Text("%s", tables[i].images.c_str());
                     ImGui::TableSetColumnIndex(12); ImGui::Text("%s", tables[i].videos.c_str());
                 }

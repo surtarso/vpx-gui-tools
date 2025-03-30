@@ -123,16 +123,26 @@ void TableManager::loadTables() {
         }
         entry.version = tableInfo["table_version"].is_string() ? tableInfo["table_version"].get<std::string>() : "Unknown";
 
-        // ROM Check - Back to Basics
+        // ROM Check - Simplified with Debug
         bool requiresPinmame = t["requires_pinmame"].is_boolean() ? t["requires_pinmame"].get<bool>() : false;
         entry.rom = "";
-        if (requiresPinmame && t["game_name"].is_string()) {
-            std::string gameName = t["game_name"].get<std::string>();
-            if (std::filesystem::exists(config.getTablesDir() + config.getRomPath() + "/" + gameName + ".zip")) {
-                entry.rom = "ROM"; // Old way that worked
+        if (requiresPinmame) {
+            if (t["game_name"].is_string()) {
+                std::string gameName = t["game_name"].get<std::string>();
+                std::string romPath = config.getTablesDir() + config.getRomPath() + "/" + gameName + ".zip";
+                std::cerr << "Checking ROM for " << entry.name << ": requires_pinmame=" << requiresPinmame 
+                          << ", game_name=" << gameName << ", path=" << romPath << std::endl;
+                if (std::filesystem::exists(romPath)) {
+                    entry.rom = "ROM";
+                    std::cerr << "ROM found for " << entry.name << std::endl;
+                } else {
+                    std::cerr << "ROM not found for " << entry.name << " at " << romPath << std::endl;
+                }
+            } else {
+                std::cerr << "Missing or null game_name for " << entry.name << std::endl;
             }
-        } else if (requiresPinmame) {
-            std::cerr << "Missing or null game_name for " << entry.name << std::endl;
+        } else {
+            std::cerr << "No ROM required for " << entry.name << std::endl;
         }
 
         // Debug null fields
@@ -193,10 +203,10 @@ void TableManager::updateTablesAsync() {
                                std::string(vbsExists ? "VBS " : "") +
                                std::string(std::filesystem::exists(b2sFile) ? "B2S" : "");
             table.udmd = std::filesystem::exists(folder + "/UltraDMD") ? u8"✪" : "";
-            table.alts = std::filesystem::exists(folder + config.getAltSoundPath()) ? u8"♪" : "";
+            table.alts = std::filesystem::exists(folder + config.getAltSoundPath()) ? u8"♫" : "";
             table.altc = std::filesystem::exists(folder + config.getAltColorPath()) ? u8"☀" : "";
             table.pup = std::filesystem::exists(folder + config.getPupPackPath()) ? u8"▣" : "";
-            table.music = std::filesystem::exists(folder + config.getMusicPath()) ? u8"♫" : "";
+            table.music = std::filesystem::exists(folder + config.getMusicPath()) ? u8"♪" : "";
             table.images = std::string(std::filesystem::exists(folder + config.getWheelImage()) ? "Wheel " : "") +
                            std::string(std::filesystem::exists(folder + config.getTableImage()) ? "Table " : "") +
                            std::string(std::filesystem::exists(folder + config.getBackglassImage()) ? "B2S " : "") +
