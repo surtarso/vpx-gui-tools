@@ -1,11 +1,11 @@
 #include "launcher/launcher.h"
 #include "imgui.h"
 #include <filesystem>
-#include <cstdlib>
-#include <algorithm>
+
+
 
 Launcher::Launcher(IConfigProvider& config, TableManager* tm)
-    : config(config), tableManager(tm), selectedIniPath(config.getVPinballXIni()) {}
+    : config(config), tableManager(tm), tableView(tm, config), tableActions(config), createIniConfirmed(false), selectedIniPath(config.getVPinballXIni()) {}
 
 void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested, bool& showCreateIniPrompt, bool& showNoTablePopup) {
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
@@ -24,106 +24,13 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
         float availableHeight = ImGui::GetIO().DisplaySize.y - headerHeight - buttonHeight;
 
         ImGui::BeginChild("TableContainer", ImVec2(0, availableHeight), true, ImGuiWindowFlags_HorizontalScrollbar);
-        if (ImGui::BeginTable("Tables", 13, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | 
-                              ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable)) {
-            ImGui::TableSetupColumn("Year", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed, 60.0f);
-            ImGui::TableSetupColumn("Author", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-            ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 200.0f);
-            ImGui::TableSetupColumn("Version", ImGuiTableColumnFlags_WidthFixed, 50.0f);
-            ImGui::TableSetupColumn("Extra", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-            ImGui::TableSetupColumn("ROM", ImGuiTableColumnFlags_WidthFixed, 80.0f);
-            ImGui::TableSetupColumn("uDMD", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 20.0f);
-            ImGui::TableSetupColumn("AltS", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 20.0f);
-            ImGui::TableSetupColumn("AltC", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 20.0f);
-            ImGui::TableSetupColumn("PUP", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 20.0f);
-            ImGui::TableSetupColumn("Music", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 20.0f);
-            ImGui::TableSetupColumn("Images", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-            ImGui::TableSetupColumn("Videos", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-            ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableHeadersRow();
-
-            if (ImGuiTableSortSpecs* sortSpecs = ImGui::TableGetSortSpecs()) {
-                if (sortSpecs->SpecsDirty) {
-                    const ImGuiTableColumnSortSpecs* spec = &sortSpecs->Specs[0];
-                    int columnIdx = spec->ColumnIndex;
-                    bool isAscending = spec->SortDirection == ImGuiSortDirection_Ascending;
-                    tableManager->setSortSpecs(columnIdx, isAscending);
-                    sortSpecs->SpecsDirty = false;
-                }
-            }
-
-            for (size_t i = 0; i < tables.size(); ++i) {
-                ImGui::TableNextRow();
-                ImGui::PushID(static_cast<int>(i));
-                bool isSelected = (selectedTable == static_cast<int>(i));
-                if (ImGui::TableSetColumnIndex(0)) {
-                    char rowLabel[1024];
-                    snprintf(rowLabel, sizeof(rowLabel), "%s##%zu", tables[i].year.c_str(), i);
-                    bool wasClicked = ImGui::Selectable(rowLabel, &isSelected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap);
-                    if (wasClicked) {
-                        if (selectedTable == static_cast<int>(i)) selectedTable = -1;
-                        else selectedTable = static_cast<int>(i);
-                    }
-                    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0) && selectedTable >= 0) {
-                        openFolder(tables[selectedTable].filepath);
-                    }
-                    if (isSelected && ImGui::IsKeyPressed(ImGuiKey_Enter) && selectedTable >= 0) {
-                        launchTable(tables[selectedTable].filepath);
-                    }
-                    ImGui::TableSetColumnIndex(1); ImGui::Text("%s", tables[i].brand.c_str());
-                    ImGui::TableSetColumnIndex(2); ImGui::Text("%s", tables[i].name.c_str());
-                    ImGui::TableSetColumnIndex(3); ImGui::Text("%s", tables[i].version.c_str());
-                    ImGui::TableSetColumnIndex(4); {
-                        if (tables[i].extraFiles.find("INI") != std::string::npos) {
-                            if (tables[i].iniModified) ImGui::TextColored(ImVec4(1, 1, 0, 1), "INI ");
-                            else ImGui::Text("INI ");
-                            ImGui::SameLine(0, 0);
-                        }
-                        if (tables[i].extraFiles.find("VBS") != std::string::npos) {
-                            if (tables[i].vbsModified) ImGui::TextColored(ImVec4(1, 1, 0, 1), "VBS ");
-                            else ImGui::Text("VBS ");
-                            ImGui::SameLine(0, 0);
-                        }
-                        if (tables[i].extraFiles.find("B2S") != std::string::npos) ImGui::Text("B2S");
-                    }
-                    ImGui::TableSetColumnIndex(5); ImGui::Text("%s", tables[i].rom.c_str());
-                    ImGui::TableSetColumnIndex(6); {
-                        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f);
-                        ImGui::Text("%s", tables[i].udmd.c_str());
-                        ImGui::PopTextWrapPos();
-                    }
-                    ImGui::TableSetColumnIndex(7); {
-                        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f);
-                        ImGui::Text("%s", tables[i].alts.c_str());
-                        ImGui::PopTextWrapPos();
-                    }
-                    ImGui::TableSetColumnIndex(8); {
-                        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f);
-                        ImGui::Text("%s", tables[i].altc.c_str());
-                        ImGui::PopTextWrapPos();
-                    }
-                    ImGui::TableSetColumnIndex(9); {
-                        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f);
-                        ImGui::Text("%s", tables[i].pup.c_str());
-                        ImGui::PopTextWrapPos();
-                    }
-                    ImGui::TableSetColumnIndex(10); {
-                        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f);
-                        ImGui::Text("%s", tables[i].music.c_str());
-                        ImGui::PopTextWrapPos();
-                    }
-                    ImGui::TableSetColumnIndex(11); ImGui::Text("%s", tables[i].images.c_str());
-                    ImGui::TableSetColumnIndex(12); ImGui::Text("%s", tables[i].videos.c_str());
-                }
-                ImGui::PopID();
-            }
-            ImGui::EndTable();
-        }
+        tableView.drawTable(tables);
         ImGui::EndChild();
 
         if (ImGui::Button("⛭")) editingSettings = true;
         ImGui::SameLine();
         if (ImGui::Button("INI Editor")) {
+            int selectedTable = tableView.getSelectedTable();
             if (selectedTable >= 0) {
                 std::string iniFile = tables[selectedTable].filepath;
                 iniFile = iniFile.substr(0, iniFile.find_last_of('.')) + ".ini";
@@ -137,25 +44,28 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
         }
         ImGui::SameLine();
         if (ImGui::Button("Extract VBS")) {
+            int selectedTable = tableView.getSelectedTable();
             if (selectedTable >= 0) {
                 std::string vbsFile = tables[selectedTable].filepath;
                 vbsFile = vbsFile.substr(0, vbsFile.find_last_of('.')) + ".vbs";
-                if (std::filesystem::exists(vbsFile)) openInExternalEditor(vbsFile);
+                if (std::filesystem::exists(vbsFile)) tableActions.openInExternalEditor(vbsFile);
                 else {
-                    extractVBS(tables[selectedTable].filepath);
-                    if (std::filesystem::exists(vbsFile)) openInExternalEditor(vbsFile);
+                    tableActions.extractVBS(tables[selectedTable].filepath);
+                    if (std::filesystem::exists(vbsFile)) tableActions.openInExternalEditor(vbsFile);
                 }
             } else showNoTablePopup = true;
         }
         ImGui::SameLine();
         if (ImGui::Button("Open Folder")) {
-            openFolder(selectedTable >= 0 ? tables[selectedTable].filepath : config.getTablesDir());
+            int selectedTable = tableView.getSelectedTable();
+            tableActions.openFolder(selectedTable >= 0 ? tables[selectedTable].filepath : config.getTablesDir());
         }
         ImGui::SameLine();
         float playButtonPosX = ImGui::GetCursorPosX();
         float playButtonWidth = ImGui::CalcTextSize("▶ Play").x + ImGui::GetStyle().FramePadding.x * 2;
         if (ImGui::Button("▶ Play")) {
-            if (selectedTable >= 0) launchTable(tables[selectedTable].filepath);
+            int selectedTable = tableView.getSelectedTable();
+            if (selectedTable >= 0) tableActions.launchTable(tables[selectedTable].filepath);
             else showNoTablePopup = true;
         }
         ImGui::SameLine();
@@ -173,32 +83,4 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
         if (ImGui::Button("✖ Quit")) quitRequested = true;
     }
     ImGui::End();
-}
-
-void Launcher::launchTable(const std::string& filepath) {
-    std::string cmd = config.getStartArgs() + " \"" + config.getCommandToRun() + "\" " + config.getPlaySubCmd() + " \"" + filepath + "\" " + config.getEndArgs();
-    system(cmd.c_str());
-}
-
-void Launcher::extractVBS(const std::string& filepath) {
-    std::string cmd = "\"" + config.getVpxTool() + "\" " + config.getVbsSubCmd() + " \"" + filepath + "\"";
-    system(cmd.c_str());
-}
-
-bool Launcher::openInExternalEditor(const std::string& filepath) {
-    std::string cmd = "xdg-open \"" + filepath + "\"";
-    if (system(cmd.c_str()) != 0) {
-        if (!config.getFallbackEditor().empty()) {
-            cmd = "\"" + config.getFallbackEditor() + "\" \"" + filepath + "\"";
-            return system(cmd.c_str()) == 0;
-        }
-        return false;
-    }
-    return true;
-}
-
-void Launcher::openFolder(const std::string& filepath) {
-    std::string folder = filepath.empty() ? config.getTablesDir() : filepath.substr(0, filepath.find_last_of('/'));
-    std::string cmd = "xdg-open \"" + folder + "\"";
-    system(cmd.c_str());
 }

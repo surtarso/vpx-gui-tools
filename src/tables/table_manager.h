@@ -3,6 +3,9 @@
 
 #include "utils/structures.h"
 #include "config/iconfig_provider.h"
+#include "tables/table_loader.h"
+#include "tables/table_updater.h"
+#include "tables/table_filter.h"
 #include <vector>
 #include <string>
 #include <mutex>
@@ -19,16 +22,14 @@ public:
     bool isLoading() const { return loading; }
 
 private:
-    void loadFromCache(const std::string& jsonPath);
-    void saveToCache(const std::string& jsonPath);
-    void generateIndex();
     IConfigProvider& config;
     std::vector<TableEntry> tables;
     std::vector<TableEntry> filteredTables;
-    int sortColumn = 0;
-    bool sortAscending = true;
-    bool loading = false;
+    bool loading;
     std::mutex tablesMutex;
+    TableLoader loader;
+    TableUpdater updater;
+    TableFilter filter;
 };
 
 #endif // TABLE_MANAGER_H

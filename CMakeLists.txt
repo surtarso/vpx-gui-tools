@@ -12,7 +12,12 @@ set(SOURCES
     src/config/config_manager.cpp
     src/tools/ini_editor.cpp
     src/launcher/launcher.cpp
+    src/launcher/table_actions.cpp
+    src/launcher/table_view.cpp
+    src/tables/table_filter.cpp
+    src/tables/table_loader.cpp
     src/tables/table_manager.cpp
+    src/tables/table_updater.cpp
     external/imgui/imgui.cpp
     external/imgui/imgui_draw.cpp
     external/imgui/imgui_tables.cpp
