@@ -11,7 +11,7 @@ public:
     IniEditor(const std::string& initialFile, bool isConfigEditor = false);
     void loadIniFile(const std::string& filename);
     void saveIniFile();
-    void draw(bool& isOpen);  // Added isOpen parameter to control visibility
+    void draw(bool& isOpen);  // isOpen parameter to control visibility
 
     std::string getCurrentFile() const { return currentIniFile; }
     bool isEditing() const { return true; } // Always editable for now

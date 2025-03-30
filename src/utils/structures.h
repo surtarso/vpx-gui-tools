@@ -28,8 +28,8 @@ struct TableEntry {
     std::string filepath;   // Full file path
     bool vbsModified = false; // VBS differs from internal
     bool iniModified = false; // INI differs from default
-    bool requiresPinmame = false; // New: Does the table require a ROM?
-    std::string gameName;         // New: ROM game name (e.g., "sprk_103")
+    bool requiresPinmame = false; // Does the table require a ROM?
+    std::string gameName;         // ROM game name (e.g., "sprk_103")
 };
 
 #endif // STRUCTURES_H

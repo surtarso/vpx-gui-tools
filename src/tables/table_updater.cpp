@@ -1,4 +1,5 @@
 #include "tables/table_updater.h"
+#include "utils/logging.h"
 #include <filesystem>
 #include <iostream>
 #include <array>
@@ -9,28 +10,28 @@
 TableUpdater::TableUpdater(IConfigProvider& config, std::mutex& mutex) : config(config), tablesMutex(mutex) {}
 
 void TableUpdater::checkRomForChunk(std::vector<TableEntry>& tables, size_t start, size_t end) {
-    std::cerr << "Starting ROM check for chunk [" << start << ", " << end << ") in thread " << std::this_thread::get_id() << std::endl;
+    LOG_DEBUG("Starting ROM check for chunk [" << start << ", " << end << ") in thread " << std::this_thread::get_id());
     for (size_t i = start; i < end && i < tables.size(); ++i) {
         auto& table = tables[i];
         std::string folder = std::filesystem::path(table.filepath).parent_path().string();
         table.rom = "";
         if (table.requiresPinmame && !table.gameName.empty()) {
             std::string romPath = folder + "/" + config.getRomPath() + "/" + table.gameName + ".zip";
-            std::cerr << "Checking ROM for " << table.name << ": requiresPinmame=" << table.requiresPinmame 
-                      << ", gameName=" << table.gameName << ", path=" << romPath << std::endl;
+            LOG_DEBUG("Checking ROM for " << table.name << ": requiresPinmame=" << table.requiresPinmame 
+                      << ", gameName=" << table.gameName << ", path=" << romPath);
             if (std::filesystem::exists(romPath)) {
                 table.rom = table.gameName;
-                std::cerr << "ROM found for " << table.name << ": " << table.gameName << std::endl;
+                LOG_DEBUG("ROM found for " << table.name << ": " << table.gameName);
             } else {
-                std::cerr << "ROM not found for " << table.name << " at " << romPath << std::endl;
+                LOG_DEBUG("ROM not found for " << table.name << " at " << romPath);
             }
         } else if (table.requiresPinmame) {
-            std::cerr << "Missing or null gameName for " << table.name << std::endl;
+            LOG_DEBUG("Missing or null gameName for " << table.name);
         } else {
-            std::cerr << "No ROM required for " << table.name << std::endl;
+            LOG_DEBUG("No ROM required for " << table.name);
         }
     }
-    std::cerr << "Finished ROM check for chunk [" << start << ", " << end << ") in thread " << std::this_thread::get_id() << std::endl;
+    LOG_DEBUG("Finished ROM check for chunk [" << start << ", " << end << ") in thread " << std::this_thread::get_id());
 }
 
 void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vector<TableEntry>& filteredTables, bool& loading) {
@@ -79,10 +80,10 @@ void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vecto
                                std::string(vbsExists ? "VBS " : "") +
                                std::string(std::filesystem::exists(b2sFile) ? "B2S" : "");
             table.udmd = std::filesystem::exists(folder + "/UltraDMD") ? u8"✪" : "";
-            table.alts = std::filesystem::exists(folder + config.getAltSoundPath()) ? u8"♫" : "";
+            table.alts = std::filesystem::exists(folder + config.getAltSoundPath()) ? u8"♪" : "";
             table.altc = std::filesystem::exists(folder + config.getAltColorPath()) ? u8"☀" : "";
             table.pup = std::filesystem::exists(folder + config.getPupPackPath()) ? u8"▣" : "";
-            table.music = std::filesystem::exists(folder + config.getMusicPath()) ? u8"♪" : "";
+            table.music = std::filesystem::exists(folder + config.getMusicPath()) ? u8"♫" : "";
             table.images = std::string(std::filesystem::exists(folder + config.getWheelImage()) ? "Wheel " : "") +
                            std::string(std::filesystem::exists(folder + config.getTableImage()) ? "Table " : "") +
                            std::string(std::filesystem::exists(folder + config.getBackglassImage()) ? "B2S " : "") +
@@ -97,7 +98,7 @@ void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vecto
         const size_t chunkSize = tables.size() / numThreads + (tables.size() % numThreads != 0 ? 1 : 0);
         std::vector<std::thread> threads;
 
-        std::cerr << "Starting ROM checks with " << numThreads << " threads, chunk size=" << chunkSize << std::endl;
+        LOG_DEBUG("Starting ROM checks with " << numThreads << " threads, chunk size=" << chunkSize);
         for (size_t i = 0; i < tables.size(); i += chunkSize) {
             size_t start = i;
             size_t end = std::min(i + chunkSize, tables.size());
@@ -109,9 +110,9 @@ void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vecto
         }
 
         // Step 3: Log final ROM status
-        for (const auto& table : tables) {
-            std::cerr << "Final ROM status for " << table.name << ": rom=" << table.rom << std::endl;
-        }
+        // for (const auto& table : tables) {
+        //     LOG_DEBUG("Final ROM status for " << table.name << ": rom=" << table.rom);
+        // }
 
         // Step 4: Save to cache
         json j;
@@ -144,6 +145,6 @@ void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vecto
 
         filteredTables = tables;
         loading = false;
-        std::cerr << "Finished updating tables, loading=false" << std::endl;
+        LOG_DEBUG("Finished updating tables, loading=false");
     }).detach();
 }

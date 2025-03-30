@@ -9,7 +9,7 @@ public:
     ConfigManager(const std::string& basePath);
     void loadSettings();
 
-    std::string getBasePath() const override { return basePath; } // New
+    std::string getBasePath() const override { return basePath; }
     std::string getTablesDir() const override { return tablesDir; }
     std::string getStartArgs() const override { return startArgs; }
     std::string getCommandToRun() const override { return commandToRun; }

@@ -4,6 +4,7 @@ settings.json
 .vscode/*
 .vscode/settings.json
 *.vscode
+imgui.ini
 
 # Prerequisites
 *.d

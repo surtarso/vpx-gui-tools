@@ -7,7 +7,7 @@ class IConfigProvider {
 public:
     virtual ~IConfigProvider() = default;
 
-    virtual std::string getBasePath() const = 0; // New: App root dir
+    virtual std::string getBasePath() const = 0;
     virtual std::string getTablesDir() const = 0;
     virtual std::string getStartArgs() const = 0;
     virtual std::string getCommandToRun() const = 0;

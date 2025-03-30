@@ -1,4 +1,5 @@
 #include "core/application.h"
+#include "utils/logging.h"
 #include <imgui.h>
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
@@ -17,21 +18,21 @@ Application::~Application() {}
 
 void Application::run() {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
-        std::cerr << "SDL_Init Error: " << SDL_GetError() << std::endl;
+        LOG_DEBUG("SDL_Init Error: " << SDL_GetError());
         return;
     }
 
     window = SDL_CreateWindow("VPX GUI Tools", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                               config.getWindowWidth(), config.getWindowHeight(), SDL_WINDOW_RESIZABLE);
     if (!window) {
-        std::cerr << "SDL_CreateWindow Error: " << SDL_GetError() << std::endl;
+        LOG_DEBUG("SDL_CreateWindow Error: " << SDL_GetError());
         SDL_Quit();
         return;
     }
 
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!renderer) {
-        std::cerr << "SDL_CreateRenderer Error: " << SDL_GetError() << std::endl;
+        LOG_DEBUG("SDL_CreateRenderer Error: " << SDL_GetError());
         SDL_DestroyWindow(window);
         SDL_Quit();
         return;

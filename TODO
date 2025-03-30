@@ -2,6 +2,11 @@ TODO:
 
 - ultradmds not showing yet
 
+- stop imgui from creating an ini file, or direct it to resouces/
+
+- add color diff for images/videos as:
+not present, red, present, green
+
 - add everything to ini to configure easy
 
 - add coloring to row as in:
@@ -12,9 +17,6 @@ default is clear, if launches normally, make sure its clear (to remove red)
 
 - get some feedback on shit
 extracting, launching, loading etc...
-
-- add color diff for images/videos as:
-not present, red, present, green
 
 - show active folder on menu top bar while on ini editor
 
