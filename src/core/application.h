@@ -15,7 +15,7 @@ public:
     void run();
 
 private:
-    std::string basePath;  // Store executable directory
+    std::string basePath;
     ConfigManager config;
     TableManager tableManager;
     IniEditor iniEditor;
@@ -24,7 +24,7 @@ private:
     bool editingIni = false;
     bool editingSettings = false;
     bool exitRequested = false;
-
+    bool showCreateIniPrompt = false;
     SDL_Window* window;
     SDL_GLContext gl_context;
 };

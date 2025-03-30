@@ -6,14 +6,14 @@
 
 Launcher::Launcher(const std::string& tablesDir, const std::string& startArgs, const std::string& commandToRun,
                    const std::string& endArgs, const std::string& vpinballXIni, TableManager* tm)
-    : tablesDir(tablesDir), startArgs(startArgs), commandToRun(commandToRun), endArgs(endArgs), vpinballXIni(vpinballXIni), tableManager(tm) {}
+    : tablesDir(tablesDir), startArgs(startArgs), commandToRun(commandToRun), endArgs(endArgs), 
+      vpinballXIni(vpinballXIni), tableManager(tm), selectedIniPath(vpinballXIni) {}
 
-void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested) {
+void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested, bool& showCreateIniPrompt) {
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize, ImGuiCond_Always);
     ImGui::Begin("VPX GUI Tools", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
 
-    // Tables found at the top left
     char tablesFoundText[32];
     snprintf(tablesFoundText, sizeof(tablesFoundText), "Table(s) found: %zu", tables.size());
     ImGui::Text("%s", tablesFoundText);
@@ -22,7 +22,6 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
     float buttonHeight = ImGui::GetFrameHeight() + ImGui::GetStyle().ItemSpacing.y * 2;
     float availableHeight = ImGui::GetIO().DisplaySize.y - headerHeight - buttonHeight;
 
-    // Enable horizontal scrolling with ScrollX
     ImGui::BeginChild("TableContainer", ImVec2(0, availableHeight), true, ImGuiWindowFlags_HorizontalScrollbar);
     if (ImGui::BeginTable("Tables", 12, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | 
                           ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable)) {
@@ -58,8 +57,13 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
             if (ImGui::TableSetColumnIndex(0)) {
                 char rowLabel[1024];
                 snprintf(rowLabel, sizeof(rowLabel), "%s##%zu", tables[i].year.c_str(), i);
-                if (ImGui::Selectable(rowLabel, &isSelected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap)) {
-                    selectedTable = static_cast<int>(i);
+                bool wasClicked = ImGui::Selectable(rowLabel, &isSelected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap);
+                if (wasClicked) {
+                    if (selectedTable == static_cast<int>(i)) {
+                        selectedTable = -1;  // Deselect if already selected
+                    } else {
+                        selectedTable = static_cast<int>(i);  // Select new row
+                    }
                 }
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0) && selectedTable >= 0) {
                     openFolder(tables[selectedTable].filepath);
@@ -85,13 +89,24 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
     }
     ImGui::EndChild();
 
-    // Buttons with search bar between Play and Quit
     if (ImGui::Button("⛭")) {
         editingSettings = true;
     }
     ImGui::SameLine();
     if (ImGui::Button("INI Editor")) {
-        editingIni = true;
+        if (selectedTable >= 0) {
+            std::string iniFile = tables[selectedTable].filepath;
+            iniFile = iniFile.substr(0, iniFile.find_last_of('.')) + ".ini";
+            selectedIniPath = iniFile;
+            if (std::filesystem::exists(iniFile)) {
+                editingIni = true;
+            } else {
+                showCreateIniPrompt = true;
+            }
+        } else {
+            selectedIniPath = vpinballXIni;
+            editingIni = true;
+        }
     }
     ImGui::SameLine();
     if (ImGui::Button("Extract VBS") && selectedTable >= 0) {
@@ -102,15 +117,14 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
         openFolder(selectedTable >= 0 ? tables[selectedTable].filepath : tablesDir);
     }
     ImGui::SameLine();
-    float playButtonPosX = ImGui::GetCursorPosX();  // Capture Play button's left edge
-    float playButtonWidth = ImGui::CalcTextSize("▶ Play").x + ImGui::GetStyle().FramePadding.x * 2;  // Button width
+    float playButtonPosX = ImGui::GetCursorPosX();
+    float playButtonWidth = ImGui::CalcTextSize("▶ Play").x + ImGui::GetStyle().FramePadding.x * 2;
     if (ImGui::Button("▶ Play") && selectedTable >= 0) {
         launchTable(tables[selectedTable].filepath);
     }
     ImGui::SameLine();
-    // Search bar after Play button with placeholder
     float padding = ImGui::GetStyle().ItemSpacing.x;
-    ImGui::SetCursorPosX(playButtonPosX + playButtonWidth + padding);  // Align to Play's right edge + padding
+    ImGui::SetCursorPosX(playButtonPosX + playButtonWidth + padding);
     float searchBarWidth = 350.0f;
     char searchBuf[300];
     strncpy(searchBuf, searchQuery.c_str(), sizeof(searchBuf) - 1);
@@ -121,7 +135,6 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
     }
     ImGui::PopItemWidth();
 
-    // Quit button isolated on the right
     ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::CalcTextSize("✖ Quit").x - ImGui::GetStyle().ItemSpacing.x * 2);
     if (ImGui::Button("✖ Quit")) {
         quitRequested = true;
