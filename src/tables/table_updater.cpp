@@ -79,7 +79,22 @@ void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vecto
             table.extraFiles = std::string(iniExists ? "INI " : "") +
                                std::string(vbsExists ? "VBS " : "") +
                                std::string(std::filesystem::exists(b2sFile) ? "B2S" : "");
-            table.udmd = std::filesystem::exists(folder + "/UltraDMD") ? u8"✪" : "";
+            
+            bool hasUltraDmdFolder = false;
+            for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+                if (entry.is_directory()) {
+                    std::string folderName = entry.path().filename().string();
+                    LOG_DEBUG("Checking folder in " << folder << ": " << folderName);
+                    if (folderName.length() >= 9 && folderName.substr(folderName.length() - 9) == ".UltraDMD") {
+                        hasUltraDmdFolder = true;
+                        LOG_DEBUG("Found UltraDMD folder for " << table.name << ": " << folderName);
+                        break;
+                    }
+                }
+            }
+            table.udmd = hasUltraDmdFolder ? u8"✪" : "";
+            LOG_DEBUG("Set udmd for " << table.name << ": " << (table.udmd.empty() ? "empty" : table.udmd));
+            
             table.alts = std::filesystem::exists(folder + config.getAltSoundPath()) ? u8"♪" : "";
             table.altc = std::filesystem::exists(folder + config.getAltColorPath()) ? u8"☀" : "";
             table.pup = std::filesystem::exists(folder + config.getPupPackPath()) ? u8"▣" : "";
