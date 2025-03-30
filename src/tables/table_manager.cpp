@@ -3,6 +3,8 @@
 #include <iostream>
 #include <algorithm>
 #include <cctype>
+#include <cstdlib>
+#include <array>
 
 TableManager::TableManager(IConfigProvider& config) : config(config) {
     loadTables();
@@ -58,8 +60,46 @@ void TableManager::loadTables() {
                 std::string iniFile = folder + "/" + basename + ".ini";
                 std::string vbsFile = folder + "/" + basename + ".vbs";
                 std::string b2sFile = folder + "/" + basename + ".directb2s";
-                table.extraFiles = std::string(std::filesystem::exists(iniFile) ? "INI " : "") +
-                                   std::string(std::filesystem::exists(vbsFile) ? "VBS " : "") +
+
+                // Check VBS diff only if .vbs exists
+                bool vbsExists = std::filesystem::exists(vbsFile);
+                table.vbsModified = false;
+                if (vbsExists) {
+                    std::string vbsDiffCmd = "\"" + config.getVpxTool() + "\" " + config.getDiffSubCmd() + " \"" + filepath + "\"";
+                    std::array<char, 128> buffer;
+                    std::string result;
+                    FILE* pipe = popen(vbsDiffCmd.c_str(), "r");
+                    if (pipe) {
+                        while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
+                            result += buffer.data();
+                        }
+                        pclose(pipe);
+                        // Check if result is empty or whitespace (no diff) vs. containing diff markers
+                        bool isWhitespace = std::all_of(result.begin(), result.end(), isspace);
+                        table.vbsModified = (!result.empty() && !isWhitespace && (result.find("---") != std::string::npos || result.find("+++") != std::string::npos));
+                    }
+                }
+
+                // Check INI diff
+                bool iniExists = std::filesystem::exists(iniFile);
+                table.iniModified = false;
+                if (iniExists) {
+                    std::string iniDiffCmd = "diff \"" + config.getVPinballXIni() + "\" \"" + iniFile + "\"";
+                    FILE* pipe = popen(iniDiffCmd.c_str(), "r");
+                    if (pipe) {
+                        std::array<char, 128> buffer;
+                        std::string result;
+                        while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
+                            result += buffer.data();
+                        }
+                        int status = pclose(pipe);
+                        table.iniModified = (status != 0); // Non-zero exit means a diff
+                    }
+                }
+
+                // Build extraFiles string
+                table.extraFiles = std::string(iniExists ? "INI " : "") +
+                                   std::string(vbsExists ? "VBS " : "") +
                                    std::string(std::filesystem::exists(b2sFile) ? "B2S" : "");
 
                 std::string romDir = folder + config.getRomPath();

@@ -7,7 +7,7 @@
 Launcher::Launcher(IConfigProvider& config, TableManager* tm)
     : config(config), tableManager(tm), selectedIniPath(config.getVPinballXIni()) {}
 
-void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested, bool& showCreateIniPrompt) {
+void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested, bool& showCreateIniPrompt, bool& showNoTablePopup) {
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize, ImGuiCond_Always);
     ImGui::Begin("VPX GUI Tools", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
@@ -71,7 +71,22 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
                 }
                 ImGui::TableSetColumnIndex(1); ImGui::Text("%s", tables[i].brand.c_str());
                 ImGui::TableSetColumnIndex(2); ImGui::Text("%s", tables[i].name.c_str());
-                ImGui::TableSetColumnIndex(3); ImGui::Text("%s", tables[i].extraFiles.c_str());
+                ImGui::TableSetColumnIndex(3); {
+                    // Colorize Extra Files based on diff status (yellow for modified)
+                    if (tables[i].extraFiles.find("INI") != std::string::npos) {
+                        if (tables[i].iniModified) ImGui::TextColored(ImVec4(1, 1, 0, 1), "INI ");
+                        else ImGui::Text("INI ");
+                        ImGui::SameLine(0, 0);
+                    }
+                    if (tables[i].extraFiles.find("VBS") != std::string::npos) {
+                        if (tables[i].vbsModified) ImGui::TextColored(ImVec4(1, 1, 0, 1), "VBS ");
+                        else ImGui::Text("VBS ");
+                        ImGui::SameLine(0, 0);
+                    }
+                    if (tables[i].extraFiles.find("B2S") != std::string::npos) {
+                        ImGui::Text("B2S");
+                    }
+                }
                 ImGui::TableSetColumnIndex(4); ImGui::Text("%s", tables[i].rom.c_str());
                 ImGui::TableSetColumnIndex(5); ImGui::Text("%s", tables[i].udmd.c_str());
                 ImGui::TableSetColumnIndex(6); ImGui::Text("%s", tables[i].alts.c_str());
@@ -120,7 +135,7 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
                 }
             }
         } else {
-            ImGui::OpenPopup("No Table Selected");
+            showNoTablePopup = true; // Trigger the popup
         }
     }
     ImGui::SameLine();
@@ -130,8 +145,12 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
     ImGui::SameLine();
     float playButtonPosX = ImGui::GetCursorPosX();
     float playButtonWidth = ImGui::CalcTextSize("▶ Play").x + ImGui::GetStyle().FramePadding.x * 2;
-    if (ImGui::Button("▶ Play") && selectedTable >= 0) {
-        launchTable(tables[selectedTable].filepath);
+    if (ImGui::Button("▶ Play")) {
+        if (selectedTable >= 0) {
+            launchTable(tables[selectedTable].filepath);
+        } else {
+            showNoTablePopup = true; // Trigger the popup
+        }
     }
     ImGui::SameLine();
     float padding = ImGui::GetStyle().ItemSpacing.x;

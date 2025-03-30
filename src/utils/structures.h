@@ -5,13 +5,11 @@
 #include <vector>
 #include <map>
 
-// Structure for a configuration section
 struct ConfigSection {
     std::vector<std::pair<std::string, std::string>> keyValues;
     std::map<std::string, size_t> keyToLineIndex;
 };
 
-// Structure for a table entry
 struct TableEntry {
     std::string year;
     std::string brand;
@@ -27,6 +25,8 @@ struct TableEntry {
     std::string videos;     // Video status
     std::string filename;   // Full basename
     std::string filepath;   // Full file path
+    bool vbsModified = false; // New: VBS differs from internal
+    bool iniModified = false; // New: INI differs from default
 };
 
 #endif // STRUCTURES_H

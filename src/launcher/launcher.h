@@ -10,7 +10,7 @@
 class Launcher {
 public:
     Launcher(IConfigProvider& config, TableManager* tm = nullptr);
-    void draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested, bool& showCreateIniPrompt);
+    void draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested, bool& showCreateIniPrompt, bool& showNoTablePopup);
     int getSelectedTable() const { return selectedTable; }
     std::string getSearchQuery() const { return searchQuery; }
     std::string getSelectedIniPath() const { return selectedIniPath; }

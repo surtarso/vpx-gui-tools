@@ -93,7 +93,7 @@ void Application::run() {
         }
         else {
             tableManager.filterTables(launcher.getSearchQuery());
-            launcher.draw(tableManager.getTables(), editingIni, editingSettings, exitRequested, showCreateIniPrompt);
+            launcher.draw(tableManager.getTables(), editingIni, editingSettings, exitRequested, showCreateIniPrompt, showNoTablePopup);
         }
 
         if (showCreateIniPrompt) {
@@ -118,12 +118,16 @@ void Application::run() {
             }
         }
 
-        if (ImGui::BeginPopupModal("No Table Selected", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::Text("No table selected.\nPlease select a table first.");
-            if (ImGui::Button("OK")) {
-                ImGui::CloseCurrentPopup();
+        if (showNoTablePopup) {
+            ImGui::OpenPopup("No Table Selected");
+            if (ImGui::BeginPopupModal("No Table Selected", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+                ImGui::Text("No table selected.\nPlease select a table first.");
+                if (ImGui::Button("OK")) {
+                    showNoTablePopup = false;
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
             }
-            ImGui::EndPopup();
         }
 
         ImGui::Render();
