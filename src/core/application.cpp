@@ -41,6 +41,18 @@ void Application::run() {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
+    
+    // Get ImGuiConf path from config and prepend base path
+    imguiIniPath = config.getImGuiConf();
+    
+    // Ensure the directory exists (e.g., resources/)
+    std::string resourcesDir = config.getBasePath() + "resources";
+    if (!std::filesystem::exists(resourcesDir)) {
+        std::filesystem::create_directory(resourcesDir);
+    }
+    
+    io.IniFilename = imguiIniPath.c_str();
+    LOG_DEBUG("INI file path: " << io.IniFilename);
 
     static const ImWchar glyphRanges[] = {
         0x0020, 0x007F, 0x2600, 0x26FF, 0x25A0, 0x25FF, 0x2700, 0x27BF, 0, 0

@@ -35,6 +35,7 @@ public:
     virtual std::string getIndexerSubCmd() const = 0;
     virtual std::string getDiffSubCmd() const = 0;
     virtual std::string getRomSubCmd() const = 0;
+    // virtual std::string getImGuiConf() const = 0;
 };
 
 #endif // ICONFIG_PROVIDER_H

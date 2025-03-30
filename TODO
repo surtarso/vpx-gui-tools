@@ -1,9 +1,5 @@
 TODO:
 
-- ultradmds not showing yet
-
-- stop imgui from creating an ini file, or direct it to resouces/
-
 - add color diff for images/videos as:
 not present, red, present, green
 

@@ -28,6 +28,7 @@ private:
     bool showNoTablePopup = false;
     SDL_Window* window;
     SDL_GLContext gl_context;
+    std::string imguiIniPath;
 };
 
 #endif // APPLICATION_H

@@ -55,7 +55,8 @@ void ConfigManager::loadSettings() {
             << "DiffSubCmd=diff\n"
             << "RomSubCmd=romname\n"
             << "VbsSubCmd=extractvbs\n"
-            << "PlaySubCmd=-Play\n";
+            << "PlaySubCmd=-Play\n"
+            << "ImGuiConf=resources/imgui.ini\n";
         out.close();
     }
 
@@ -89,6 +90,7 @@ void ConfigManager::loadSettings() {
         indexerSubCmd = "index -r";
         diffSubCmd = "diff";
         romSubCmd = "romname";
+        imGuiConf = prependBasePath("resources/imgui.ini");
         return;
     }
 
@@ -146,6 +148,7 @@ void ConfigManager::loadSettings() {
             else if (key == "RomSubCmd") romSubCmd = value;
             else if (key == "VbsSubCmd") vbsSubCmd = value;
             else if (key == "PlaySubCmd") playSubCmd = value;
+            else if (key == "ImGuiConf") imGuiConf = prependBasePath(value);
         }
     }
     file.close();

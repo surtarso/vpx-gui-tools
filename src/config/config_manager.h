@@ -37,6 +37,7 @@ public:
     std::string getIndexerSubCmd() const override { return indexerSubCmd; }
     std::string getDiffSubCmd() const override { return diffSubCmd; }
     std::string getRomSubCmd() const override { return romSubCmd; }
+    std::string getImGuiConf() const { return imGuiConf; }
 
 private:
     std::string basePath;
@@ -69,6 +70,7 @@ private:
     std::string indexerSubCmd;
     std::string diffSubCmd;
     std::string romSubCmd;
+    std::string imGuiConf;
 };
 
 #endif // CONFIG_MANAGER_H
