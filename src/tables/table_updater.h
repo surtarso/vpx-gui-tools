@@ -14,6 +14,7 @@ public:
     TableUpdater(IConfigProvider& config, std::mutex& mutex);
     void updateTablesAsync(std::vector<TableEntry>& tables, std::vector<TableEntry>& filteredTables, bool& loading);
 private:
+    void checkRomForChunk(std::vector<TableEntry>& tables, size_t start, size_t end); // New
     IConfigProvider& config;
     std::mutex& tablesMutex;
 };

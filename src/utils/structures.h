@@ -14,7 +14,7 @@ struct TableEntry {
     std::string year;
     std::string brand;
     std::string name;
-    std::string version;    // New: Table version from vpxtool
+    std::string version;    // Table version from vpxtool
     std::string extraFiles; // INI, VBS, B2S status
     std::string rom;        // ROM status and name
     std::string udmd;       // UltraDMD status
@@ -28,6 +28,8 @@ struct TableEntry {
     std::string filepath;   // Full file path
     bool vbsModified = false; // VBS differs from internal
     bool iniModified = false; // INI differs from default
+    bool requiresPinmame = false; // New: Does the table require a ROM?
+    std::string gameName;         // New: ROM game name (e.g., "sprk_103")
 };
 
 #endif // STRUCTURES_H

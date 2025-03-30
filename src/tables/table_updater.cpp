@@ -4,13 +4,41 @@
 #include <array>
 #include <fstream>
 #include <thread>
+#include <vector>
 
 TableUpdater::TableUpdater(IConfigProvider& config, std::mutex& mutex) : config(config), tablesMutex(mutex) {}
+
+void TableUpdater::checkRomForChunk(std::vector<TableEntry>& tables, size_t start, size_t end) {
+    std::cerr << "Starting ROM check for chunk [" << start << ", " << end << ") in thread " << std::this_thread::get_id() << std::endl;
+    for (size_t i = start; i < end && i < tables.size(); ++i) {
+        auto& table = tables[i];
+        std::string folder = std::filesystem::path(table.filepath).parent_path().string();
+        table.rom = "";
+        if (table.requiresPinmame && !table.gameName.empty()) {
+            std::string romPath = folder + "/" + config.getRomPath() + "/" + table.gameName + ".zip";
+            std::cerr << "Checking ROM for " << table.name << ": requiresPinmame=" << table.requiresPinmame 
+                      << ", gameName=" << table.gameName << ", path=" << romPath << std::endl;
+            if (std::filesystem::exists(romPath)) {
+                table.rom = table.gameName;
+                std::cerr << "ROM found for " << table.name << ": " << table.gameName << std::endl;
+            } else {
+                std::cerr << "ROM not found for " << table.name << " at " << romPath << std::endl;
+            }
+        } else if (table.requiresPinmame) {
+            std::cerr << "Missing or null gameName for " << table.name << std::endl;
+        } else {
+            std::cerr << "No ROM required for " << table.name << std::endl;
+        }
+    }
+    std::cerr << "Finished ROM check for chunk [" << start << ", " << end << ") in thread " << std::this_thread::get_id() << std::endl;
+}
 
 void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vector<TableEntry>& filteredTables, bool& loading) {
     std::thread([this, &tables, &filteredTables, &loading]() {
         loading = true;
         std::lock_guard<std::mutex> lock(tablesMutex);
+
+        // Step 1: Update VBS and INI checks
         for (auto& table : tables) {
             std::string folder = std::filesystem::path(table.filepath).parent_path().string();
             std::string basename = table.filename;
@@ -47,40 +75,6 @@ void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vecto
                 }
             }
 
-            table.rom = "";
-            std::string indexPath = config.getTablesDir() + "/" + config.getVpxtoolIndexFile();
-            std::ifstream file(indexPath);
-            if (file.is_open()) {
-                json j;
-                file >> j;
-                for (const auto& t : j["tables"]) {
-                    std::string filepath = t["path"].is_string() ? t["path"].get<std::string>() : "Unknown";
-                    if (filepath == table.filepath) {
-                        bool requiresPinmame = t["requires_pinmame"].is_boolean() ? t["requires_pinmame"].get<bool>() : false;
-                        if (requiresPinmame && t["game_name"].is_string()) {
-                            std::string gameName = t["game_name"].get<std::string>();
-                            std::string romPath = folder + "/" + config.getRomPath() + "/" + gameName + ".zip";
-                            std::cerr << "Checking ROM for " << table.name << ": requires_pinmame=" << requiresPinmame 
-                                      << ", game_name=" << gameName << ", path=" << romPath << std::endl;
-                            if (std::filesystem::exists(romPath)) {
-                                table.rom = gameName;
-                                std::cerr << "ROM found for " << table.name << ": " << gameName << std::endl;
-                            } else {
-                                std::cerr << "ROM not found for " << table.name << " at " << romPath << std::endl;
-                            }
-                        } else if (requiresPinmame) {
-                            std::cerr << "Missing or null game_name for " << table.name << std::endl;
-                        } else {
-                            std::cerr << "No ROM required for " << table.name << std::endl;
-                        }
-                        break;
-                    }
-                }
-                file.close();
-            } else {
-                std::cerr << "Could not reopen index file for ROM check: " << indexPath << std::endl;
-            }
-
             table.extraFiles = std::string(iniExists ? "INI " : "") +
                                std::string(vbsExists ? "VBS " : "") +
                                std::string(std::filesystem::exists(b2sFile) ? "B2S" : "");
@@ -98,7 +92,28 @@ void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vecto
                            std::string(std::filesystem::exists(folder + config.getDmdVideo()) ? "DMD" : "");
         }
 
-        // Save to cache
+        // Step 2: Threaded ROM checks
+        const size_t numThreads = std::thread::hardware_concurrency();
+        const size_t chunkSize = tables.size() / numThreads + (tables.size() % numThreads != 0 ? 1 : 0);
+        std::vector<std::thread> threads;
+
+        std::cerr << "Starting ROM checks with " << numThreads << " threads, chunk size=" << chunkSize << std::endl;
+        for (size_t i = 0; i < tables.size(); i += chunkSize) {
+            size_t start = i;
+            size_t end = std::min(i + chunkSize, tables.size());
+            threads.emplace_back(&TableUpdater::checkRomForChunk, this, std::ref(tables), start, end);
+        }
+
+        for (auto& thread : threads) {
+            thread.join();
+        }
+
+        // Step 3: Log final ROM status
+        for (const auto& table : tables) {
+            std::cerr << "Final ROM status for " << table.name << ": rom=" << table.rom << std::endl;
+        }
+
+        // Step 4: Save to cache
         json j;
         j["last_updated"] = std::chrono::system_clock::now().time_since_epoch().count();
         for (const auto& t : tables) {
@@ -120,6 +135,8 @@ void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vecto
             tj["videos"] = t.videos;
             tj["vbsModified"] = t.vbsModified;
             tj["iniModified"] = t.iniModified;
+            tj["requiresPinmame"] = t.requiresPinmame;
+            tj["gameName"] = t.gameName;
             j["tables"].push_back(tj);
         }
         std::ofstream file(config.getBasePath() + "resources/tables_index.json");
@@ -127,5 +144,6 @@ void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vecto
 
         filteredTables = tables;
         loading = false;
+        std::cerr << "Finished updating tables, loading=false" << std::endl;
     }).detach();
 }
