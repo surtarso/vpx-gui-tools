@@ -89,6 +89,7 @@ void TableManager::saveToCache(const std::string& jsonPath) {
 
 void TableManager::generateIndex() {
     std::string cmd = "\"" + config.getVpxTool() + "\" " + config.getIndexerSubCmd() + " \"" + config.getTablesDir() + "\"";
+    std::cerr << "Generating index with command: " << cmd << std::endl;
     system(cmd.c_str());
 }
 
@@ -122,28 +123,6 @@ void TableManager::loadTables() {
             if (!release.empty()) std::cerr << "Invalid release_date for " << entry.name << ": " << release << std::endl;
         }
         entry.version = tableInfo["table_version"].is_string() ? tableInfo["table_version"].get<std::string>() : "Unknown";
-
-        // ROM Check - Simplified with Debug
-        bool requiresPinmame = t["requires_pinmame"].is_boolean() ? t["requires_pinmame"].get<bool>() : false;
-        entry.rom = "";
-        if (requiresPinmame) {
-            if (t["game_name"].is_string()) {
-                std::string gameName = t["game_name"].get<std::string>();
-                std::string romPath = config.getTablesDir() + config.getRomPath() + "/" + gameName + ".zip";
-                std::cerr << "Checking ROM for " << entry.name << ": requires_pinmame=" << requiresPinmame 
-                          << ", game_name=" << gameName << ", path=" << romPath << std::endl;
-                if (std::filesystem::exists(romPath)) {
-                    entry.rom = "ROM";
-                    std::cerr << "ROM found for " << entry.name << std::endl;
-                } else {
-                    std::cerr << "ROM not found for " << entry.name << " at " << romPath << std::endl;
-                }
-            } else {
-                std::cerr << "Missing or null game_name for " << entry.name << std::endl;
-            }
-        } else {
-            std::cerr << "No ROM required for " << entry.name << std::endl;
-        }
 
         // Debug null fields
         if (!t["path"].is_string()) std::cerr << "Null path for table at " << entry.filepath << std::endl;
@@ -199,6 +178,42 @@ void TableManager::updateTablesAsync() {
                 }
             }
 
+            // Check ROM - Moved here to ensure it runs for all tables
+            table.rom = "";
+            std::string indexPath = config.getTablesDir() + "/" + config.getVpxtoolIndexFile();
+            std::ifstream file(indexPath);
+            if (file.is_open()) {
+                json j;
+                file >> j;
+                for (const auto& t : j["tables"]) {
+                    std::string filepath = t["path"].is_string() ? t["path"].get<std::string>() : "Unknown";
+                    if (filepath == table.filepath) { // Match the table by filepath
+                        bool requiresPinmame = t["requires_pinmame"].is_boolean() ? t["requires_pinmame"].get<bool>() : false;
+                        if (requiresPinmame && t["game_name"].is_string()) {
+                            std::string gameName = t["game_name"].get<std::string>();
+                            std::string romPath = folder + "/" + config.getRomPath() + "/" + gameName + ".zip";
+                            std::cerr << "Checking ROM for " << table.name << ": requires_pinmame=" << requiresPinmame 
+                                      << ", game_name=" << gameName << ", path=" << romPath << std::endl;
+                            if (std::filesystem::exists(romPath)) {
+                                table.rom = gameName; // Display the actual ROM name (e.g., "t2")
+                                std::cerr << "ROM found for " << table.name << ": " << gameName << std::endl;
+                            } else {
+                                std::cerr << "ROM not found for " << table.name << " at " << romPath << std::endl;
+                            }
+                        } else if (requiresPinmame) {
+                            std::cerr << "Missing or null game_name for " << table.name << std::endl;
+                        } else {
+                            std::cerr << "No ROM required for " << table.name << std::endl;
+                        }
+                        break;
+                    }
+                }
+                file.close();
+            } else {
+                std::cerr << "Could not reopen index file for ROM check: " << indexPath << std::endl;
+            }
+
+            // Fix B2S typo
             table.extraFiles = std::string(iniExists ? "INI " : "") +
                                std::string(vbsExists ? "VBS " : "") +
                                std::string(std::filesystem::exists(b2sFile) ? "B2S" : "");

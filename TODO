@@ -4,9 +4,6 @@ TODO:
 
 - add everything to ini to configure easy
 
-table:
-- show romname on rom column
-
 - add coloring to row as in:
 set if a table fails to launch, paint it red
 default is clear, if launches normally, make sure its clear (to remove red)
