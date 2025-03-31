@@ -1,4 +1,5 @@
 #include "launcher/table_view.h"
+#include "utils/logging.h"
 #include <filesystem>
 #include <sstream>
 #include <vector>
@@ -49,11 +50,17 @@ void TableView::drawTable(std::vector<TableEntry>& tables) {
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0) && selectedTable >= 0) {
                     std::string folder = std::filesystem::path(tables[selectedTable].filepath).parent_path().string();
                     std::string cmd = "xdg-open \"" + folder + "\"";
-                    system(cmd.c_str());
+                    int result = system(cmd.c_str());
+                    if (result != 0) {
+                        LOG_DEBUG("Failed to open table folder: " << folder << " (command: " << cmd << ")");
+                    }
                 }
                 if (isSelected && ImGui::IsKeyPressed(ImGuiKey_Enter) && selectedTable >= 0) {
                     std::string cmd = config.getStartArgs() + " \"" + config.getCommandToRun() + "\" " + config.getPlaySubCmd() + " \"" + tables[selectedTable].filepath + "\" " + config.getEndArgs();
-                    system(cmd.c_str());
+                    int result = system(cmd.c_str());
+                    if (result != 0) {
+                        LOG_DEBUG("Failed to open: " << tables[selectedTable].filepath << " (command: " << cmd << ")");
+                    }
                 }
                 ImGui::TableSetColumnIndex(1); ImGui::Text("%s", tables[i].brand.c_str());
                 ImGui::TableSetColumnIndex(2); ImGui::Text("%s", tables[i].name.c_str());
