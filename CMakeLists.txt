@@ -75,6 +75,15 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
     target_compile_options(${PROJECT_NAME} PRIVATE -O2)
 endif()
 
+# Suppress warnings for tinyfiledialogs only
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set_source_files_properties(
+        ${CMAKE_SOURCE_DIR}/external/tinyfiledialogs/tinyfiledialogs.c
+        PROPERTIES
+        COMPILE_FLAGS "-w"
+    )
+endif()
+
 # Set output directory
 set_target_properties(${PROJECT_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
