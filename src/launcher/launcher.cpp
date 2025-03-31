@@ -93,7 +93,7 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
 
         // Add 'x' button to clear the search bar
         ImGui::SameLine();
-        if (ImGui::Button("x")) {
+        if (ImGui::Button("X")) {
             searchQuery.clear(); // Clear the search query
         }
 

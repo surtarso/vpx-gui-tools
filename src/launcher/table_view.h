@@ -15,6 +15,7 @@ private:
     TableManager* tableManager;
     IConfigProvider& config;
     int selectedTable;
+    bool checkFilePresence(const std::string& tablePath, const std::string& relativePath);
 };
 
 #endif // TABLE_VIEW_H
