@@ -1,9 +1,7 @@
 <h1 align="center">VPX GUI Tools for Linux</h1>
 <p align="center">A GUI tool for launching VPX tables, editing INI settings, extracting VBS scripts, and more with "just a mouse click", to be used with <a href="https://github.com/vpinball/vpinball">VPinballX</a>.</p>
 
-| **[VPX GUI Tools Launcher](VPXGUITools)** | 
-|-------------------------------------|
-| ![image](https://github.com/user-attachments/assets/d424151f-ce64-46d9-a42a-8e12e884b896) | 
+![image](https://github.com/user-attachments/assets/d424151f-ce64-46d9-a42a-8e12e884b896)
 
 <p align="center"><i>This tool is part of the <a href="https://github.com/surtarso/ASAPCabinetFE">ASAPCabinetFE</a> ecosystem.</i></p>
 
