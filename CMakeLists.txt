@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(VPXGUITools VERSION 0.9.8 LANGUAGES CXX)
+project(VPXGUITools VERSION 0.9.8 LANGUAGES CXX C)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -18,6 +18,7 @@ set(SOURCES
     src/core/application.cpp
     src/config/config_manager.cpp
     src/tools/ini_editor.cpp
+    src/tools/first_run.cpp
     src/launcher/launcher.cpp
     src/launcher/table_actions.cpp
     src/launcher/table_view.cpp
@@ -25,12 +26,14 @@ set(SOURCES
     src/tables/table_loader.cpp
     src/tables/table_manager.cpp
     src/tables/table_updater.cpp
+    # external submodules
     external/imgui/imgui.cpp
     external/imgui/imgui_draw.cpp
     external/imgui/imgui_tables.cpp
     external/imgui/imgui_widgets.cpp
     external/imgui/backends/imgui_impl_sdl2.cpp
     external/imgui/backends/imgui_impl_sdlrenderer2.cpp
+    external/tinyfiledialogs/tinyfiledialogs.c
 )
 
 # Define the executable
@@ -45,8 +48,10 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/src/tools
     ${CMAKE_SOURCE_DIR}/src/tables
     ${CMAKE_SOURCE_DIR}/src/utils
+    # external submodules
     ${CMAKE_SOURCE_DIR}/external/imgui
     ${CMAKE_SOURCE_DIR}/external/imgui/backends
+    ${CMAKE_SOURCE_DIR}/external/tinyfiledialogs
     ${CMAKE_SOURCE_DIR}/external/json/single_include/nlohmann
     ${CMAKE_BINARY_DIR}  # Where version.h is generated
 )

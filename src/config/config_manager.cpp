@@ -1,10 +1,11 @@
-#include "config/config_manager.h"
+#include "config_manager.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
 #include <filesystem>
+#include "utils/logging.h"
 
-ConfigManager::ConfigManager(const std::string& basePath) : basePath(basePath) {
+ConfigManager::ConfigManager(const std::string& basePath) : basePath(basePath), firstRun(true) {
     loadSettings();
 }
 
@@ -23,6 +24,7 @@ void ConfigManager::loadSettings() {
     if (!std::filesystem::exists(configFile)) {
         std::ofstream out(configFile);
         out << "[VPinballX]\n"
+            << "FirstRun=true\n"  // Add FirstRun key
             << "TablesDir=tables\n"
             << "StartArgs=\n"
             << "CommandToRun=vpinballx\n"
@@ -63,6 +65,7 @@ void ConfigManager::loadSettings() {
     std::ifstream file(configFile);
     if (!file.is_open()) {
         std::cerr << "Could not open " << configFile << std::endl;
+        firstRun = true;
         tablesDir = prependBasePath("tables");
         startArgs = "";
         commandToRun = "vpinballx";
@@ -109,7 +112,8 @@ void ConfigManager::loadSettings() {
         value.erase(0, value.find_first_not_of(" \t"));
 
         if (currentSection == "VPinballX") {
-            if (key == "TablesDir") tablesDir = prependBasePath(value);
+            if (key == "FirstRun") firstRun = (value == "true");
+            else if (key == "TablesDir") tablesDir = prependBasePath(value);
             else if (key == "StartArgs") startArgs = value;
             else if (key == "CommandToRun") commandToRun = prependBasePath(value);
             else if (key == "EndArgs") endArgs = value;
@@ -152,4 +156,115 @@ void ConfigManager::loadSettings() {
         }
     }
     file.close();
+}
+
+void ConfigManager::save() {
+    std::string configFile = prependBasePath("resources/settings.ini");
+    std::ifstream inFile(configFile);
+    std::stringstream buffer;
+    buffer << inFile.rdbuf();
+    inFile.close();
+
+    std::string content = buffer.str();
+    std::string newContent;
+    bool inVPinballXSection = false;
+    bool firstRunWritten = false;
+
+    std::istringstream iss(content);
+    std::string line;
+    while (std::getline(iss, line)) {
+        if (line.empty() || line[0] == ';') {
+            newContent += line + "\n";
+            continue;
+        }
+        if (line.front() == '[' && line.back() == ']') {
+            if (inVPinballXSection) {
+                // End of [VPinballX] section, write FirstRun if not already written
+                if (!firstRunWritten) {
+                    newContent += "FirstRun=" + std::string(firstRun ? "true" : "false") + "\n";
+                }
+            }
+            inVPinballXSection = (line == "[VPinballX]");
+            newContent += line + "\n";
+            continue;
+        }
+        if (inVPinballXSection) {
+            size_t pos = line.find('=');
+            if (pos != std::string::npos) {
+                std::string key = line.substr(0, pos);
+                key.erase(key.find_last_not_of(" \t") + 1);
+                if (key == "FirstRun") {
+                    newContent += "FirstRun=" + std::string(firstRun ? "true" : "false") + "\n";
+                    firstRunWritten = true;
+                    continue;
+                }
+                else if (key == "TablesDir") {
+                    newContent += "TablesDir=" + tablesDir + "\n";
+                    continue;
+                }
+                else if (key == "CommandToRun") {
+                    newContent += "CommandToRun=" + commandToRun + "\n";
+                    continue;
+                }
+                else if (key == "VPinballXIni") {
+                    newContent += "VPinballXIni=" + vpinballXIni + "\n";
+                    continue;
+                }
+            }
+        }
+        newContent += line + "\n";
+    }
+
+    // If [VPinballX] section was the last section and FirstRun wasn't written
+    if (inVPinballXSection && !firstRunWritten) {
+        newContent += "FirstRun=" + std::string(firstRun ? "true" : "false") + "\n";
+    }
+
+    std::ofstream outFile(configFile);
+    outFile << newContent;
+    outFile.close();
+}
+
+void ConfigManager::setTablesDir(const std::string& path) {
+    tablesDir = path;
+}
+
+void ConfigManager::setCommandToRun(const std::string& path) {
+    commandToRun = path;
+}
+
+void ConfigManager::setVPinballXIni(const std::string& path) {
+    vpinballXIni = path;
+}
+
+void ConfigManager::setFirstRun(bool value) {
+    firstRun = value;
+}
+
+bool ConfigManager::isFirstRun() const {
+    return firstRun;
+}
+
+bool ConfigManager::arePathsValid() const {
+    // Validate table folder: must exist, be a directory, and contain at least one .vpx file
+    bool tablePathValid = std::filesystem::exists(tablesDir) && std::filesystem::is_directory(tablesDir);
+    if (tablePathValid) {
+        bool hasVpxFile = false;
+        for (const auto& entry : std::filesystem::recursive_directory_iterator(tablesDir)) {
+            if (entry.path().extension() == ".vpx") {
+                hasVpxFile = true;
+                break;
+            }
+        }
+        tablePathValid = hasVpxFile;
+    }
+
+    // Validate VPinballX executable: must exist and be executable
+    bool vpxExecutableValid = std::filesystem::exists(commandToRun) && 
+                             (std::filesystem::status(commandToRun).permissions() & std::filesystem::perms::owner_exec) != std::filesystem::perms::none;
+
+    // Validate VPinballX.ini: must exist
+    bool vpinballXIniValid = std::filesystem::exists(vpinballXIni);
+
+    return tablePathValid && vpxExecutableValid && vpinballXIniValid;
 }

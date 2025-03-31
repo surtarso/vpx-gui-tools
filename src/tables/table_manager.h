@@ -13,7 +13,7 @@
 class TableManager {
 public:
     TableManager(IConfigProvider& config);
-    void loadTables();
+    void loadTables(); // Explicit method to load tables
     void filterTables(const std::string& query);
     void setSortSpecs(int columnIdx, bool ascending);
     void updateTablesAsync();
@@ -26,6 +26,7 @@ private:
     std::vector<TableEntry> tables;
     std::vector<TableEntry> filteredTables;
     bool loading;
+    bool tablesLoaded; // Track whether tables have been loaded
     std::mutex tablesMutex;
     TableLoader loader;
     TableUpdater updater;

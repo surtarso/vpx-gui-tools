@@ -35,7 +35,16 @@ public:
     virtual std::string getIndexerSubCmd() const = 0;
     virtual std::string getDiffSubCmd() const = 0;
     virtual std::string getRomSubCmd() const = 0;
-    // virtual std::string getImGuiConf() const = 0;
+    virtual std::string getImGuiConf() const = 0;
+
+    // New methods for first-run setup
+    virtual void setTablesDir(const std::string& path) = 0;
+    virtual void setCommandToRun(const std::string& path) = 0;
+    virtual void setVPinballXIni(const std::string& path) = 0;
+    virtual void setFirstRun(bool value) = 0;
+    virtual bool isFirstRun() const = 0;
+    virtual bool arePathsValid() const = 0;
+    virtual void save() = 0;
 };
 
 #endif // ICONFIG_PROVIDER_H

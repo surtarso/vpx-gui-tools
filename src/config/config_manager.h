@@ -8,6 +8,7 @@ class ConfigManager : public IConfigProvider {
 public:
     ConfigManager(const std::string& basePath);
     void loadSettings();
+    void save() override;
 
     std::string getBasePath() const override { return basePath; }
     std::string getTablesDir() const override { return tablesDir; }
@@ -37,12 +38,21 @@ public:
     std::string getIndexerSubCmd() const override { return indexerSubCmd; }
     std::string getDiffSubCmd() const override { return diffSubCmd; }
     std::string getRomSubCmd() const override { return romSubCmd; }
-    std::string getImGuiConf() const { return imGuiConf; }
+    std::string getImGuiConf() const override { return imGuiConf; }
+
+    // New methods for first-run setup
+    void setTablesDir(const std::string& path) override;
+    void setCommandToRun(const std::string& path) override;
+    void setVPinballXIni(const std::string& path) override;
+    void setFirstRun(bool value) override;
+    bool isFirstRun() const override;
+    bool arePathsValid() const override;
 
 private:
     std::string basePath;
     std::string prependBasePath(const std::string& relativePath) const;
 
+    bool firstRun;
     std::string tablesDir;
     std::string startArgs;
     std::string commandToRun;

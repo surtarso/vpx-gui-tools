@@ -12,14 +12,22 @@ Application::Application(const std::string& basePath)
       tableManager(config),
       iniEditor(config.getVPinballXIni(), false),
       configEditor(basePath + "resources/settings.ini", true),
-      launcher(config, &tableManager) {}
-
-Application::~Application() {}
-
-void Application::run() {
+      launcher(config, &tableManager),
+      firstRunDialog(config),
+      showFirstRunDialog(false),
+      deferInitialLoad(false),
+      loadingTables(false),
+      loadingComplete(false),
+      editingIni(false),
+      editingSettings(false),
+      exitRequested(false),
+      showCreateIniPrompt(false),
+      showNoTablePopup(false),
+      window(nullptr),
+      renderer(nullptr) {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
         LOG_DEBUG("SDL_Init Error: " << SDL_GetError());
-        return;
+        throw std::runtime_error("Failed to initialize SDL");
     }
 
     window = SDL_CreateWindow("VPX GUI Tools", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -27,15 +35,15 @@ void Application::run() {
     if (!window) {
         LOG_DEBUG("SDL_CreateWindow Error: " << SDL_GetError());
         SDL_Quit();
-        return;
+        throw std::runtime_error("Failed to create SDL window");
     }
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!renderer) {
         LOG_DEBUG("SDL_CreateRenderer Error: " << SDL_GetError());
         SDL_DestroyWindow(window);
         SDL_Quit();
-        return;
+        throw std::runtime_error("Failed to create SDL renderer");
     }
 
     IMGUI_CHECKVERSION();
@@ -75,6 +83,53 @@ void Application::run() {
     ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer2_Init(renderer);
 
+    // Check if we need to show the first-run dialog
+    if (config.isFirstRun() || !config.arePathsValid()) {
+        showFirstRunDialog = true;
+        deferInitialLoad = true; // Defer initial table loading until after the first-run dialog
+    } else {
+        loadTables(); // Load tables immediately if no first-run dialog is needed
+    }
+}
+
+Application::~Application() {
+    if (loadingThread.joinable()) {
+        loadingThread.join(); // Ensure the loading thread is finished before destruction
+    }
+    ImGui_ImplSDLRenderer2_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
+    if (renderer) SDL_DestroyRenderer(renderer);
+    if (window) SDL_DestroyWindow(window);
+    SDL_Quit();
+}
+
+void Application::loadTables() {
+    loadingTables = true;
+    loadingComplete = false;
+    // Start the loading process in a separate thread
+    loadingThread = std::thread([this]() {
+        tableManager.loadTables();
+        LOG_DEBUG("Loaded " << tableManager.getTables().size() << " tables.");
+        loadingComplete = true;
+    });
+}
+
+void Application::drawLoadingScreen() {
+    // Calculate the position to center the text
+    const char* loadingText = "Indexing tables...";
+    ImVec2 textSize = ImGui::CalcTextSize(loadingText);
+    ImVec2 windowSize = ImGui::GetIO().DisplaySize;
+    ImVec2 textPos = ImVec2((windowSize.x - textSize.x) * 0.5f, (windowSize.y - textSize.y) * 0.5f);
+
+    // Draw the text directly without a window
+    ImGui::SetNextWindowPos(textPos, ImGuiCond_Always);
+    ImGui::Begin("Loading", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs);
+    ImGui::Text("%s", loadingText);
+    ImGui::End();
+}
+
+void Application::run() {
     std::string lastIniPath = config.getVPinballXIni();
 
     while (!exitRequested) {
@@ -88,7 +143,27 @@ void Application::run() {
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        if (editingIni) {
+        if (showFirstRunDialog) {
+            showFirstRunDialog = firstRunDialog.show();
+            if (!showFirstRunDialog) {
+                // Dialog closed, check if paths are valid before proceeding
+                if (config.arePathsValid()) {
+                    loadTables(); // Start the table loading process
+                } else {
+                    exitRequested = true; // Exit if the user didn't set valid paths
+                }
+            }
+        }
+        else if (loadingTables) {
+            drawLoadingScreen(); // Show the loading screen while tables are being loaded
+            if (loadingComplete) {
+                loadingTables = false; // Loading is done, move to the main interface
+                if (loadingThread.joinable()) {
+                    loadingThread.join(); // Clean up the thread
+                }
+            }
+        }
+        else if (editingIni) {
             std::string currentIniPath = launcher.getSelectedIniPath();
             if (currentIniPath != lastIniPath) {
                 iniEditor.loadIniFile(currentIniPath);
@@ -149,11 +224,4 @@ void Application::run() {
         ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
         SDL_RenderPresent(renderer);
     }
-
-    ImGui_ImplSDLRenderer2_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
-    ImGui::DestroyContext();
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
 }

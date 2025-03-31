@@ -11,7 +11,11 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
     ImGui::Begin("VPX GUI Tools", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
 
     if (tableManager->isLoading()) {
-        ImGui::Text("Loading tables...");
+        const char* loadingText = "Updating tables...";
+        ImVec2 textSize = ImGui::CalcTextSize(loadingText);
+        ImVec2 windowSize = ImGui::GetIO().DisplaySize;
+        ImGui::SetCursorPos(ImVec2((windowSize.x - textSize.x) * 0.5f, (windowSize.y - textSize.y) * 0.5f));
+        ImGui::Text("%s", loadingText);
     } else {
         ImGuiIO& io = ImGui::GetIO();
         bool shouldFocusSearch = false;
