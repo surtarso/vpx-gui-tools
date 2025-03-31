@@ -1,5 +1,6 @@
 <h1 align="center">VPX GUI Tools for Linux</h1>
-<p align="center">A GUI tool for launching VPX tables, editing INI settings, extracting VBS scripts, and more with "just a mouse click", to be used with <a href="https://github.com/vpinball/vpinball">VPinballX</a>.</p>
+<p align="center">A <a href="https://github.com/vpinball/vpinball">VPinballX</a> GUI tool for launching VPX tables, editing INI settings, extracting VBS scripts, and more with "just a mouse click".</p>
+<p align="center"><i>Now in C++ and powered by <a href="https://github.com/francisdb/vpxtool">vpxtool</a>! "Harder, better, faster, stronger"</i></p>
 
 ![image](https://github.com/user-attachments/assets/e8d96bd5-8c40-440b-80ea-721f30e67931)
 
