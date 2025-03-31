@@ -4,3 +4,6 @@
 [submodule "src/External/json"]
 	path = external/json
 	url = https://github.com/nlohmann/json.git
+[submodule "external/tinyfiledialogs"]
+	path = external/tinyfiledialogs
+	url = https://github.com/native-toolkit/tinyfiledialogs.git
