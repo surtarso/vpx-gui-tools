@@ -28,6 +28,7 @@ private:
     bool showSavedMessage = false;
     double savedMessageTimer = 0.0;
     bool isConfigEditor;
+    bool wasOpen; // Track the previous state of isOpen
 
     void initExplanations();
 };

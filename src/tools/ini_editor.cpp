@@ -4,12 +4,12 @@
 #include "imgui.h"
 #include <fstream>
 #include <iostream>
+#include <filesystem>
 
 IniEditor::IniEditor(const std::string& initialFile, bool isConfigEditor) 
-    : currentIniFile(initialFile), isConfigEditor(isConfigEditor) {
+    : currentIniFile(initialFile), isConfigEditor(isConfigEditor), wasOpen(false) {
     initExplanations();
     loadIniFile(initialFile);
-    if (!sections.empty()) currentSection = sections[0];
 }
 
 void IniEditor::loadIniFile(const std::string& filename) {
@@ -52,6 +52,13 @@ void IniEditor::loadIniFile(const std::string& filename) {
         }
         lineIndex++;
     }
+
+    // Reset currentSection to the first section after loading the file
+    if (!sections.empty()) {
+        currentSection = sections[0];
+    } else {
+        currentSection.clear();
+    }
 }
 
 void IniEditor::saveIniFile() {
@@ -77,10 +84,31 @@ void IniEditor::saveIniFile() {
 }
 
 void IniEditor::draw(bool& isOpen) {
+    // Detect when the editor is opened (isOpen transitions from false to true)
+    if (isOpen && !wasOpen) {
+        // Reset to the first section when the editor is opened
+        if (!sections.empty()) {
+            currentSection = sections[0];
+        } else {
+            currentSection.clear();
+        }
+    }
+    wasOpen = isOpen;
+
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize, ImGuiCond_Always);
-    ImGui::Begin(isConfigEditor ? "Settings Configuration" : "VPinballX Configuration", 
-                 nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+
+    // Set the window title dynamically
+    std::string windowTitle;
+    if (isConfigEditor) {
+        windowTitle = "Settings Configuration";
+    } else {
+        std::string filename = std::filesystem::path(currentIniFile).filename().string();
+        windowTitle = "VPinballX Configuration - Editing: " + filename;
+    }
+
+    ImGui::Begin(windowTitle.c_str(), nullptr, 
+                 ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
     if (ImGui::BeginCombo("Section", currentSection.c_str())) {
         for (const auto& section : sections) {
@@ -108,23 +136,23 @@ void IniEditor::draw(bool& isOpen) {
                 ImGui::TextColored(ImVec4(0, 1, 0, 1), "?");
                 if (ImGui::IsItemHovered()) {
                     ImGui::BeginTooltip();
-                    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 20.0f);  // Set a reasonable wrapping width
+                    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 20.0f);
                     ImGui::TextWrapped("%s", explanations[kv.first].c_str());
                     ImGui::PopTextWrapPos();
                     ImGui::EndTooltip();
                 }
             }
             
-            ImGui::SameLine(225);  // Consistent spacing for input field
+            ImGui::SameLine(225);
             char buf[256];
             strncpy(buf, kv.second.c_str(), sizeof(buf));
             buf[sizeof(buf) - 1] = '\0';
-            ImGui::PushItemWidth(-1);  // Make input field stretch to available width
+            ImGui::PushItemWidth(-1);
             if (ImGui::InputText("", buf, sizeof(buf))) kv.second = buf;
             ImGui::PopItemWidth();
             
             ImGui::PopID();
-            ImGui::NewLine();  // Add spacing between entries
+            ImGui::NewLine();
         }
     }
     ImGui::EndChild();

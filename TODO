@@ -1,9 +1,6 @@
 TODO:
 
-- add color diff for images/videos as:
-not present, red, present, green
-
-- add everything to ini to configure easy
+- add all configurable values to ini to customize (colors etc)
 
 - add coloring to row as in:
 set if a table fails to launch, paint it red
@@ -11,8 +8,6 @@ default is clear, if launches normally, make sure its clear (to remove red)
 
 - get some feedback on shit
 extracting, launching, loading etc...
-
-- show active folder on menu top bar while on ini editor
 
 - refresh button for changes (run vpxtool index again and refresh dirs)
 
