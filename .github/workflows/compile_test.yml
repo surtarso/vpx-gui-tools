@@ -63,8 +63,21 @@ jobs:
           exit 1
         fi
 
+    - name: Copy Resources
+      run: |
+        # Copy the resources directory
+        cp -r resources build/resources
+        # Copy vpxtool to resources (if it exists)
+        if [ -f external/vpxtool ]; then
+          cp external/vpxtool build/resources/vpxtool
+        fi
+        # Create logs directory
+        mkdir -p build/resources/logs
+
     - name: Archive Binary
       uses: actions/upload-artifact@v4
       with:
         name: vpx-gui-tools-binary
-        path: build/VPXGUITools
+        path: |
+          build/VPXGUITools
+          build/resources/
