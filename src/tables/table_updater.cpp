@@ -6,6 +6,8 @@
 #include <fstream>
 #include <thread>
 #include <vector>
+#include <algorithm> // For std::transform
+#include <cctype>    // For std::tolower
 
 TableUpdater::TableUpdater(IConfigProvider& config, std::mutex& mutex) : config(config), tablesMutex(mutex) {}
 
@@ -46,7 +48,8 @@ void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vecto
 
             std::string iniFile = folder + "/" + basename + ".ini";
             std::string vbsFile = folder + "/" + basename + ".vbs";
-            std::string b2sFile = folder + "/" + basename + ".directb2s";
+            std::string b2sFileLower = folder + "/" + basename + ".directb2s";
+            std::string b2sFileUpper = folder + "/" + basename + ".directB2S";
 
             bool vbsExists = std::filesystem::exists(vbsFile);
             table.vbsModified = false;
@@ -76,9 +79,12 @@ void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vecto
                 }
             }
 
+            // Check for .directb2s or .directB2S (case-insensitive)
+            bool b2sExists = std::filesystem::exists(b2sFileLower) || std::filesystem::exists(b2sFileUpper);
+
             table.extraFiles = std::string(iniExists ? "INI " : "") +
                                std::string(vbsExists ? "VBS " : "") +
-                               std::string(std::filesystem::exists(b2sFile) ? "B2S" : "");
+                               std::string(b2sExists ? "B2S" : "");
             
             bool hasUltraDmdFolder = false;
             for (const auto& entry : std::filesystem::directory_iterator(folder)) {
