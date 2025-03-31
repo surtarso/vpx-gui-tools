@@ -1,7 +1,7 @@
 <h1 align="center">VPX GUI Tools for Linux</h1>
 <p align="center">A GUI tool for launching VPX tables, editing INI settings, extracting VBS scripts, and more with "just a mouse click", to be used with <a href="https://github.com/vpinball/vpinball">VPinballX</a>.</p>
 
-![image](https://github.com/user-attachments/assets/d424151f-ce64-46d9-a42a-8e12e884b896)
+![image](https://github.com/user-attachments/assets/e8d96bd5-8c40-440b-80ea-721f30e67931)
 
 <p align="center"><i>This tool is part of the <a href="https://github.com/surtarso/ASAPCabinetFE">ASAPCabinetFE</a> ecosystem.</i></p>
 
@@ -62,7 +62,7 @@
 
 ## **INI Editor**  
 
-![image](https://github.com/user-attachments/assets/b11bbccf-2844-4c14-b93f-0049c8b97717)
+![image](https://github.com/user-attachments/assets/aae3833c-837d-49f3-b122-807eb8285167)
 
 ## **Editor Features:**  
  - Explanations for each variable [**(need help!)**](https://github.com/surtarso/vpx-gui-tools/wiki/Adding-VPinballX.ini-Tooltips)
