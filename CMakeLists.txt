@@ -1,9 +1,16 @@
 cmake_minimum_required(VERSION 3.10)
-project(VPXGUITools VERSION 0.0.1 LANGUAGES CXX)
+project(VPXGUITools VERSION 0.9.8 LANGUAGES CXX)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Generate a version.h header with the project version
+configure_file(
+    ${CMAKE_SOURCE_DIR}/version.h.in
+    ${CMAKE_BINARY_DIR}/version.h
+    @ONLY
+)
 
 # Define source files
 set(SOURCES
@@ -41,6 +48,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/external/imgui
     ${CMAKE_SOURCE_DIR}/external/imgui/backends
     ${CMAKE_SOURCE_DIR}/external/json/single_include/nlohmann
+    ${CMAKE_BINARY_DIR}  # Where version.h is generated
 )
 
 # Find and link dependencies

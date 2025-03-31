@@ -1,0 +1,70 @@
+name: C++ Compile Test
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - ".github/workflows/compile_test.yml"
+      - "src/**"                      # Watch all source files
+      - "resources/**"                # Watch all resource files
+      - "CMakeLists.txt"              # Watch CMakeLists.txt instead of Makefile
+      - "external/imgui/**"           # Watch ImGui files
+      - "external/json/**"           # Watch json files
+      # - "external/tinyfiledialogs/**" # Watch tinyfiledialogs files
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  compile_app:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake libsdl2-dev
+
+    - name: Configure with CMake
+      run: |
+        mkdir build && cd build
+        cmake -DCMAKE_BUILD_TYPE=Release ..
+
+    - name: Compile with CMake
+      run: |
+        cd build
+        make -j$(nproc)
+
+    - name: Check Compilation
+      run: |
+        if [ -f build/VPXGUITools ]; then
+          echo "Compilation successful!"
+        else
+          echo "Compilation failed!"
+          exit 1
+        fi
+    
+    - name: Test Version Flag
+      run: |
+       # Extract version from CMakeLists.txt using absolute path
+        VERSION=$(grep "project(VPXGUITools VERSION" ${GITHUB_WORKSPACE}/CMakeLists.txt | sed 's/.*VERSION \([^ ]*\).*/\1/')
+        EXPECTED_OUTPUT="VPXGUITools version $VERSION"
+        VERSION_OUTPUT=$(./build/VPXGUITools --version)
+        if [ "$VERSION_OUTPUT" = "$EXPECTED_OUTPUT" ]; then
+          echo "Version check passed: $VERSION_OUTPUT"
+        else
+          echo "Version check failed!"
+          echo "Expected: $EXPECTED_OUTPUT"
+          echo "Got: $VERSION_OUTPUT"
+          exit 1
+        fi
+
+    - name: Archive Binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: vpx-gui-tools-binary
+        path: build/VPXGUITools
