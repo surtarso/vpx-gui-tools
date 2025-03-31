@@ -116,7 +116,11 @@ void TableLoader::saveToCache(const std::string& jsonPath, const std::vector<Tab
 void TableLoader::generateIndex() {
     std::string cmd = "\"" + config.getVpxTool() + "\" " + config.getIndexerSubCmd() + " \"" + config.getTablesDir() + "\"";
     LOG_DEBUG("Generating index with command: " << cmd);
-    system(cmd.c_str());
+    int result = system(cmd.c_str());
+    if (result != 0) {
+        LOG_DEBUG("Failed to index." << " (command: " << cmd << ")");
+    }
+    
 }
 
 void TableLoader::loadTables(std::vector<TableEntry>& tables) {
