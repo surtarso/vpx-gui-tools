@@ -1,18 +1,10 @@
-make_release.sh
-create_icons.sh
-grid/*
-cabinet/*
-vpx-gui-tools.run
 .vscode*
 settings.json
 .vscode
 .vscode/*
 .vscode/settings.json
 *.vscode
-vpx_config
 imgui.ini
-settings.ini
-src/vpxtool
 
 # Prerequisites
 *.d

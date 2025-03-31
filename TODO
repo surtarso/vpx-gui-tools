@@ -1,0 +1,18 @@
+TODO:
+
+handle 1st run (vpxtool paths etc)
+
+- add all configurable values to ini to customize (colors etc)
+
+- add coloring to row as in:
+set if a table fails to launch, paint it red
+default is clear, if launches normally, make sure its clear (to remove red)
+
+- get some feedback on shit
+extracting, launching, loading etc...
+
+- refresh button for changes (run vpxtool index again and refresh dirs)
+
+- launcher related settings apply on save
+
+- hamburguer menu for advanced options, like all vpxtool args etc

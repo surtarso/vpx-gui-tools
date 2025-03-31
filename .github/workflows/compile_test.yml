@@ -3,69 +3,68 @@ name: C++ Compile Test
 on:
   push:
     branches: [ "main" ]
-    paths: [ ".github/workflows/compile_test.yml", "src/vpx_config.cpp" ]
+    paths:
+      - ".github/workflows/compile_test.yml"
+      - "src/**"                      # Watch all source files
+      - "resources/**"                # Watch all resource files
+      - "CMakeLists.txt"              # Watch CMakeLists.txt instead of Makefile
+      - "external/imgui/**"           # Watch ImGui files
+      - "external/json/**"           # Watch json files
+      # - "external/tinyfiledialogs/**" # Watch tinyfiledialogs files
   pull_request:
     branches: [ "main" ]
 
 jobs:
-  compile_config:
+  compile_app:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        submodules: true
+        submodules: recursive
 
     - name: Install System Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libsdl2-dev libgl1-mesa-dev jq
+        sudo apt-get install -y build-essential cmake libsdl2-dev
 
-    - name: Download Latest vpxtool Binary
+    - name: Configure with CMake
       run: |
-        set -x
+        mkdir build && cd build
+        cmake -DCMAKE_BUILD_TYPE=Release ..
 
-        # Fetch the latest release info from GitHub API
-        LATEST_RELEASE=$(curl -s https://api.github.com/repos/francisdb/vpxtool/releases/latest)
-        
-        # Extract the download URL for the Linux binary
-        DOWNLOAD_URL=$(echo $LATEST_RELEASE | jq -r '.assets[] | select(.name | test("Linux-x86_64")) | .browser_download_url')
-
-        # Download and extract vpxtool binary
-        if [ -z "$DOWNLOAD_URL" ]; then
-          echo "Error: Could not find the latest vpxtool Linux binary URL!"
-          exit 1
-        fi
-
-        echo "Downloading the binary tarball"
-        wget $DOWNLOAD_URL -O vpxtool.tar.gz
-
-        echo "Extracting the binary and moving it to /src"
-        tar -xzvf vpxtool.tar.gz
-        mv vpxtool src/vpxtool
-        chmod +x src/vpxtool
-        rm vpxtool.tar.gz
-
-        set +x
-
-    - name: Compile
+    - name: Compile with CMake
       run: |
-        set -x
-        g++ src/vpx_config.cpp imgui/*.cpp imgui/backends/imgui_impl_sdl2.cpp imgui/backends/imgui_impl_opengl3.cpp -std=c++17 -Wall -Wextra -pedantic -I/usr/include/SDL2 -D_REENTRANT -Iimgui -Iimgui/backends -lSDL2 -lGL -static-libstdc++ -o vpx_config
-        set +x
-        
+        cd build
+        make -j$(nproc)
+
     - name: Check Compilation
       run: |
-        if [ -f vpx_config ]; then
+        if [ -f build/VPXGUITools ]; then
           echo "Compilation successful!"
         else
           echo "Compilation failed!"
           exit 1
         fi
-
-    - name: Run Binaries
+    
+    - name: Test Version Flag
       run: |
-        ./vpx_config --version || echo "Binary ran without proper version output, but build succeeded."
-        ./src/vpxtool --version || echo "Binary ran without proper version output, but was downloaded."
-      
+       # Extract version from CMakeLists.txt using absolute path
+        VERSION=$(grep "project(VPXGUITools VERSION" ${GITHUB_WORKSPACE}/CMakeLists.txt | sed 's/.*VERSION \([^ ]*\).*/\1/')
+        EXPECTED_OUTPUT="VPXGUITools version $VERSION"
+        VERSION_OUTPUT=$(./build/VPXGUITools --version)
+        if [ "$VERSION_OUTPUT" = "$EXPECTED_OUTPUT" ]; then
+          echo "Version check passed: $VERSION_OUTPUT"
+        else
+          echo "Version check failed!"
+          echo "Expected: $EXPECTED_OUTPUT"
+          echo "Got: $VERSION_OUTPUT"
+          exit 1
+        fi
+
+    - name: Archive Binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: vpx-gui-tools-binary
+        path: build/VPXGUITools
