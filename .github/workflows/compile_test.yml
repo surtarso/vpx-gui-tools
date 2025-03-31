@@ -65,8 +65,6 @@ jobs:
 
     - name: Copy Resources
       run: |
-        # Copy the resources directory
-        cp -r resources build/resources
         # Copy vpxtool to resources (if it exists)
         if [ -f external/vpxtool ]; then
           cp external/vpxtool build/resources/vpxtool
