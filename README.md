@@ -1,4 +1,3 @@
-```markdown
 <h1 align="center">VPX GUI Tools for Linux</h1>
 <p align="center">A GUI tool for launching VPX tables, editing INI settings, extracting VBS scripts, and more with "just a mouse click", to be used with <a href="https://github.com/vpinball/vpinball">VPinballX</a>.</p>
 
