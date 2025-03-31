@@ -78,4 +78,3 @@ Contributions to this project are welcome! Feel free to snoop around, open issue
 Any contribution to the INI Editor explanations project is highly appreciated! Check the [wiki](https://github.com/surtarso/vpx-gui-tools/wiki/Adding-VPinballX.ini-Tooltips).
 
 Older versions in Python + Shell (discontinued) can be downloaded here: https://github.com/surtarso/vpx-frontend/releases
-```
