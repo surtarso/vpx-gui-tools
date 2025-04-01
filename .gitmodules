@@ -4,9 +4,6 @@
 [submodule "external/json"]
 	path = external/json
 	url = https://github.com/nlohmann/json.git
-[submodule "external/tinyfiledialogs"]
-	path = external/tinyfiledialogs
-	url = https://github.com/native-toolkit/tinyfiledialogs.git
 [submodule "external/ImGuiFileDialog"]
 	path = external/ImGuiFileDialog
 	url = https://github.com/aiekick/ImGuiFileDialog.git
