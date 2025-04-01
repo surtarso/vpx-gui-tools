@@ -15,7 +15,7 @@ FirstRunDialog::FirstRunDialog(IConfigProvider& config)
     // Apply file style globally for all dialogs
     ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByFullName, "((VPinballX.*))", ImVec4(0.0f, 1.0f, 0.0f, 0.9f)); // Green with 90% opacity
     // Fallback: Highlight .ini files specifically
-    ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByExtention, ".ini", ImVec4(0.0f, 1.0f, 0.0f, 0.9f)); // Green with 90% opacity
+    // ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByExtention, ".ini", ImVec4(0.0f, 1.0f, 0.0f, 0.9f)); // Green with 90% opacity
     validatePaths(); // Validate paths on initialization
 }
 
