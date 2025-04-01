@@ -90,15 +90,11 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
 
-# Copy resources to the build directory after building the executable
+# Copy resources to the build directory after building the executable using a custom script
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    # settings:
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/resources ${CMAKE_BINARY_DIR}/resources
-    # vpxtool:
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    ${CMAKE_SOURCE_DIR}/external/vpxtool ${CMAKE_BINARY_DIR}/resources/vpxtool
-    # logs:
-    COMMAND ${CMAKE_COMMAND} -E make_directory
-    ${CMAKE_BINARY_DIR}/resources/logs
+    COMMAND ${CMAKE_COMMAND}
+        -D "SRC_DIR=${CMAKE_SOURCE_DIR}"
+        -D "BIN_DIR=${CMAKE_BINARY_DIR}"
+        -P "${CMAKE_SOURCE_DIR}/resources.cmake"
+    COMMENT "Copying resources to build directory..."
 )
