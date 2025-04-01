@@ -1,5 +1,4 @@
 #include "launcher/table_actions.h"
-#include "utils/logging.h"
 #include <cstdlib>
 
 TableActions::TableActions(IConfigProvider& config) : config(config) {}

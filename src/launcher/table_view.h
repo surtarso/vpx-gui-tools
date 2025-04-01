@@ -1,6 +1,7 @@
 #ifndef TABLE_VIEW_H
 #define TABLE_VIEW_H
 
+#include "utils/logging.h"
 #include "utils/structures.h"
 #include "tables/table_manager.h"
 #include "config/iconfig_provider.h"

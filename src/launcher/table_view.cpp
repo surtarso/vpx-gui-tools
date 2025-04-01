@@ -1,5 +1,4 @@
 #include "launcher/table_view.h"
-#include "utils/logging.h"
 #include <filesystem>
 #include <sstream>
 #include <vector>
@@ -13,15 +12,15 @@ void TableView::drawTable(std::vector<TableEntry>& tables) {
         ImGui::TableSetupColumn("Author", ImGuiTableColumnFlags_WidthFixed, 60.0f);
         ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 200.0f);
         ImGui::TableSetupColumn("Version", ImGuiTableColumnFlags_WidthFixed, 35.0f);
-        ImGui::TableSetupColumn("Extra Files", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+        ImGui::TableSetupColumn("Extra Files", ImGuiTableColumnFlags_WidthFixed, 90.0f);
         ImGui::TableSetupColumn("ROM", ImGuiTableColumnFlags_WidthFixed, 65.0f);
         ImGui::TableSetupColumn("UltraDMD", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f);
         ImGui::TableSetupColumn("AltSound", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f);
         ImGui::TableSetupColumn("AltColor", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f);
         ImGui::TableSetupColumn("PUPMedia", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f);
         ImGui::TableSetupColumn("Music", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f);
-        ImGui::TableSetupColumn("Images", ImGuiTableColumnFlags_WidthFixed, 155.0f);
-        ImGui::TableSetupColumn("Videos", ImGuiTableColumnFlags_WidthFixed, 90.0f);
+        ImGui::TableSetupColumn("Images", ImGuiTableColumnFlags_WidthFixed, 175.0f);
+        ImGui::TableSetupColumn("Videos", ImGuiTableColumnFlags_WidthFixed, 100.0f);
         ImGui::TableSetupScrollFreeze(0, 1);
         ImGui::TableHeadersRow();
 

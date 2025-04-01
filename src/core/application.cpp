@@ -1,8 +1,7 @@
 #include "core/application.h"
-#include "utils/logging.h"
 #include <imgui.h>
-#include "imgui_impl_sdl2.h"
-#include "imgui_impl_sdlrenderer2.h"
+#include <imgui_impl_sdl2.h>
+#include <imgui_impl_sdlrenderer2.h>
 #include <iostream>
 #include <filesystem>
 
@@ -69,7 +68,7 @@ Application::Application(const std::string& basePath)
     std::string symbolaPath = basePath + "resources/Symbola.ttf";
     ImFont* emojiFont = nullptr;
     if (std::filesystem::exists(symbolaPath)) {
-        emojiFont = io.Fonts->AddFontFromFileTTF(symbolaPath.c_str(), 14.0f, nullptr, glyphRanges);
+        emojiFont = io.Fonts->AddFontFromFileTTF(symbolaPath.c_str(), 16.0f, nullptr, glyphRanges);
     }
     const char* fallbackFontPath = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
     if (!emojiFont && std::filesystem::exists(fallbackFontPath)) {

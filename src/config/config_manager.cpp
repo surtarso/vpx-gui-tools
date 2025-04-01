@@ -3,7 +3,6 @@
 #include <sstream>
 #include <iostream>
 #include <filesystem>
-#include "utils/logging.h"
 
 ConfigManager::ConfigManager(const std::string& basePath) : basePath(basePath), firstRun(true) {
     loadSettings();

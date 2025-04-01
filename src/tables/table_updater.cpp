@@ -1,5 +1,4 @@
 #include "tables/table_updater.h"
-#include "utils/logging.h"
 #include <filesystem>
 #include <iostream>
 #include <array>

@@ -1,6 +1,7 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
+#include "utils/logging.h"
 #include "config/config_manager.h"
 #include "tables/table_manager.h"
 #include "tools/ini_editor.h"

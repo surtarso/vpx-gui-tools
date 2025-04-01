@@ -1,6 +1,7 @@
 #ifndef TABLE_LOADER_H
 #define TABLE_LOADER_H
 
+#include "utils/logging.h"
 #include "utils/structures.h"
 #include "config/iconfig_provider.h"
 #include <json.hpp>

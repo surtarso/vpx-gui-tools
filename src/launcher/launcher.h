@@ -6,6 +6,7 @@
 #include "config/iconfig_provider.h"
 #include "launcher/table_view.h"
 #include "launcher/table_actions.h"
+#include <imgui.h>
 #include <string>
 #include <vector>
 

@@ -16,3 +16,7 @@ extracting, launching, loading etc...
 - launcher related settings apply on save
 
 - hamburguer menu for advanced options, like all vpxtool args etc
+
+- show filename on hover or next to tables found
+
+- allow search to also use filename(?)

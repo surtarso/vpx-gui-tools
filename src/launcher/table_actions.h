@@ -1,6 +1,7 @@
 #ifndef TABLE_ACTIONS_H
 #define TABLE_ACTIONS_H
 
+#include "utils/logging.h"
 #include "config/iconfig_provider.h"
 #include <string>
 

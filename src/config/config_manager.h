@@ -1,6 +1,7 @@
 #ifndef CONFIG_MANAGER_H
 #define CONFIG_MANAGER_H
 
+#include "utils/logging.h"
 #include "iconfig_provider.h"
 #include <string>
 
