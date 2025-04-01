@@ -35,7 +35,6 @@ set(SOURCES
     external/imgui/backends/imgui_impl_sdlrenderer2.cpp
     # Add ImGuiFileDialog
     external/ImGuiFileDialog/ImGuiFileDialog.cpp
-    external/tinyfiledialogs/tinyfiledialogs.c
 )
 
 # Define the executable
@@ -54,7 +53,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/external/imgui
     ${CMAKE_SOURCE_DIR}/external/imgui/backends
     ${CMAKE_SOURCE_DIR}/external/ImGuiFileDialog
-    ${CMAKE_SOURCE_DIR}/external/tinyfiledialogs
     ${CMAKE_SOURCE_DIR}/external/json/single_include/nlohmann
     ${CMAKE_BINARY_DIR}  # Where version.h is generated
 )
@@ -82,7 +80,6 @@ endif()
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     set_source_files_properties(
         ${CMAKE_SOURCE_DIR}/external/ImGuiFileDialog/ImGuiFileDialog.cpp
-        ${CMAKE_SOURCE_DIR}/external/tinyfiledialogs/tinyfiledialogs.c
         PROPERTIES
         COMPILE_FLAGS "-w"
     )
