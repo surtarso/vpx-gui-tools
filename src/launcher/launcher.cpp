@@ -5,6 +5,11 @@ Launcher::Launcher(IConfigProvider& config, TableManager* tm)
     : config(config), tableManager(tm), tableView(tm, config), tableActions(config), createIniConfirmed(false), selectedIniPath(config.getVPinballXIni()) {}
 
 void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested, bool& showCreateIniPrompt, bool& showNoTablePopup) {
+    // Get the DPI scaling factor from ImGui
+    ImGuiIO& io = ImGui::GetIO();
+    float dpiScale = io.FontGlobalScale; // Use the global font scale as the DPI scale
+    if (dpiScale <= 0.0f) dpiScale = 1.0f; // Fallback to 1.0 if invalid
+
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize, ImGuiCond_Always);
     ImGui::Begin("VPX GUI Tools", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
@@ -78,7 +83,7 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
         ImGui::SameLine();
         float padding = ImGui::GetStyle().ItemSpacing.x;
         ImGui::SetCursorPosX(playButtonPosX + playButtonWidth + padding);
-        float searchBarWidth = 350.0f;
+        float searchBarWidth = 350.0f * dpiScale; // Scale the search bar width
         char searchBuf[300];
         strncpy(searchBuf, searchQuery.c_str(), sizeof(searchBuf) - 1);
         searchBuf[sizeof(searchBuf) - 1] = '\0';

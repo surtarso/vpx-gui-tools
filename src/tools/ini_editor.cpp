@@ -84,6 +84,11 @@ void IniEditor::saveIniFile() {
 }
 
 void IniEditor::draw(bool& isOpen) {
+    // Get the DPI scaling factor from ImGui
+    ImGuiIO& io = ImGui::GetIO();
+    float dpiScale = io.FontGlobalScale; // Use the global font scale as the DPI scale
+    if (dpiScale <= 0.0f) dpiScale = 1.0f; // Fallback to 1.0 if invalid
+
     // Detect when the editor is opened (isOpen transitions from false to true)
     if (isOpen && !wasOpen) {
         // Reset to the first section when the editor is opened
@@ -143,7 +148,7 @@ void IniEditor::draw(bool& isOpen) {
                 }
             }
             
-            ImGui::SameLine(225);
+            ImGui::SameLine(225 * dpiScale); // Scale the position of the input field
             char buf[256];
             strncpy(buf, kv.second.c_str(), sizeof(buf));
             buf[sizeof(buf) - 1] = '\0';

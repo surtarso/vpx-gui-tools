@@ -23,14 +23,20 @@ Application::Application(const std::string& basePath)
       showCreateIniPrompt(false),
       showNoTablePopup(false),
       window(nullptr),
-      renderer(nullptr) {
+      renderer(nullptr),
+      dpiScale(1.0f) { // Initialize dpiScale
+    // Enable DPI awareness
+    SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "0"); // Ensure high-DPI support is enabled
+
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
         LOG_DEBUG("SDL_Init Error: " << SDL_GetError());
         throw std::runtime_error("Failed to initialize SDL");
     }
 
+    // Create window with high-DPI support
     window = SDL_CreateWindow("VPX GUI Tools", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                              config.getWindowWidth(), config.getWindowHeight(), SDL_WINDOW_RESIZABLE);
+                              config.getWindowWidth(), config.getWindowHeight(),
+                              SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     if (!window) {
         LOG_DEBUG("SDL_CreateWindow Error: " << SDL_GetError());
         SDL_Quit();
@@ -48,18 +54,25 @@ Application::Application(const std::string& basePath)
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    
-    // Get ImGuiConf path from config and prepend base path
-    imguiIniPath = config.getImGuiConf();
-    
-    // Ensure the directory exists (e.g., resources/)
-    std::string resourcesDir = config.getBasePath() + "resources";
-    if (!std::filesystem::exists(resourcesDir)) {
-        std::filesystem::create_directory(resourcesDir);
+
+    // Calculate DPI scaling factor
+    float dpi = 96.0f; // Default DPI (typical for 1080p at 100% scaling)
+    int displayIndex = 0; // Primary display
+    if (SDL_GetDisplayDPI(displayIndex, &dpi, nullptr, nullptr) != 0) {
+        std::cerr << "Failed to get display DPI: " << SDL_GetError() << std::endl;
+        dpiScale = 1.0f; // Fallback to no scaling
+    } else {
+        dpiScale = dpi / 96.0f; // Calculate scaling factor relative to 96 DPI
+        if (dpiScale <= 0.0f) dpiScale = 1.0f; // Ensure scale is positive
     }
-    
-    io.IniFilename = imguiIniPath.c_str();
-    LOG_DEBUG("INI file path: " << io.IniFilename);
+    LOG_DEBUG("DPI Scale: " << dpiScale);
+
+    // Scale the font
+    io.FontGlobalScale = dpiScale; // Scale the default font
+
+    // Load fonts with scaled size
+    float baseFontSize = 16.0f; // Base font size for 1080p
+    float scaledFontSize = baseFontSize * dpiScale;
 
     static const ImWchar glyphRanges[] = {
         0x0020, 0x007F, 0x2600, 0x26FF, 0x25A0, 0x25FF, 0x2700, 0x27BF, 0, 0
@@ -68,16 +81,32 @@ Application::Application(const std::string& basePath)
     std::string symbolaPath = basePath + "resources/Symbola.ttf";
     ImFont* emojiFont = nullptr;
     if (std::filesystem::exists(symbolaPath)) {
-        emojiFont = io.Fonts->AddFontFromFileTTF(symbolaPath.c_str(), 16.0f, nullptr, glyphRanges);
+        emojiFont = io.Fonts->AddFontFromFileTTF(symbolaPath.c_str(), scaledFontSize, nullptr, glyphRanges);
     }
     const char* fallbackFontPath = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
     if (!emojiFont && std::filesystem::exists(fallbackFontPath)) {
-        io.Fonts->AddFontFromFileTTF(fallbackFontPath, 16.0f, nullptr, io.Fonts->GetGlyphRangesDefault());
+        io.Fonts->AddFontFromFileTTF(fallbackFontPath, scaledFontSize, nullptr, io.Fonts->GetGlyphRangesDefault());
     }
     if (io.Fonts->Fonts.empty()) {
         io.Fonts->AddFontDefault();
     }
     io.Fonts->Build();
+
+    // Scale ImGui style
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.ScaleAllSizes(dpiScale);
+
+    // Get ImGuiConf path from config and prepend base path
+    imguiIniPath = config.getImGuiConf();
+
+    // Ensure the directory exists (e.g., resources/)
+    std::string resourcesDir = config.getBasePath() + "resources";
+    if (!std::filesystem::exists(resourcesDir)) {
+        std::filesystem::create_directory(resourcesDir);
+    }
+
+    io.IniFilename = imguiIniPath.c_str();
+    LOG_DEBUG("INI file path: " << io.IniFilename);
 
     ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer2_Init(renderer);

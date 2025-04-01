@@ -6,21 +6,30 @@
 TableView::TableView(TableManager* tm, IConfigProvider& config) : tableManager(tm), config(config), selectedTable(-1) {}
 
 void TableView::drawTable(std::vector<TableEntry>& tables) {
+    // Get the DPI scaling factor from ImGui
+    ImGuiIO& io = ImGui::GetIO();
+    float dpiScale = io.FontGlobalScale; // Use the global font scale as the DPI scale
+    if (dpiScale <= 0.0f) dpiScale = 1.0f; // Fallback to 1.0 if invalid
+
+    // Scale table row height and padding
+    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4.0f * dpiScale, 2.0f * dpiScale));
+
     if (ImGui::BeginTable("Tables", 13, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | 
                           ImGuiTableFlags_ScrollX | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable)) {
-        ImGui::TableSetupColumn("Year", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed, 30.0f);
-        ImGui::TableSetupColumn("Author", ImGuiTableColumnFlags_WidthFixed, 60.0f);
-        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 200.0f);
-        ImGui::TableSetupColumn("Version", ImGuiTableColumnFlags_WidthFixed, 35.0f);
-        ImGui::TableSetupColumn("Extra Files", ImGuiTableColumnFlags_WidthFixed, 90.0f);
-        ImGui::TableSetupColumn("ROM", ImGuiTableColumnFlags_WidthFixed, 65.0f);
-        ImGui::TableSetupColumn("UltraDMD", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f);
-        ImGui::TableSetupColumn("AltSound", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f);
-        ImGui::TableSetupColumn("AltColor", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f);
-        ImGui::TableSetupColumn("PUPMedia", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f);
-        ImGui::TableSetupColumn("Music", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f);
-        ImGui::TableSetupColumn("Images", ImGuiTableColumnFlags_WidthFixed, 175.0f);
-        ImGui::TableSetupColumn("Videos", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+        // Setup columns with scaled widths
+        ImGui::TableSetupColumn("Year", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed, 30.0f * dpiScale);
+        ImGui::TableSetupColumn("Author", ImGuiTableColumnFlags_WidthFixed, 60.0f * dpiScale);
+        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 200.0f * dpiScale);
+        ImGui::TableSetupColumn("Version", ImGuiTableColumnFlags_WidthFixed, 35.0f * dpiScale);
+        ImGui::TableSetupColumn("Extra Files", ImGuiTableColumnFlags_WidthFixed, 90.0f * dpiScale);
+        ImGui::TableSetupColumn("ROM", ImGuiTableColumnFlags_WidthFixed, 65.0f * dpiScale);
+        ImGui::TableSetupColumn("UltraDMD", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * dpiScale);
+        ImGui::TableSetupColumn("AltSound", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * dpiScale);
+        ImGui::TableSetupColumn("AltColor", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * dpiScale);
+        ImGui::TableSetupColumn("PUPMedia", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * dpiScale);
+        ImGui::TableSetupColumn("Music", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * dpiScale);
+        ImGui::TableSetupColumn("Images", ImGuiTableColumnFlags_WidthFixed, 175.0f * dpiScale);
+        ImGui::TableSetupColumn("Videos", ImGuiTableColumnFlags_WidthFixed, 100.0f * dpiScale);
         ImGui::TableSetupScrollFreeze(0, 1);
         ImGui::TableHeadersRow();
 
@@ -35,7 +44,7 @@ void TableView::drawTable(std::vector<TableEntry>& tables) {
         }
 
         for (size_t i = 0; i < tables.size(); ++i) {
-            ImGui::TableNextRow();
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, 30.0f * dpiScale); // Scale row height
             ImGui::PushID(static_cast<int>(i));
             bool isSelected = (selectedTable == static_cast<int>(i));
             if (ImGui::TableSetColumnIndex(0)) {
@@ -79,35 +88,35 @@ void TableView::drawTable(std::vector<TableEntry>& tables) {
                 }
                 ImGui::TableSetColumnIndex(5); ImGui::Text("%s", tables[i].rom.c_str());
                 ImGui::TableSetColumnIndex(6); { // uDMD column
-                    ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f);
+                    ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f * dpiScale);
                     if (!tables[i].udmd.empty()) {
                         ImGui::TextColored(ImVec4(0.5f, 0, 0.7f, 0.90f), "%s", tables[i].udmd.c_str()); // Light purple
                     }
                     ImGui::PopTextWrapPos();
                 }
                 ImGui::TableSetColumnIndex(7); { // AltS column
-                    ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f);
+                    ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f * dpiScale);
                     if (!tables[i].alts.empty()) {
                         ImGui::TextColored(ImVec4(0.4f, 0.6f, 0.9f, 0.85f), "%s", tables[i].alts.c_str()); // Light blue
                     }
                     ImGui::PopTextWrapPos();
                 }
                 ImGui::TableSetColumnIndex(8); { // AltC column
-                    ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f);
+                    ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f * dpiScale);
                     if (!tables[i].altc.empty()) {
                         ImGui::TextColored(ImVec4(0.7f, 0.4f, 0, 0.90f), "%s", tables[i].altc.c_str()); // Light orange
                     }
                     ImGui::PopTextWrapPos();
                 }
                 ImGui::TableSetColumnIndex(9); { // PUP column
-                    ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f);
+                    ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f * dpiScale);
                     if (!tables[i].pup.empty()) {
                         ImGui::TextColored(ImVec4(0.7f, 0.7f, 0, 0.90f), "%s", tables[i].pup.c_str()); // Light yellow
                     }
                     ImGui::PopTextWrapPos();
                 }
                 ImGui::TableSetColumnIndex(10); { // Music column
-                    ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f);
+                    ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f * dpiScale);
                     if (!tables[i].music.empty()) {
                         ImGui::TextColored(ImVec4(0.4f, 0.6f, 0.9f, 0.85f), "%s", tables[i].music.c_str()); // Light blue
                     }
@@ -181,6 +190,8 @@ void TableView::drawTable(std::vector<TableEntry>& tables) {
         }
         ImGui::EndTable();
     }
+
+    ImGui::PopStyleVar();
 }
 
 bool TableView::checkFilePresence(const std::string& tablePath, const std::string& relativePath) {

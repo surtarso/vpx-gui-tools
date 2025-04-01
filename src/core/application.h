@@ -17,6 +17,7 @@ public:
     Application(const std::string& basePath);
     ~Application();
     void run();
+    float getDPIScale() const { return dpiScale; } // Add getter for DPI scale
 
 private:
     void loadTables(); // Start the table loading process
@@ -42,6 +43,7 @@ private:
     SDL_Window* window;
     SDL_Renderer* renderer;
     std::string imguiIniPath;
+    float dpiScale; // Store the DPI scaling factor
 };
 
 #endif // APPLICATION_H

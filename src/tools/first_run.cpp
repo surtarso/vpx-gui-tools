@@ -14,8 +14,6 @@ FirstRunDialog::FirstRunDialog(IConfigProvider& config)
       pathsValid(false) {                      // Flag to track if all paths are valid
     // Apply file style globally for all dialogs
     ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByFullName, "((VPinballX.*))", ImVec4(0.0f, 1.0f, 0.0f, 0.9f)); // Green with 90% opacity
-    // Fallback: Highlight .ini files specifically
-    // ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByExtention, ".ini", ImVec4(0.0f, 1.0f, 0.0f, 0.9f)); // Green with 90% opacity
     validatePaths(); // Validate paths on initialization
 }
 
@@ -85,9 +83,18 @@ bool FirstRunDialog::show() {
             #endif
         };
 
+        // Get the DPI scaling factor from ImGui (set in app.cpp)
+        ImGuiIO& io = ImGui::GetIO();
+        float dpiScale = io.FontGlobalScale; // Use the global font scale as the DPI scale
+        if (dpiScale <= 0.0f) dpiScale = 1.0f; // Fallback to 1.0 if invalid
+
         // Common variables for all dialogs
         ImVec2 displaySize = ImGui::GetIO().DisplaySize;
-        ImVec2 desiredSize = ImVec2(782, 505); // Desired size from your eyeballing
+        ImVec2 baseSize = ImVec2(782, 505); // Base size for 1080p
+        ImVec2 desiredSize = ImVec2(baseSize.x * dpiScale, baseSize.y * dpiScale); // Scale the dialog size
+        // Clamp the dialog size to 80% of the display size to prevent it from being too large
+        desiredSize.x = std::min(desiredSize.x, displaySize.x * 0.8f);
+        desiredSize.y = std::min(desiredSize.y, displaySize.y * 0.8f);
         ImVec2 maxSize = displaySize; // Allow the dialog to be as large as the display
 
         // --- Table Path Section ---
