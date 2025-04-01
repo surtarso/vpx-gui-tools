@@ -24,9 +24,10 @@ Application::Application(const std::string& basePath)
       showNoTablePopup(false),
       window(nullptr),
       renderer(nullptr),
-      dpiScale(1.0f) { // Initialize dpiScale
+      dpiScale(1.0f) {
     // Enable DPI awareness
-    SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "0"); // Ensure high-DPI support is enabled
+    SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "0");
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1"); // Linear filtering for sharpness
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
         LOG_DEBUG("SDL_Init Error: " << SDL_GetError());
@@ -51,27 +52,26 @@ Application::Application(const std::string& basePath)
         throw std::runtime_error("Failed to create SDL renderer");
     }
 
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-
-    // Calculate DPI scaling factor
-    float dpi = 96.0f; // Default DPI (typical for 1080p at 100% scaling)
-    int displayIndex = 0; // Primary display
+    // Get DPI scaling factor
+    float dpi = 96.0f;
+    int displayIndex = SDL_GetWindowDisplayIndex(window);
     if (SDL_GetDisplayDPI(displayIndex, &dpi, nullptr, nullptr) != 0) {
         std::cerr << "Failed to get display DPI: " << SDL_GetError() << std::endl;
-        dpiScale = 1.0f; // Fallback to no scaling
+        dpiScale = 1.0f;
     } else {
-        dpiScale = dpi / 96.0f; // Calculate scaling factor relative to 96 DPI
-        if (dpiScale <= 0.0f) dpiScale = 1.0f; // Ensure scale is positive
+        dpiScale = dpi / 96.0f;
+        if (dpiScale <= 0.0f) dpiScale = 1.0f;
     }
     LOG_DEBUG("DPI Scale: " << dpiScale);
 
-    // Scale the font
-    io.FontGlobalScale = dpiScale; // Scale the default font
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
-    // Load fonts with scaled size
-    float baseFontSize = 16.0f; // Base font size for 1080p
+    // Scale ImGui globally
+    io.FontGlobalScale = dpiScale;
+    float baseFontSize = 16.0f;
     float scaledFontSize = baseFontSize * dpiScale;
 
     static const ImWchar glyphRanges[] = {
@@ -92,37 +92,31 @@ Application::Application(const std::string& basePath)
     }
     io.Fonts->Build();
 
-    // Scale ImGui style
     ImGuiStyle& style = ImGui::GetStyle();
     style.ScaleAllSizes(dpiScale);
 
-    // Get ImGuiConf path from config and prepend base path
     imguiIniPath = config.getImGuiConf();
-
-    // Ensure the directory exists (e.g., resources/)
     std::string resourcesDir = config.getBasePath() + "resources";
     if (!std::filesystem::exists(resourcesDir)) {
         std::filesystem::create_directory(resourcesDir);
     }
-
     io.IniFilename = imguiIniPath.c_str();
     LOG_DEBUG("INI file path: " << io.IniFilename);
 
     ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer2_Init(renderer);
 
-    // Check if we need to show the first-run dialog
     if (config.isFirstRun() || !config.arePathsValid()) {
         showFirstRunDialog = true;
-        deferInitialLoad = true; // Defer initial table loading until after the first-run dialog
+        deferInitialLoad = true;
     } else {
-        loadTables(); // Load tables immediately if no first-run dialog is needed
+        loadTables();
     }
 }
 
 Application::~Application() {
     if (loadingThread.joinable()) {
-        loadingThread.join(); // Ensure the loading thread is finished before destruction
+        loadingThread.join();
     }
     ImGui_ImplSDLRenderer2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
@@ -135,7 +129,6 @@ Application::~Application() {
 void Application::loadTables() {
     loadingTables = true;
     loadingComplete = false;
-    // Start the loading process in a separate thread
     loadingThread = std::thread([this]() {
         tableManager.loadTables();
         LOG_DEBUG("Loaded " << tableManager.getTables().size() << " tables.");
@@ -144,16 +137,13 @@ void Application::loadTables() {
 }
 
 void Application::drawLoadingScreen() {
-    // Calculate the position to center the text
-    const char* loadingText = "Indexing tables...";
-    ImVec2 textSize = ImGui::CalcTextSize(loadingText);
+    ImVec2 textSize = ImGui::CalcTextSize("Indexing tables...");
     ImVec2 windowSize = ImGui::GetIO().DisplaySize;
     ImVec2 textPos = ImVec2((windowSize.x - textSize.x) * 0.5f, (windowSize.y - textSize.y) * 0.5f);
 
-    // Draw the text directly without a window
     ImGui::SetNextWindowPos(textPos, ImGuiCond_Always);
     ImGui::Begin("Loading", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs);
-    ImGui::Text("%s", loadingText);
+    ImGui::Text("Indexing tables...");
     ImGui::End();
 }
 
@@ -165,6 +155,10 @@ void Application::run() {
         while (SDL_PollEvent(&event)) {
             ImGui_ImplSDL2_ProcessEvent(&event);
             if (event.type == SDL_QUIT) exitRequested = true;
+            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                // Update renderer viewport on resize
+                SDL_RenderSetViewport(renderer, nullptr);
+            }
         }
 
         ImGui_ImplSDLRenderer2_NewFrame();
@@ -173,25 +167,20 @@ void Application::run() {
 
         if (showFirstRunDialog) {
             showFirstRunDialog = firstRunDialog.show();
-            if (!showFirstRunDialog) {
-                // Dialog closed, check if paths are valid before proceeding
-                if (config.arePathsValid()) {
-                    loadTables(); // Start the table loading process
-                } else {
-                    exitRequested = true; // Exit if the user didn't set valid paths
-                }
+            if (!showFirstRunDialog && config.arePathsValid()) {
+                loadTables();
+            } else if (!showFirstRunDialog) {
+                exitRequested = true;
             }
-        }
-        else if (loadingTables) {
-            drawLoadingScreen(); // Show the loading screen while tables are being loaded
+        } else if (loadingTables) {
+            drawLoadingScreen();
             if (loadingComplete) {
-                loadingTables = false; // Loading is done, move to the main interface
+                loadingTables = false;
                 if (loadingThread.joinable()) {
-                    loadingThread.join(); // Clean up the thread
+                    loadingThread.join();
                 }
             }
-        }
-        else if (editingIni) {
+        } else if (editingIni) {
             std::string currentIniPath = launcher.getSelectedIniPath();
             if (currentIniPath != lastIniPath) {
                 iniEditor.loadIniFile(currentIniPath);
@@ -199,15 +188,13 @@ void Application::run() {
             }
             iniEditor.draw(editingIni);
             if (ImGui::IsKeyPressed(ImGuiKey_Escape)) editingIni = false;
-        }
-        else if (editingSettings) {
+        } else if (editingSettings) {
             configEditor.draw(editingSettings);
             if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
                 editingSettings = false;
                 config.loadSettings();
             }
-        }
-        else {
+        } else {
             tableManager.filterTables(launcher.getSearchQuery());
             launcher.draw(tableManager.getTables(), editingIni, editingSettings, exitRequested, showCreateIniPrompt, showNoTablePopup);
         }

@@ -53,7 +53,6 @@ void IniEditor::loadIniFile(const std::string& filename) {
         lineIndex++;
     }
 
-    // Reset currentSection to the first section after loading the file
     if (!sections.empty()) {
         currentSection = sections[0];
     } else {
@@ -84,14 +83,10 @@ void IniEditor::saveIniFile() {
 }
 
 void IniEditor::draw(bool& isOpen) {
-    // Get the DPI scaling factor from ImGui
-    ImGuiIO& io = ImGui::GetIO();
-    float dpiScale = io.FontGlobalScale; // Use the global font scale as the DPI scale
-    if (dpiScale <= 0.0f) dpiScale = 1.0f; // Fallback to 1.0 if invalid
+    float dpiScale = ImGui::GetIO().FontGlobalScale;
+    if (dpiScale <= 0.0f) dpiScale = 1.0f;
 
-    // Detect when the editor is opened (isOpen transitions from false to true)
     if (isOpen && !wasOpen) {
-        // Reset to the first section when the editor is opened
         if (!sections.empty()) {
             currentSection = sections[0];
         } else {
@@ -103,17 +98,8 @@ void IniEditor::draw(bool& isOpen) {
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize, ImGuiCond_Always);
 
-    // Set the window title dynamically
-    std::string windowTitle;
-    if (isConfigEditor) {
-        windowTitle = "Settings Configuration";
-    } else {
-        std::string filename = std::filesystem::path(currentIniFile).filename().string();
-        windowTitle = "VPinballX Configuration - Editing: " + filename;
-    }
-
-    ImGui::Begin(windowTitle.c_str(), nullptr, 
-                 ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+    std::string windowTitle = isConfigEditor ? "Settings Configuration" : "VPinballX Configuration - Editing: " + std::filesystem::path(currentIniFile).filename().string();
+    ImGui::Begin(windowTitle.c_str(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
     if (ImGui::BeginCombo("Section", currentSection.c_str())) {
         for (const auto& section : sections) {
@@ -124,12 +110,11 @@ void IniEditor::draw(bool& isOpen) {
         ImGui::EndCombo();
     }
 
-    float buttonHeight = ImGui::GetFrameHeight() + ImGui::GetStyle().ItemSpacing.y;
-    float availableHeight = ImGui::GetContentRegionAvail().y;
-    float childHeight = availableHeight - buttonHeight;
-    if (childHeight < 0) childHeight = 0;
+    float buttonHeight = ImGui::GetFrameHeight() * dpiScale + ImGui::GetStyle().ItemSpacing.y * dpiScale;
+    float availableHeight = ImGui::GetContentRegionAvail().y - buttonHeight;
+    if (availableHeight < 0) availableHeight = 0;
 
-    ImGui::BeginChild("KeyValues", ImVec2(0, childHeight), true);
+    ImGui::BeginChild("KeyValues", ImVec2(0, availableHeight), true);
     if (iniData.count(currentSection)) {
         for (auto& kv : iniData[currentSection].keyValues) {
             ImGui::PushID(kv.first.c_str());
@@ -141,14 +126,14 @@ void IniEditor::draw(bool& isOpen) {
                 ImGui::TextColored(ImVec4(0, 1, 0, 1), "?");
                 if (ImGui::IsItemHovered()) {
                     ImGui::BeginTooltip();
-                    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 20.0f);
+                    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 20.0f * dpiScale);
                     ImGui::TextWrapped("%s", explanations[kv.first].c_str());
                     ImGui::PopTextWrapPos();
                     ImGui::EndTooltip();
                 }
             }
             
-            ImGui::SameLine(225 * dpiScale); // Scale the position of the input field
+            ImGui::SameLine(225 * dpiScale);
             char buf[256];
             strncpy(buf, kv.second.c_str(), sizeof(buf));
             buf[sizeof(buf) - 1] = '\0';

@@ -5,14 +5,12 @@ Launcher::Launcher(IConfigProvider& config, TableManager* tm)
     : config(config), tableManager(tm), tableView(tm, config), tableActions(config), createIniConfirmed(false), selectedIniPath(config.getVPinballXIni()) {}
 
 void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested, bool& showCreateIniPrompt, bool& showNoTablePopup) {
-    // Get the DPI scaling factor from ImGui
-    ImGuiIO& io = ImGui::GetIO();
-    float dpiScale = io.FontGlobalScale; // Use the global font scale as the DPI scale
-    if (dpiScale <= 0.0f) dpiScale = 1.0f; // Fallback to 1.0 if invalid
-
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize, ImGuiCond_Always);
     ImGui::Begin("VPX GUI Tools", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
+
+    float dpiScale = ImGui::GetIO().FontGlobalScale;
+    if (dpiScale <= 0.0f) dpiScale = 1.0f;
 
     if (tableManager->isLoading()) {
         const char* loadingText = "Updating tables...";
@@ -22,17 +20,14 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
         ImGui::Text("%s", loadingText);
     } else {
         ImGuiIO& io = ImGui::GetIO();
-        bool shouldFocusSearch = false;
-        if (!io.WantTextInput && ImGui::IsKeyPressed(ImGuiKey_Space, false)) { // Focus on spacebar press
-            shouldFocusSearch = true;
-        }
+        bool shouldFocusSearch = (!io.WantTextInput && ImGui::IsKeyPressed(ImGuiKey_Space, false));
 
         char tablesFoundText[32];
         snprintf(tablesFoundText, sizeof(tablesFoundText), "Table(s) found: %zu", tables.size());
         ImGui::Text("%s", tablesFoundText);
 
         float headerHeight = ImGui::GetCursorPosY();
-        float buttonHeight = ImGui::GetFrameHeight() + ImGui::GetStyle().ItemSpacing.y * 2;
+        float buttonHeight = ImGui::GetFrameHeight() * dpiScale + ImGui::GetStyle().ItemSpacing.y * 2 * dpiScale;
         float availableHeight = ImGui::GetIO().DisplaySize.y - headerHeight - buttonHeight;
 
         ImGui::BeginChild("TableContainer", ImVec2(0, availableHeight), true, ImGuiWindowFlags_HorizontalScrollbar);
@@ -74,45 +69,41 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
         }
         ImGui::SameLine();
         float playButtonPosX = ImGui::GetCursorPosX();
-        float playButtonWidth = ImGui::CalcTextSize("▶ Play").x + ImGui::GetStyle().FramePadding.x * 2;
+        float playButtonWidth = ImGui::CalcTextSize("▶ Play").x + ImGui::GetStyle().FramePadding.x * 2 * dpiScale;
         if (ImGui::Button("▶ Play")) {
             int selectedTable = tableView.getSelectedTable();
             if (selectedTable >= 0) tableActions.launchTable(tables[selectedTable].filepath);
             else showNoTablePopup = true;
         }
         ImGui::SameLine();
-        float padding = ImGui::GetStyle().ItemSpacing.x;
+        float padding = ImGui::GetStyle().ItemSpacing.x * dpiScale;
         ImGui::SetCursorPosX(playButtonPosX + playButtonWidth + padding);
-        float searchBarWidth = 350.0f * dpiScale; // Scale the search bar width
+        float searchBarWidth = 350.0f * dpiScale;
         char searchBuf[300];
         strncpy(searchBuf, searchQuery.c_str(), sizeof(searchBuf) - 1);
         searchBuf[sizeof(searchBuf) - 1] = '\0';
         ImGui::PushItemWidth(searchBarWidth);
 
-        // Focus the search bar if flagged from the previous frame
         if (shouldFocusSearch) {
             ImGui::SetKeyboardFocusHere();
         }
 
-        // Render the search bar
         if (ImGui::InputTextWithHint("##Search", "Search", searchBuf, sizeof(searchBuf))) {
             searchQuery = searchBuf;
         }
 
-        // Add 'x' button to clear the search bar
         ImGui::SameLine();
         if (ImGui::Button("X")) {
-            searchQuery.clear(); // Clear the search query
+            searchQuery.clear();
         }
 
-        // Clear search bar with ESC
         if (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Escape)) {
-            searchQuery.clear(); // Clear the search query
+            searchQuery.clear();
         }
 
         ImGui::PopItemWidth();
 
-        ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::CalcTextSize("✖ Quit").x - ImGui::GetStyle().ItemSpacing.x * 2);
+        ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::CalcTextSize("✖ Quit").x - ImGui::GetStyle().ItemSpacing.x * 2 * dpiScale);
         if (ImGui::Button("✖ Quit")) quitRequested = true;
     }
     ImGui::End();

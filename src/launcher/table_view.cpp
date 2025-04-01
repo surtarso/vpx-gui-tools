@@ -6,17 +6,13 @@
 TableView::TableView(TableManager* tm, IConfigProvider& config) : tableManager(tm), config(config), selectedTable(-1) {}
 
 void TableView::drawTable(std::vector<TableEntry>& tables) {
-    // Get the DPI scaling factor from ImGui
-    ImGuiIO& io = ImGui::GetIO();
-    float dpiScale = io.FontGlobalScale; // Use the global font scale as the DPI scale
-    if (dpiScale <= 0.0f) dpiScale = 1.0f; // Fallback to 1.0 if invalid
+    float dpiScale = ImGui::GetIO().FontGlobalScale;
+    if (dpiScale <= 0.0f) dpiScale = 1.0f;
 
-    // Scale table row height and padding
     ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4.0f * dpiScale, 2.0f * dpiScale));
 
     if (ImGui::BeginTable("Tables", 13, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | 
                           ImGuiTableFlags_ScrollX | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable)) {
-        // Setup columns with scaled widths
         ImGui::TableSetupColumn("Year", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed, 30.0f * dpiScale);
         ImGui::TableSetupColumn("Author", ImGuiTableColumnFlags_WidthFixed, 60.0f * dpiScale);
         ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 200.0f * dpiScale);
@@ -44,7 +40,7 @@ void TableView::drawTable(std::vector<TableEntry>& tables) {
         }
 
         for (size_t i = 0; i < tables.size(); ++i) {
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, 30.0f * dpiScale); // Scale row height
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, 30.0f * dpiScale);
             ImGui::PushID(static_cast<int>(i));
             bool isSelected = (selectedTable == static_cast<int>(i));
             if (ImGui::TableSetColumnIndex(0)) {
@@ -52,8 +48,7 @@ void TableView::drawTable(std::vector<TableEntry>& tables) {
                 snprintf(rowLabel, sizeof(rowLabel), "%s##%zu", tables[i].year.c_str(), i);
                 bool wasClicked = ImGui::Selectable(rowLabel, &isSelected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap);
                 if (wasClicked) {
-                    if (selectedTable == static_cast<int>(i)) selectedTable = -1;
-                    else selectedTable = static_cast<int>(i);
+                    selectedTable = (selectedTable == static_cast<int>(i)) ? -1 : static_cast<int>(i);
                 }
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0) && selectedTable >= 0) {
                     std::string folder = std::filesystem::path(tables[selectedTable].filepath).parent_path().string();
@@ -74,116 +69,48 @@ void TableView::drawTable(std::vector<TableEntry>& tables) {
                 ImGui::TableSetColumnIndex(2); ImGui::Text("%s", tables[i].name.c_str());
                 ImGui::TableSetColumnIndex(3); ImGui::Text("%s", tables[i].version.c_str());
                 ImGui::TableSetColumnIndex(4); {
+                    std::string extraFiles;
                     if (tables[i].extraFiles.find("INI") != std::string::npos) {
-                        if (tables[i].iniModified) ImGui::TextColored(ImVec4(1, 1, 0, 1), "INI ");
-                        else ImGui::Text("INI ");
-                        ImGui::SameLine(0, 0);
+                        extraFiles += tables[i].iniModified ? "[INI] " : "INI ";
                     }
                     if (tables[i].extraFiles.find("VBS") != std::string::npos) {
-                        if (tables[i].vbsModified) ImGui::TextColored(ImVec4(1, 1, 0, 1), "VBS ");
-                        else ImGui::Text("VBS ");
-                        ImGui::SameLine(0, 0);
+                        extraFiles += tables[i].vbsModified ? "[VBS] " : "VBS ";
                     }
-                    if (tables[i].extraFiles.find("B2S") != std::string::npos) ImGui::Text("B2S");
+                    if (tables[i].extraFiles.find("B2S") != std::string::npos) extraFiles += "B2S";
+                    ImGui::Text("%s", extraFiles.c_str());
                 }
                 ImGui::TableSetColumnIndex(5); ImGui::Text("%s", tables[i].rom.c_str());
-                ImGui::TableSetColumnIndex(6); { // uDMD column
-                    ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f * dpiScale);
-                    if (!tables[i].udmd.empty()) {
-                        ImGui::TextColored(ImVec4(0.5f, 0, 0.7f, 0.90f), "%s", tables[i].udmd.c_str()); // Light purple
-                    }
-                    ImGui::PopTextWrapPos();
+                ImGui::TableSetColumnIndex(6); {
+                    if (!tables[i].udmd.empty()) ImGui::TextColored(ImVec4(0.5f, 0, 0.7f, 0.90f), "%s", tables[i].udmd.c_str());
                 }
-                ImGui::TableSetColumnIndex(7); { // AltS column
-                    ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f * dpiScale);
-                    if (!tables[i].alts.empty()) {
-                        ImGui::TextColored(ImVec4(0.4f, 0.6f, 0.9f, 0.85f), "%s", tables[i].alts.c_str()); // Light blue
-                    }
-                    ImGui::PopTextWrapPos();
+                ImGui::TableSetColumnIndex(7); {
+                    if (!tables[i].alts.empty()) ImGui::TextColored(ImVec4(0.4f, 0.6f, 0.9f, 0.85f), "%s", tables[i].alts.c_str());
                 }
-                ImGui::TableSetColumnIndex(8); { // AltC column
-                    ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f * dpiScale);
-                    if (!tables[i].altc.empty()) {
-                        ImGui::TextColored(ImVec4(0.7f, 0.4f, 0, 0.90f), "%s", tables[i].altc.c_str()); // Light orange
-                    }
-                    ImGui::PopTextWrapPos();
+                ImGui::TableSetColumnIndex(8); {
+                    if (!tables[i].altc.empty()) ImGui::TextColored(ImVec4(0.7f, 0.4f, 0, 0.90f), "%s", tables[i].altc.c_str());
                 }
-                ImGui::TableSetColumnIndex(9); { // PUP column
-                    ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f * dpiScale);
-                    if (!tables[i].pup.empty()) {
-                        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0, 0.90f), "%s", tables[i].pup.c_str()); // Light yellow
-                    }
-                    ImGui::PopTextWrapPos();
+                ImGui::TableSetColumnIndex(9); {
+                    if (!tables[i].pup.empty()) ImGui::TextColored(ImVec4(0.7f, 0.7f, 0, 0.90f), "%s", tables[i].pup.c_str());
                 }
-                ImGui::TableSetColumnIndex(10); { // Music column
-                    ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + 20.0f * dpiScale);
-                    if (!tables[i].music.empty()) {
-                        ImGui::TextColored(ImVec4(0.4f, 0.6f, 0.9f, 0.85f), "%s", tables[i].music.c_str()); // Light blue
-                    }
-                    ImGui::PopTextWrapPos();
+                ImGui::TableSetColumnIndex(10); {
+                    if (!tables[i].music.empty()) ImGui::TextColored(ImVec4(0.4f, 0.6f, 0.9f, 0.85f), "%s", tables[i].music.c_str());
                 }
-                ImGui::TableSetColumnIndex(11); { // Images column
+                ImGui::TableSetColumnIndex(11); {
                     std::string tableDir = std::filesystem::path(tables[i].filepath).parent_path().string();
-                    std::istringstream iss(tables[i].images);
-                    std::string word;
-                    bool first = true;
-                    while (iss >> word) {
-                        if (!first) ImGui::SameLine(0, 0);
-                        ImGui::TextColored(
-                            checkFilePresence(tableDir, 
-                                word == "Wheel" ? config.getWheelImage() :
-                                word == "Table" ? config.getTableImage() :
-                                word == "B2S" ? config.getBackglassImage() :
-                                word == "Marquee" ? config.getMarqueeImage() : "") ? 
-                            ImVec4(0, 0.7f, 0, 0.90f) : ImVec4(0.7f, 0, 0, 0.90f), "%s", word.c_str());
-                        first = false;
-                    }
-                    // Fill in missing parts
-                    if (tables[i].images.find("Wheel") == std::string::npos) {
-                        if (!first) ImGui::SameLine(0, 0);
-                        ImGui::TextColored(checkFilePresence(tableDir, config.getWheelImage()) ? ImVec4(0, 0.7f, 0, 0.90f) : ImVec4(0.7f, 0, 0, 0.90f), "Wheel");
-                    }
-                    if (tables[i].images.find("Table") == std::string::npos) {
-                        if (!first) ImGui::SameLine(0, 0);
-                        ImGui::TextColored(checkFilePresence(tableDir, config.getTableImage()) ? ImVec4(0, 0.7f, 0, 0.90f) : ImVec4(0.7f, 0, 0, 0.90f), "Table");
-                    }
-                    if (tables[i].images.find("B2S") == std::string::npos) {
-                        if (!first) ImGui::SameLine(0, 0);
-                        ImGui::TextColored(checkFilePresence(tableDir, config.getBackglassImage()) ? ImVec4(0, 0.7f, 0, 0.90f) : ImVec4(0.7f, 0, 0, 0.90f), "B2S");
-                    }
-                    if (tables[i].images.find("Marquee") == std::string::npos) {
-                        if (!first) ImGui::SameLine(0, 0);
-                        ImGui::TextColored(checkFilePresence(tableDir, config.getMarqueeImage()) ? ImVec4(0, 0.7f, 0, 0.90f) : ImVec4(0.7f, 0, 0, 0.90f), "Marquee");
-                    }
+                    std::string images = tables[i].images;
+                    if (images.find("Wheel") == std::string::npos && checkFilePresence(tableDir, config.getWheelImage())) images += " Wheel";
+                    if (images.find("Table") == std::string::npos && checkFilePresence(tableDir, config.getTableImage())) images += " Table";
+                    if (images.find("B2S") == std::string::npos && checkFilePresence(tableDir, config.getBackglassImage())) images += " B2S";
+                    if (images.find("Marquee") == std::string::npos && checkFilePresence(tableDir, config.getMarqueeImage())) images += " Marquee";
+                    ImGui::Text("%s", images.c_str());
                 }
-                ImGui::TableSetColumnIndex(12); { // Videos column
+                ImGui::TableSetColumnIndex(12); {
                     std::string tableDir = std::filesystem::path(tables[i].filepath).parent_path().string();
-                    std::istringstream iss(tables[i].videos);
-                    std::string word;
-                    bool first = true;
-                    while (iss >> word) {
-                        if (!first) ImGui::SameLine(0, 0);
-                        ImGui::TextColored(
-                            checkFilePresence(tableDir, 
-                                word == "Table" ? config.getTableVideo() :
-                                word == "B2S" ? config.getBackglassVideo() :
-                                word == "DMD" ? config.getDmdVideo() : "") ? 
-                            ImVec4(0, 0.7f, 0, 0.90f) : ImVec4(0.7f, 0, 0, 0.90f), "%s", word.c_str());
-                        first = false;
-                    }
-                    // Fill in missing parts
-                    if (tables[i].videos.find("Table") == std::string::npos) {
-                        if (!first) ImGui::SameLine(0, 0);
-                        ImGui::TextColored(checkFilePresence(tableDir, config.getTableVideo()) ? ImVec4(0, 0.7f, 0, 0.90f) : ImVec4(0.7f, 0, 0, 0.90f), "Table");
-                    }
-                    if (tables[i].videos.find("B2S") == std::string::npos) {
-                        if (!first) ImGui::SameLine(0, 0);
-                        ImGui::TextColored(checkFilePresence(tableDir, config.getBackglassVideo()) ? ImVec4(0, 0.7f, 0, 0.90f) : ImVec4(0.7f, 0, 0, 0.90f), "B2S");
-                    }
-                    if (tables[i].videos.find("DMD") == std::string::npos) {
-                        if (!first) ImGui::SameLine(0, 0);
-                        ImGui::TextColored(checkFilePresence(tableDir, config.getDmdVideo()) ? ImVec4(0, 0.7f, 0, 0.90f) : ImVec4(0.7f, 0, 0, 0.90f), "DMD");
-                    }
+                    std::string videos = tables[i].videos;
+                    if (videos.find("Table") == std::string::npos && checkFilePresence(tableDir, config.getTableVideo())) videos += " Table";
+                    if (videos.find("B2S") == std::string::npos && checkFilePresence(tableDir, config.getBackglassVideo())) videos += " B2S";
+                    if (videos.find("DMD") == std::string::npos && checkFilePresence(tableDir, config.getDmdVideo())) videos += " DMD";
+                    ImGui::Text("%s", videos.c_str());
                 }
             }
             ImGui::PopID();
