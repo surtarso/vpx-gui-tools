@@ -1,9 +1,9 @@
 #ifndef FIRST_RUN_H
 #define FIRST_RUN_H
 
-#include "config/iconfig_provider.h"
-#include <tinyfiledialogs.h> // For file/folder pickers
 #include "utils/logging.h"
+#include "config/iconfig_provider.h"
+#include <ImGuiFileDialog.h>
 #include <imgui.h>
 #include <string>
 
