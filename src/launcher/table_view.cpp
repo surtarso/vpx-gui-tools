@@ -15,20 +15,20 @@ void TableView::drawTable(std::vector<TableEntry>& tables) {
 
     if (ImGui::BeginTable(tableName, 13, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | 
                           ImGuiTableFlags_ScrollX | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable)) {
-        // Adjusted widths, especially for Images and Videos
-        ImGui::TableSetupColumn("Year", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed, 40.0f * dpiScale);
-        ImGui::TableSetupColumn("Author", ImGuiTableColumnFlags_WidthFixed, 80.0f * dpiScale);
-        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 250.0f * dpiScale);
-        ImGui::TableSetupColumn("Version", ImGuiTableColumnFlags_WidthFixed, 50.0f * dpiScale);
-        ImGui::TableSetupColumn("Extra Files", ImGuiTableColumnFlags_WidthFixed, 120.0f * dpiScale);
-        ImGui::TableSetupColumn("ROM", ImGuiTableColumnFlags_WidthFixed, 80.0f * dpiScale);
-        ImGui::TableSetupColumn("UltraDMD", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 20.0f * dpiScale);
-        ImGui::TableSetupColumn("AltSound", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 20.0f * dpiScale);
-        ImGui::TableSetupColumn("AltColor", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 20.0f * dpiScale);
-        ImGui::TableSetupColumn("PUPMedia", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 20.0f * dpiScale);
-        ImGui::TableSetupColumn("Music", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 20.0f * dpiScale);
-        ImGui::TableSetupColumn("Images", ImGuiTableColumnFlags_WidthFixed, 300.0f * dpiScale); // Increased from 200
-        ImGui::TableSetupColumn("Videos", ImGuiTableColumnFlags_WidthFixed, 200.0f * dpiScale); // Increased from 120
+        // Restore original widths, scaled by dpiScale
+        ImGui::TableSetupColumn("Year", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed, 30.0f * dpiScale);
+        ImGui::TableSetupColumn("Author", ImGuiTableColumnFlags_WidthFixed, 60.0f * dpiScale);
+        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 200.0f * dpiScale); // Back to original stretch
+        ImGui::TableSetupColumn("Version", ImGuiTableColumnFlags_WidthFixed, 35.0f * dpiScale);
+        ImGui::TableSetupColumn("Extra Files", ImGuiTableColumnFlags_WidthFixed, 90.0f * dpiScale);
+        ImGui::TableSetupColumn("ROM", ImGuiTableColumnFlags_WidthFixed, 65.0f * dpiScale);
+        ImGui::TableSetupColumn("UltraDMD", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * dpiScale);
+        ImGui::TableSetupColumn("AltSound", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * dpiScale);
+        ImGui::TableSetupColumn("AltColor", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * dpiScale);
+        ImGui::TableSetupColumn("PUPMedia", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * dpiScale);
+        ImGui::TableSetupColumn("Music", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * dpiScale);
+        ImGui::TableSetupColumn("Images", ImGuiTableColumnFlags_WidthFixed, 175.0f * dpiScale); // Back to 175
+        ImGui::TableSetupColumn("Videos", ImGuiTableColumnFlags_WidthFixed, 100.0f * dpiScale); // Back to 100
         ImGui::TableSetupScrollFreeze(0, 1);
         ImGui::TableHeadersRow();
 

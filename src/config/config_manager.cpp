@@ -29,9 +29,9 @@ void ConfigManager::loadSettings() {
             << "CommandToRun=vpinballx\n"
             << "EndArgs=\n"
             << "VPinballXIni=" << defaultIniPath << "\n"
+            << "\n[LauncherWindow]\n"
             << "EnableDPIAwareness=true\n" // Default DPI awareness on
             << "DPIScaleFactor=1.0\n"     // Default no scaling
-            << "\n[LauncherWindow]\n"
             << "WindowWidth=1024\n"
             << "WindowHeight=768\n"
             << "\n[Images]\n"
