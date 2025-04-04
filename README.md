@@ -22,7 +22,7 @@
 
 1. **Download the repository** to any folder of your choice.
    ```bash
-   git clone --recurse-submodules https://github.com/surtarso/vpx-frontend.git
+   git clone --recurse-submodules https://github.com/surtarso/vpx-gui-tools.git
    ```
    
 2. **Install dependencies:**  
@@ -32,9 +32,10 @@
 
 3. **Build the application**
    ```bash
+   cd vpx-gui-tools/
    mkdir build && cd build
    cmake -DCMAKE_BUILD_TYPE=Release ..
-   make
+   make -j$(nproc)
    ```
 
 4. **Run the launcher:**  
