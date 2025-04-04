@@ -61,6 +61,13 @@ void TableView::drawTable(std::vector<TableEntry>& tables) {
                 if (wasClicked) {
                     selectedTable = (selectedTable == static_cast<int>(i)) ? -1 : static_cast<int>(i);
                 }
+                // Add tooltip when hovering over the row
+                if (ImGui::IsItemHovered()) {
+                    ImGui::BeginTooltip();
+                    ImGui::Text("Name: %s", tables[i].name.c_str());
+                    ImGui::Text("Filename: %s", tables[i].filename.c_str());
+                    ImGui::EndTooltip();
+                }
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0) && selectedTable >= 0) {
                     std::string folder = std::filesystem::path(tables[selectedTable].filepath).parent_path().string();
                     std::string cmd = "xdg-open \"" + folder + "\"";

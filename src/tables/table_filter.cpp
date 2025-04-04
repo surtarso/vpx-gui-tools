@@ -1,22 +1,37 @@
 #include "tables/table_filter.h"
 #include <cctype>
+#include <algorithm> // For std::transform
 
 void TableFilter::filterTables(const std::vector<TableEntry>& tables, std::vector<TableEntry>& filteredTables, const std::string& query) {
     filteredTables.clear();
+    
+    // If the query is empty, show all tables
     if (query.empty()) {
         filteredTables = tables;
     } else {
+        // Convert the search query to lowercase for case-insensitive matching
         std::string lowerQuery = query;
         std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
+
+        // Iterate through all tables and check if either the name or filename matches the query
         for (const auto& table : tables) {
+            // Convert table name to lowercase for comparison
             std::string lowerName = table.name;
             std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
-            if (lowerName.find(lowerQuery) != std::string::npos) {
+
+            // Convert filename to lowercase for comparison
+            std::string lowerFilename = table.filename;
+            std::transform(lowerFilename.begin(), lowerFilename.end(), lowerFilename.begin(), ::tolower);
+
+            // Check if either the name or filename contains the query
+            if (lowerName.find(lowerQuery) != std::string::npos || 
+                lowerFilename.find(lowerQuery) != std::string::npos) {
                 filteredTables.push_back(table);
             }
         }
     }
 
+    // Sort the filtered tables based on the current sort specifications
     std::sort(filteredTables.begin(), filteredTables.end(), [this](const TableEntry& a, const TableEntry& b) {
         switch (sortColumn) {
             case 0: return sortAscending ? a.year < b.year : a.year > b.year;
