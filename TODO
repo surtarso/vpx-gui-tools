@@ -1,5 +1,7 @@
 TODO:
 
+- add tooltips to buttons to add use hints(shift click etc)
+
 - add all configurable values to ini to customize (colors etc)
 
 - launcher related settings to apply on save instead of restart
