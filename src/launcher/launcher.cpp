@@ -1,18 +1,58 @@
 #include "launcher/launcher.h"
 #include <filesystem>
 
-Launcher::Launcher(IConfigProvider& config, TableManager* tm)
+Launcher::Launcher(IConfigProvider& config, TableManager* tm, SDL_Renderer* renderer)
     : config(config), 
       tableManager(tm), 
+      renderer(renderer),
       tableView(tm, config), 
       tableActions(config), 
       createIniConfirmed(false), 
       selectedIniPath(config.getVPinballXIni()),
       feedbackMessage(""),
-      feedbackMessageTimer(0.0f) {}
+      feedbackMessageTimer(0.0f),
+      pendingExtractVBS(false),
+      pendingPlay(false),
+      pendingTableIndex(static_cast<size_t>(-1)),
+      delayTimer(0.0f) {}
 
 bool Launcher::isShiftKeyDown() const {
     return ImGui::GetIO().KeyShift;
+}
+
+void Launcher::handlePendingOperations(std::vector<TableEntry>& tables) {
+    if (pendingExtractVBS || pendingPlay) {
+        // Wait for the delay to complete before starting the operation
+        if (delayTimer > 0.0f) {
+            delayTimer -= ImGui::GetIO().DeltaTime;
+            if (delayTimer <= 0.0f) {
+                // Delay is complete, execute the operation
+                if (pendingExtractVBS && pendingTableIndex != static_cast<size_t>(-1) && pendingTableIndex < tables.size()) {
+                    std::string vbsFile = tables[pendingTableIndex].filepath;
+                    LOG_DEBUG("Original filepath: " << vbsFile);
+                    // Normalize the path to remove any trailing slashes
+                    vbsFile = std::filesystem::path(vbsFile).string();
+                    vbsFile = vbsFile.substr(0, vbsFile.find_last_of('.')) + ".vbs";
+                    LOG_DEBUG("Constructed vbsFile path: " << vbsFile);
+                    if (std::filesystem::exists(vbsFile)) {
+                        tableActions.openInExternalEditor(vbsFile);
+                    } else {
+                        tableActions.extractVBS(tables[pendingTableIndex].filepath);
+                        if (std::filesystem::exists(vbsFile)) tableActions.openInExternalEditor(vbsFile);
+                    }
+                    pendingExtractVBS = false;
+                    pendingTableIndex = static_cast<size_t>(-1);
+                }
+
+                if (pendingPlay && pendingTableIndex != static_cast<size_t>(-1) && pendingTableIndex < tables.size()) {
+                    bool success = tableActions.launchTable(tables[pendingTableIndex].filepath);
+                    tableManager->updateTableLastRun(pendingTableIndex, success ? "success" : "failed");
+                    pendingPlay = false;
+                    pendingTableIndex = static_cast<size_t>(-1);
+                }
+            }
+        }
+    }
 }
 
 void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested, bool& showCreateIniPrompt, bool& showNoTablePopup) {
@@ -64,17 +104,19 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
         if (ImGui::Button("Extract VBS")) {
             int selectedTable = tableView.getSelectedTable();
             if (selectedTable >= 0) {
+                // Check if the .vbs file exists before setting the message
                 std::string vbsFile = tables[selectedTable].filepath;
+                vbsFile = std::filesystem::path(vbsFile).string();
                 vbsFile = vbsFile.substr(0, vbsFile.find_last_of('.')) + ".vbs";
                 if (std::filesystem::exists(vbsFile)) {
-                    tableActions.openInExternalEditor(vbsFile);
+                    feedbackMessage = "Opening VBS...";
                 } else {
                     feedbackMessage = "Extracting VBS...";
-                    feedbackMessageTimer = FEEDBACK_MESSAGE_DURATION;
-                    ImGui::GetIO().DisplaySize;
-                    tableActions.extractVBS(tables[selectedTable].filepath);
-                    if (std::filesystem::exists(vbsFile)) tableActions.openInExternalEditor(vbsFile);
                 }
+                feedbackMessageTimer = FEEDBACK_MESSAGE_DURATION;
+                pendingExtractVBS = true;
+                pendingTableIndex = static_cast<size_t>(selectedTable);
+                delayTimer = DELAY_DURATION;
             } else {
                 showNoTablePopup = true;
             }
@@ -97,9 +139,9 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
             if (selectedTable >= 0) {
                 feedbackMessage = "VPX is launching...";
                 feedbackMessageTimer = FEEDBACK_MESSAGE_DURATION;
-                ImGui::GetIO().DisplaySize;
-                bool success = tableActions.launchTable(tables[selectedTable].filepath);
-                tableManager->updateTableLastRun(selectedTable, success ? "success" : "failed");
+                pendingPlay = true;
+                pendingTableIndex = static_cast<size_t>(selectedTable);
+                delayTimer = DELAY_DURATION;
             } else {
                 showNoTablePopup = true;
             }
@@ -144,7 +186,8 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
 
             ImVec2 windowSize = ImGui::GetIO().DisplaySize;
             ImVec2 textSize = ImGui::CalcTextSize(feedbackMessage.c_str());
-            ImGui::SetNextWindowPos(ImVec2((windowSize.x - textSize.x - 20.0f) * 0.5f, 50.0f * dpiScale), ImGuiCond_Always);
+            // Center the modal both horizontally and vertically
+            ImGui::SetNextWindowPos(ImVec2((windowSize.x - textSize.x - 20.0f) * 0.5f, (windowSize.y - textSize.y - 20.0f) * 0.5f), ImGuiCond_Always);
             ImGui::SetNextWindowSize(ImVec2(textSize.x + 20.0f, textSize.y + 20.0f), ImGuiCond_Always);
 
             ImGui::Begin("FeedbackPopup", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoInputs);
@@ -153,4 +196,6 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
         }
     }
     ImGui::End();
+
+    handlePendingOperations(tables);
 }

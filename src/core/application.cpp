@@ -11,7 +11,7 @@ Application::Application(const std::string& basePath)
       tableManager(config),
       iniEditor(config.getVPinballXIni(), false),
       configEditor(basePath + "resources/settings.ini", true),
-      launcher(config, &tableManager),
+      launcher(config, &tableManager, renderer), // Pass renderer to Launcher
       firstRunDialog(config),
       showFirstRunDialog(false),
       deferInitialLoad(false),

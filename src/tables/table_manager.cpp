@@ -18,13 +18,28 @@ bool TableManager::hasTablesDirChanged() const {
         return true; // If either doesn't exist, we need to refresh
     }
 
-    auto tablesDirLastWrite = std::filesystem::last_write_time(tablesDir).time_since_epoch().count();
+    // Find the most recent modification time of any subdirectory in tables/
+    long long mostRecentSubdirWrite = 0;
+    try {
+        for (const auto& entry : std::filesystem::directory_iterator(tablesDir)) {
+            if (entry.is_directory()) {
+                auto subdirLastWrite = std::filesystem::last_write_time(entry.path()).time_since_epoch().count();
+                if (subdirLastWrite > mostRecentSubdirWrite) {
+                    mostRecentSubdirWrite = subdirLastWrite;
+                }
+            }
+        }
+    } catch (const std::filesystem::filesystem_error& e) {
+        LOG_DEBUG("Error iterating tables directory " << tablesDir << ": " << e.what());
+        return true; // If we can't iterate, assume a change to be safe
+    }
+
     std::ifstream file(jsonPath);
     json j;
     file >> j;
     auto lastUpdated = j["last_updated"].get<long long>();
 
-    return tablesDirLastWrite > lastUpdated;
+    return mostRecentSubdirWrite > lastUpdated;
 }
 
 void TableManager::loadTables() {
