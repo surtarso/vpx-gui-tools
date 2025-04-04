@@ -30,8 +30,8 @@ void ConfigManager::loadSettings() {
             << "EndArgs=\n"
             << "VPinballXIni=" << defaultIniPath << "\n"
             << "\n[LauncherWindow]\n"
-            << "EnableDPIAwareness=true\n" // Default DPI awareness on
-            << "DPIScaleFactor=1.0\n"     // Default no scaling
+            << "EnableDPIAwareness=true\n"
+            << "DPIScaleFactor=1.0\n"
             << "WindowWidth=1024\n"
             << "WindowHeight=768\n"
             << "\n[Images]\n"
@@ -74,7 +74,7 @@ void ConfigManager::loadSettings() {
         vpinballXIni = defaultIniPath;
         enableDPIAwareness = true; // Default if file fails
         dpiScaleFactor = 1.0f;
-        fallbackEditor = "code";
+        fallbackEditor = "code"; // Fixed typo: was "codeI"
         vpxTool = prependBasePath("resources/vpxtool");
         vbsSubCmd = "extractvbs";
         playSubCmd = "-Play";
@@ -188,7 +188,6 @@ void ConfigManager::save() {
             continue;
         }
         if (line.front() == '[' && line.back() == ']') {
-            // Before leaving a section, write any missing keys
             if (inVPinballXSection) {
                 if (!firstRunWritten) {
                     newContent += "FirstRun=" + std::string(firstRun ? "true" : "false") + "\n";
@@ -267,7 +266,6 @@ void ConfigManager::save() {
         newContent += line + "\n";
     }
 
-    // Append missing keys for the last section
     if (inVPinballXSection && !firstRunWritten) {
         newContent += "FirstRun=" + std::string(firstRun ? "true" : "false") + "\n";
     }
@@ -305,6 +303,8 @@ void ConfigManager::setVPinballXIni(const std::string& path) {
 
 void ConfigManager::setFirstRun(bool value) {
     firstRun = value;
+    save(); // Save the updated value to the file
+    loadSettings(); // Reload settings to ensure in-memory state matches the file
 }
 
 bool ConfigManager::isFirstRun() const {

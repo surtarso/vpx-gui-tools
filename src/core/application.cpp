@@ -201,6 +201,8 @@ void Application::run() {
         if (showFirstRunDialog) {
             showFirstRunDialog = firstRunDialog.show();
             if (!showFirstRunDialog && config.arePathsValid()) {
+                // Reload configEditor to reflect updated settings.ini after first run
+                configEditor.loadIniFile(basePath + "resources/settings.ini");
                 loadTables();
             } else if (!showFirstRunDialog) {
                 exitRequested = true;
