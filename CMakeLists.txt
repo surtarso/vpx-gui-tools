@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(VPXGUITools VERSION 0.9.8 LANGUAGES CXX C)
+project(VPXGUITools VERSION 0.9.9 LANGUAGES CXX C)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
