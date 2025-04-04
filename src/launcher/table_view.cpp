@@ -9,36 +9,103 @@ void TableView::drawTable(std::vector<TableEntry>& tables) {
     float dpiScale = ImGui::GetIO().FontGlobalScale;
     if (dpiScale <= 0.0f) dpiScale = 1.0f;
 
-    // Adjust padding for a compact look
+    // Adjust padding for a compact look, scaled by DPI
     ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4.0f * dpiScale, 1.0f * dpiScale));
 
     const char* tableName = "Tables";
 
-    // Calculate total fixed width and scale if necessary to fit window
-    float baseFixedWidth = 30.0f + 60.0f + 35.0f + 90.0f + 65.0f + (15.0f * 5) + 200.0f + 120.0f; // Sum of fixed widths
-    float totalFixedWidth = baseFixedWidth * dpiScale;
+    // Calculate the exact widths of fixed-content columns using ImGui::CalcTextSize()
+    // These columns have predictable content, so we can ensure they never clip
+    ImVec2 yearSize = ImGui::CalcTextSize("2024"); // Year is always 4 digits
+    ImVec2 extraFilesSize = ImGui::CalcTextSize("INI VBS B2S"); // Extra Files is always "INI VBS B2S"
+    ImVec2 imagesSize = ImGui::CalcTextSize("Wheel Table B2S Marquee"); // Images is always "Wheel Table B2S Marquee"
+    ImVec2 videosSize = ImGui::CalcTextSize("Table B2S DMD"); // Videos is always "Table B2S DMD"
+
+    // Calculate the width of icon columns (UltraDMD, AltSound, AltColor, PUPMedia, Music) based on their symbols
+    ImVec2 ultraDmdSize = ImGui::CalcTextSize(u8"✪"); // UltraDMD symbol
+    ImVec2 altSoundSize = ImGui::CalcTextSize(u8"♪"); // AltSound symbol
+    ImVec2 altColorSize = ImGui::CalcTextSize(u8"☀"); // AltColor symbol
+    ImVec2 pupMediaSize = ImGui::CalcTextSize(u8"▣"); // PUPMedia symbol
+    ImVec2 musicSize = ImGui::CalcTextSize(u8"♫"); // Music symbol
+    // Use the maximum width of the icon columns to ensure they all fit
+    float iconWidth = std::max({ultraDmdSize.x, altSoundSize.x, altColorSize.x, pupMediaSize.x, musicSize.x});
+
+    // Add padding to the calculated widths to ensure no clipping (e.g., 20% extra for safety)
+    float padding = 1.2f;
+    float yearWidth = yearSize.x * padding;
+    float extraFilesWidth = extraFilesSize.x * padding;
+    float imagesWidth = imagesSize.x * padding;
+    float videosWidth = videosSize.x * padding;
+    float adjustedIconWidth = iconWidth * padding;
+
+    // Define base widths for other columns (scaled by dpiScale)
+    // These are starting points and will be adjusted by widthScale if the table is too wide
+    float authorBaseWidth = 60.0f * dpiScale;
+    float versionBaseWidth = 35.0f * dpiScale;
+    float romBaseWidth = 65.0f * dpiScale;
+
+    // Calculate the total minimum width required for fixed-content columns (not scaled down)
+    float totalMinWidth = yearWidth + extraFilesWidth + imagesWidth + videosWidth + (adjustedIconWidth * 5);
+
+    // Calculate the total width of variable-content columns (which can be scaled down)
+    float totalVariableWidth = authorBaseWidth + versionBaseWidth + romBaseWidth;
+
+    // Calculate the total fixed width (minimum width + variable width)
+    float totalFixedWidth = totalMinWidth + totalVariableWidth;
+
+    // Calculate the scaling factor to fit the table within the window
     float windowWidth = ImGui::GetWindowWidth();
-    float widthScale = (totalFixedWidth > windowWidth) ? (windowWidth * 0.8f / totalFixedWidth) : 1.0f;
-    float adjustedDpiScale = dpiScale * widthScale;
+    float widthScale = 1.0f;
+    if (totalFixedWidth > windowWidth) {
+        // Only scale down the variable-content columns (Author, Version, ROM)
+        // Fixed-content columns (Year, Extra Files, Images, Videos, Icons) should not be scaled below their calculated width
+        float excessWidth = totalFixedWidth - windowWidth * 0.8f;
+        if (excessWidth > 0 && totalVariableWidth > 0) {
+            widthScale = (totalVariableWidth - excessWidth) / totalVariableWidth;
+            if (widthScale < 0.1f) widthScale = 0.1f; // Prevent excessive shrinking
+        }
+    }
+
+    // Apply the widthScale only to variable-content columns
+    float adjustedAuthorWidth = authorBaseWidth * widthScale;
+    float adjustedVersionWidth = versionBaseWidth * widthScale;
+    float adjustedRomWidth = romBaseWidth * widthScale;
+
+    // Log the calculated widths for debugging
+    LOG_DEBUG("DPI Scale: " << dpiScale << ", Window Width: " << windowWidth);
+    LOG_DEBUG("Year Width: " << yearWidth << ", Extra Files Width: " << extraFilesWidth);
+    LOG_DEBUG("Images Width: " << imagesWidth << ", Videos Width: " << videosWidth);
+    LOG_DEBUG("Icon Width: " << adjustedIconWidth);
+    LOG_DEBUG("Author Width: " << adjustedAuthorWidth << ", Version Width: " << adjustedVersionWidth << ", ROM Width: " << adjustedRomWidth);
+    LOG_DEBUG("Total Fixed Width: " << totalFixedWidth << ", Width Scale: " << widthScale);
 
     if (ImGui::BeginTable(tableName, 13, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | 
                           ImGuiTableFlags_ScrollX | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable)) {
-        // Use adjusted scaling to prevent overflow
-        ImGui::TableSetupColumn("Year", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed, 30.0f * adjustedDpiScale);
-        ImGui::TableSetupColumn("Author", ImGuiTableColumnFlags_WidthFixed, 60.0f * adjustedDpiScale);
-        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 200.0f * adjustedDpiScale);
-        ImGui::TableSetupColumn("Version", ImGuiTableColumnFlags_WidthFixed, 35.0f * adjustedDpiScale);
-        ImGui::TableSetupColumn("Extra Files", ImGuiTableColumnFlags_WidthFixed, 90.0f * adjustedDpiScale);
-        ImGui::TableSetupColumn("ROM", ImGuiTableColumnFlags_WidthFixed, 65.0f * adjustedDpiScale);
-        ImGui::TableSetupColumn("UltraDMD", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * adjustedDpiScale);
-        ImGui::TableSetupColumn("AltSound", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * adjustedDpiScale);
-        ImGui::TableSetupColumn("AltColor", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * adjustedDpiScale);
-        ImGui::TableSetupColumn("PUPMedia", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * adjustedDpiScale);
-        ImGui::TableSetupColumn("Music", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * adjustedDpiScale);
-        ImGui::TableSetupColumn("Images", ImGuiTableColumnFlags_WidthFixed, 200.0f * adjustedDpiScale); // Increased to fit "Wheel Table B2S Marquee"
-        ImGui::TableSetupColumn("Videos", ImGuiTableColumnFlags_WidthFixed, 120.0f * adjustedDpiScale); // Increased to fit "Table B2S DMD"
+        // Set up columns with dynamically calculated widths
+        // Remove ImGuiTableColumnFlags_NoResize from icon columns to allow resizing
+        ImGui::TableSetupColumn("Year", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed, yearWidth);
+        ImGui::TableSetupColumn("Author", ImGuiTableColumnFlags_WidthFixed, adjustedAuthorWidth);
+        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch); // Stretch to fill remaining space
+        ImGui::TableSetupColumn("Version", ImGuiTableColumnFlags_WidthFixed, adjustedVersionWidth);
+        ImGui::TableSetupColumn("Extra Files", ImGuiTableColumnFlags_WidthFixed, extraFilesWidth);
+        ImGui::TableSetupColumn("ROM", ImGuiTableColumnFlags_WidthFixed, adjustedRomWidth);
+        ImGui::TableSetupColumn("UltraDMD", ImGuiTableColumnFlags_WidthFixed, adjustedIconWidth);
+        ImGui::TableSetupColumn("AltSound", ImGuiTableColumnFlags_WidthFixed, adjustedIconWidth);
+        ImGui::TableSetupColumn("AltColor", ImGuiTableColumnFlags_WidthFixed, adjustedIconWidth);
+        ImGui::TableSetupColumn("PUPMedia", ImGuiTableColumnFlags_WidthFixed, adjustedIconWidth);
+        ImGui::TableSetupColumn("Music", ImGuiTableColumnFlags_WidthFixed, adjustedIconWidth);
+        ImGui::TableSetupColumn("Images", ImGuiTableColumnFlags_WidthFixed, imagesWidth);
+        ImGui::TableSetupColumn("Videos", ImGuiTableColumnFlags_WidthFixed, videosWidth);
         ImGui::TableSetupScrollFreeze(0, 1);
         ImGui::TableHeadersRow();
+
+        // Log column widths after user resizing for debugging
+        if (ImGui::GetIO().MouseClicked[0]) { // Log on mouse click to avoid spamming
+            LOG_DEBUG("Column Widths After Resizing:");
+            for (int i = 0; i < 13; ++i) {
+                LOG_DEBUG("Column " << i << " Width: " << ImGui::TableGetColumnWidth(i));
+            }
+        }
 
         if (ImGuiTableSortSpecs* sortSpecs = ImGui::TableGetSortSpecs()) {
             if (sortSpecs->SpecsDirty) {
@@ -153,12 +220,14 @@ void TableView::drawTable(std::vector<TableEntry>& tables) {
 
                     ImGui::SameLine();
                     // Check Marquee image
-                    bool marqueeExists = images.find("Marquee") != std::string::npos || checkFilePresence(tableDir, config.getMarqueeImage());
+                    bool marqueeExists = images.find("Marquee") != std::string::npos || checkFilePresence(tableDir, config
+
+.getMarqueeImage());
                     ImGui::TextColored(marqueeExists ? greenColor : redColor, "Marquee");
                 }
                 ImGui::TableSetColumnIndex(12); {
                     // Always show "Table B2S DMD" with color coding
-                    // Colors: Green (found), Red (not found)
+                    // Colors: Green - Green (found), Red (not found)
                     ImVec4 greenColor(0.0f, 1.0f, 0.0f, 1.0f);  // Green for found
                     ImVec4 redColor(1.0f, 0.0f, 0.0f, 1.0f);    // Red for not found
 
