@@ -5,8 +5,8 @@
 #include <fstream>
 #include <thread>
 #include <vector>
-#include <algorithm> // For std::transform
-#include <cctype>    // For std::tolower
+#include <algorithm>
+#include <cctype>
 
 TableUpdater::TableUpdater(IConfigProvider& config, std::mutex& mutex) : config(config), tablesMutex(mutex) {}
 
@@ -15,6 +15,10 @@ void TableUpdater::checkRomForChunk(std::vector<TableEntry>& tables, size_t star
     for (size_t i = start; i < end && i < tables.size(); ++i) {
         auto& table = tables[i];
         std::string folder = std::filesystem::path(table.filepath).parent_path().string();
+        if (!std::filesystem::exists(folder)) {
+            LOG_DEBUG("Skipping ROM check for " << table.name << ": folder does not exist: " << folder);
+            continue;
+        }
         table.rom = "";
         if (table.requiresPinmame && !table.gameName.empty()) {
             std::string romPath = folder + "/" + config.getRomPath() + "/" + table.gameName + ".zip";
@@ -40,11 +44,23 @@ void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vecto
         loading = true;
         std::lock_guard<std::mutex> lock(tablesMutex);
 
-        // Step 1: Update VBS and INI checks
-        for (auto& table : tables) {
-            std::string folder = std::filesystem::path(table.filepath).parent_path().string();
-            std::string basename = table.filename;
+        std::vector<std::string> lastRunValues(tables.size());
+        for (size_t i = 0; i < tables.size(); ++i) {
+            lastRunValues[i] = tables[i].lastRun;
+        }
 
+        std::vector<size_t> invalidIndices;
+        for (size_t i = 0; i < tables.size(); ++i) {
+            auto& table = tables[i];
+            std::string folder = std::filesystem::path(table.filepath).parent_path().string();
+            
+            if (!std::filesystem::exists(folder)) {
+                LOG_DEBUG("Table folder does not exist, marking for removal: " << table.filepath);
+                invalidIndices.push_back(i);
+                continue;
+            }
+
+            std::string basename = table.filename;
             std::string iniFile = folder + "/" + basename + ".ini";
             std::string vbsFile = folder + "/" + basename + ".vbs";
             std::string b2sFileLower = folder + "/" + basename + ".directb2s";
@@ -78,7 +94,6 @@ void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vecto
                 }
             }
 
-            // Check for .directb2s or .directB2S (case-insensitive)
             bool b2sExists = std::filesystem::exists(b2sFileLower) || std::filesystem::exists(b2sFileUpper);
 
             table.extraFiles = std::string(iniExists ? "INI " : "") +
@@ -86,16 +101,22 @@ void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vecto
                                std::string(b2sExists ? "B2S" : "");
             
             bool hasUltraDmdFolder = false;
-            for (const auto& entry : std::filesystem::directory_iterator(folder)) {
-                if (entry.is_directory()) {
-                    std::string folderName = entry.path().filename().string();
-                    LOG_DEBUG("Checking folder in " << folder << ": " << folderName);
-                    if (folderName.length() >= 9 && folderName.substr(folderName.length() - 9) == ".UltraDMD") {
-                        hasUltraDmdFolder = true;
-                        LOG_DEBUG("Found UltraDMD folder for " << table.name << ": " << folderName);
-                        break;
+            try {
+                for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+                    if (entry.is_directory()) {
+                        std::string folderName = entry.path().filename().string();
+                        LOG_DEBUG("Checking folder in " << folder << ": " << folderName);
+                        if (folderName.length() >= 9 && folderName.substr(folderName.length() - 9) == ".UltraDMD") {
+                            hasUltraDmdFolder = true;
+                            LOG_DEBUG("Found UltraDMD folder for " << table.name << ": " << folderName);
+                            break;
+                        }
                     }
                 }
+            } catch (const std::filesystem::filesystem_error& e) {
+                LOG_DEBUG("Failed to iterate directory " << folder << ": " << e.what());
+                invalidIndices.push_back(i);
+                continue;
             }
             table.udmd = hasUltraDmdFolder ? u8"✪" : "";
             LOG_DEBUG("Set udmd for " << table.name << ": " << (table.udmd.empty() ? "empty" : table.udmd));
@@ -113,7 +134,17 @@ void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vecto
                            std::string(std::filesystem::exists(folder + config.getDmdVideo()) ? "DMD" : "");
         }
 
-        // Step 2: Threaded ROM checks
+        std::sort(invalidIndices.begin(), invalidIndices.end(), std::greater<size_t>());
+        for (size_t idx : invalidIndices) {
+            LOG_DEBUG("Removing invalid table at index " << idx << ": " << tables[idx].filepath);
+            tables.erase(tables.begin() + idx);
+            lastRunValues.erase(lastRunValues.begin() + idx);
+        }
+
+        for (size_t i = 0; i < tables.size(); ++i) {
+            tables[i].lastRun = lastRunValues[i];
+        }
+
         const size_t numThreads = std::thread::hardware_concurrency();
         const size_t chunkSize = tables.size() / numThreads + (tables.size() % numThreads != 0 ? 1 : 0);
         std::vector<std::thread> threads;
@@ -129,12 +160,6 @@ void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vecto
             thread.join();
         }
 
-        // Step 3: Log final ROM status
-        // for (const auto& table : tables) {
-        //     LOG_DEBUG("Final ROM status for " << table.name << ": rom=" << table.rom);
-        // }
-
-        // Step 4: Save to cache
         json j;
         j["last_updated"] = std::chrono::system_clock::now().time_since_epoch().count();
         for (const auto& t : tables) {
@@ -158,6 +183,7 @@ void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vecto
             tj["iniModified"] = t.iniModified;
             tj["requiresPinmame"] = t.requiresPinmame;
             tj["gameName"] = t.gameName;
+            tj["lastRun"] = t.lastRun;
             j["tables"].push_back(tj);
         }
         std::ofstream file(config.getBasePath() + "resources/tables_index.json");

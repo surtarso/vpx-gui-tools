@@ -13,20 +13,24 @@
 class TableManager {
 public:
     TableManager(IConfigProvider& config);
-    void loadTables(); // Explicit method to load tables
+    void loadTables();
     void filterTables(const std::string& query);
     void setSortSpecs(int columnIdx, bool ascending);
     void updateTablesAsync();
+    void updateTableLastRun(size_t index, const std::string& status);
+    void refreshTables(bool forceFullRefresh = false); // Modified to accept forceFullRefresh
 
     std::vector<TableEntry>& getTables() { return filteredTables; }
     bool isLoading() const { return loading; }
 
 private:
+    bool hasTablesDirChanged() const; // New method to check if tables/ folder has changed
+    void saveToCache();
     IConfigProvider& config;
     std::vector<TableEntry> tables;
     std::vector<TableEntry> filteredTables;
     bool loading;
-    bool tablesLoaded; // Track whether tables have been loaded
+    bool tablesLoaded;
     std::mutex tablesMutex;
     TableLoader loader;
     TableUpdater updater;

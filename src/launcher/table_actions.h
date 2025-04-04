@@ -8,7 +8,7 @@
 class TableActions {
 public:
     TableActions(IConfigProvider& config);
-    void launchTable(const std::string& filepath);
+    bool launchTable(const std::string& filepath); // Changed to return bool
     void extractVBS(const std::string& filepath);
     bool openInExternalEditor(const std::string& filepath);
     void openFolder(const std::string& filepath);

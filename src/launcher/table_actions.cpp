@@ -3,12 +3,16 @@
 
 TableActions::TableActions(IConfigProvider& config) : config(config) {}
 
-void TableActions::launchTable(const std::string& filepath) {
+bool TableActions::launchTable(const std::string& filepath) {
     std::string cmd = config.getStartArgs() + " \"" + config.getCommandToRun() + "\" " + config.getPlaySubCmd() + " \"" + filepath + "\" " + config.getEndArgs();
+    LOG_DEBUG("Launching table with command: " << cmd);
     int result = system(cmd.c_str());
     if (result != 0) {
-        LOG_DEBUG("Failed to launch table: " << filepath << " (command: " << cmd << ")");
+        LOG_DEBUG("Failed to launch table: " << filepath << " (command: " << cmd << ", exit code: " << result << ")");
+        return false;
     }
+    LOG_DEBUG("Successfully launched table: " << filepath);
+    return true;
 }
 
 void TableActions::extractVBS(const std::string& filepath) {

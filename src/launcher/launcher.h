@@ -1,26 +1,23 @@
 #ifndef LAUNCHER_H
 #define LAUNCHER_H
 
-#include "utils/structures.h"
-#include "tables/table_manager.h"
 #include "config/iconfig_provider.h"
+#include "tables/table_manager.h"
 #include "launcher/table_view.h"
 #include "launcher/table_actions.h"
-#include <imgui.h>
+#include "imgui.h"
 #include <string>
-#include <vector>
 
 class Launcher {
 public:
-    Launcher(IConfigProvider& config, TableManager* tm = nullptr);
+    Launcher(IConfigProvider& config, TableManager* tm);
     void draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested, bool& showCreateIniPrompt, bool& showNoTablePopup);
-    int getSelectedTable() const { return tableView.getSelectedTable(); }
-    std::string getSearchQuery() const { return searchQuery; }
     std::string getSelectedIniPath() const { return selectedIniPath; }
-    bool shouldCreateIni() const { return createIniConfirmed; }
-    void resetCreateIni() { createIniConfirmed = false; }
-
+    bool getCreateIniConfirmed() const { return createIniConfirmed; }
+    void setCreateIniConfirmed(bool confirmed) { createIniConfirmed = confirmed; }
+    std::string getSearchQuery() const { return searchQuery; }
 private:
+    bool isShiftKeyDown() const; // New method to check for Shift key
     IConfigProvider& config;
     TableManager* tableManager;
     TableView tableView;
@@ -28,6 +25,9 @@ private:
     std::string searchQuery;
     bool createIniConfirmed;
     std::string selectedIniPath;
+    std::string feedbackMessage;
+    float feedbackMessageTimer = 0.0f;
+    const float FEEDBACK_MESSAGE_DURATION = 2.0f;
 };
 
 #endif // LAUNCHER_H

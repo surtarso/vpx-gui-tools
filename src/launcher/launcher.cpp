@@ -2,7 +2,18 @@
 #include <filesystem>
 
 Launcher::Launcher(IConfigProvider& config, TableManager* tm)
-    : config(config), tableManager(tm), tableView(tm, config), tableActions(config), createIniConfirmed(false), selectedIniPath(config.getVPinballXIni()) {}
+    : config(config), 
+      tableManager(tm), 
+      tableView(tm, config), 
+      tableActions(config), 
+      createIniConfirmed(false), 
+      selectedIniPath(config.getVPinballXIni()),
+      feedbackMessage(""),
+      feedbackMessageTimer(0.0f) {}
+
+bool Launcher::isShiftKeyDown() const {
+    return ImGui::GetIO().KeyShift;
+}
 
 void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& editingSettings, bool& quitRequested, bool& showCreateIniPrompt, bool& showNoTablePopup) {
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
@@ -55,12 +66,18 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
             if (selectedTable >= 0) {
                 std::string vbsFile = tables[selectedTable].filepath;
                 vbsFile = vbsFile.substr(0, vbsFile.find_last_of('.')) + ".vbs";
-                if (std::filesystem::exists(vbsFile)) tableActions.openInExternalEditor(vbsFile);
-                else {
+                if (std::filesystem::exists(vbsFile)) {
+                    tableActions.openInExternalEditor(vbsFile);
+                } else {
+                    feedbackMessage = "Extracting VBS...";
+                    feedbackMessageTimer = FEEDBACK_MESSAGE_DURATION;
+                    ImGui::GetIO().DisplaySize;
                     tableActions.extractVBS(tables[selectedTable].filepath);
                     if (std::filesystem::exists(vbsFile)) tableActions.openInExternalEditor(vbsFile);
                 }
-            } else showNoTablePopup = true;
+            } else {
+                showNoTablePopup = true;
+            }
         }
         ImGui::SameLine();
         if (ImGui::Button("Open Folder")) {
@@ -68,17 +85,29 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
             tableActions.openFolder(selectedTable >= 0 ? tables[selectedTable].filepath : config.getTablesDir());
         }
         ImGui::SameLine();
+        if (ImGui::Button("Refresh")) {
+            bool forceFullRefresh = isShiftKeyDown();
+            tableManager->refreshTables(forceFullRefresh);
+        }
+        ImGui::SameLine();
         float playButtonPosX = ImGui::GetCursorPosX();
         float playButtonWidth = ImGui::CalcTextSize("▶ Play").x + ImGui::GetStyle().FramePadding.x * 2 * dpiScale;
         if (ImGui::Button("▶ Play")) {
             int selectedTable = tableView.getSelectedTable();
-            if (selectedTable >= 0) tableActions.launchTable(tables[selectedTable].filepath);
-            else showNoTablePopup = true;
+            if (selectedTable >= 0) {
+                feedbackMessage = "VPX is launching...";
+                feedbackMessageTimer = FEEDBACK_MESSAGE_DURATION;
+                ImGui::GetIO().DisplaySize;
+                bool success = tableActions.launchTable(tables[selectedTable].filepath);
+                tableManager->updateTableLastRun(selectedTable, success ? "success" : "failed");
+            } else {
+                showNoTablePopup = true;
+            }
         }
         ImGui::SameLine();
         float padding = ImGui::GetStyle().ItemSpacing.x * dpiScale;
         ImGui::SetCursorPosX(playButtonPosX + playButtonWidth + padding);
-        float searchBarWidth = 350.0f * dpiScale; // Scale dynamically
+        float searchBarWidth = 350.0f * dpiScale;
         char searchBuf[300];
         strncpy(searchBuf, searchQuery.c_str(), sizeof(searchBuf) - 1);
         searchBuf[sizeof(searchBuf) - 1] = '\0';
@@ -105,6 +134,23 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
 
         ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::CalcTextSize("✖ Quit").x - ImGui::GetStyle().ItemSpacing.x * 2 * dpiScale);
         if (ImGui::Button("✖ Quit")) quitRequested = true;
+
+        if (feedbackMessageTimer > 0.0f) {
+            feedbackMessageTimer -= ImGui::GetIO().DeltaTime;
+            if (feedbackMessageTimer < 0.0f) feedbackMessageTimer = 0.0f;
+
+            float alpha = feedbackMessageTimer / FEEDBACK_MESSAGE_DURATION;
+            ImGui::SetNextWindowBgAlpha(alpha);
+
+            ImVec2 windowSize = ImGui::GetIO().DisplaySize;
+            ImVec2 textSize = ImGui::CalcTextSize(feedbackMessage.c_str());
+            ImGui::SetNextWindowPos(ImVec2((windowSize.x - textSize.x - 20.0f) * 0.5f, 50.0f * dpiScale), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(ImVec2(textSize.x + 20.0f, textSize.y + 20.0f), ImGuiCond_Always);
+
+            ImGui::Begin("FeedbackPopup", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoInputs);
+            ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, alpha), "%s", feedbackMessage.c_str());
+            ImGui::End();
+        }
     }
     ImGui::End();
 }

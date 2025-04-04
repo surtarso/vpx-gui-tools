@@ -4,27 +4,35 @@
 
 TableLoader::TableLoader(IConfigProvider& config) : config(config) {}
 
-void TableLoader::load(std::vector<TableEntry>& tables, std::vector<TableEntry>& filteredTables) {
+void TableLoader::load(std::vector<TableEntry>& tables, std::vector<TableEntry>& filteredTables, bool forceVpxToolIndex) {
     std::string cachePath = config.getBasePath() + "resources/tables_index.json";
     std::string indexPath = config.getTablesDir() + "/" + config.getVpxtoolIndexFile();
     LOG_DEBUG("Checking cache at " << cachePath << " and index at " << indexPath);
 
     bool useCache = false;
-    if (std::filesystem::exists(cachePath) && std::filesystem::exists(indexPath)) {
+    if (!forceVpxToolIndex && std::filesystem::exists(cachePath) && std::filesystem::exists(indexPath)) {
         std::ifstream file(cachePath);
         if (!file.is_open()) {
             LOG_DEBUG("Failed to open cache file: " << cachePath);
         } else {
             json j;
             file >> j;
-            // Check if the cache contains the new fields
-            bool hasNewFields = !j["tables"].empty() && j["tables"][0].contains("requiresPinmame") && j["tables"][0].contains("gameName");
+            bool hasRequiredFields = !j["tables"].empty() && 
+                                     j["tables"][0].contains("requiresPinmame") && 
+                                     j["tables"][0].contains("gameName") && 
+                                     j["tables"][0].contains("lastRun");
             file.close();
-            if (hasNewFields) {
-                LOG_DEBUG("Cache is valid, loading from cache: " << cachePath);
-                useCache = true;
+            if (hasRequiredFields) {
+                auto tablesDirLastWrite = std::filesystem::last_write_time(config.getTablesDir()).time_since_epoch().count();
+                auto lastUpdated = j["last_updated"].get<long long>();
+                if (lastUpdated >= tablesDirLastWrite) {
+                    LOG_DEBUG("Cache is valid, loading from cache: " << cachePath);
+                    useCache = true;
+                } else {
+                    LOG_DEBUG("Cache is outdated (tables directory modified), regenerating index...");
+                }
             } else {
-                LOG_DEBUG("Cache is outdated (missing requiresPinmame/gameName), regenerating index...");
+                LOG_DEBUG("Cache is outdated (missing required fields), regenerating index...");
                 std::filesystem::remove(cachePath);
             }
         }
@@ -75,9 +83,10 @@ void TableLoader::loadFromCache(const std::string& jsonPath, std::vector<TableEn
         entry.iniModified = t["iniModified"];
         entry.requiresPinmame = t.contains("requiresPinmame") ? t["requiresPinmame"].get<bool>() : false;
         entry.gameName = t.contains("gameName") ? t["gameName"].get<std::string>() : "";
+        entry.lastRun = t.contains("lastRun") ? t["lastRun"].get<std::string>() : "clear";
         tables.push_back(entry);
         LOG_DEBUG("Loaded from cache: " << entry.name << ", requiresPinmame=" << entry.requiresPinmame 
-                  << ", gameName=" << entry.gameName << ", rom=" << entry.rom);
+                  << ", gameName=" << entry.gameName << ", rom=" << entry.rom << ", lastRun=" << entry.lastRun);
     }
 }
 
@@ -105,6 +114,7 @@ void TableLoader::saveToCache(const std::string& jsonPath, const std::vector<Tab
         tj["iniModified"] = t.iniModified;
         tj["requiresPinmame"] = t.requiresPinmame;
         tj["gameName"] = t.gameName;
+        tj["lastRun"] = t.lastRun;
         j["tables"].push_back(tj);
     }
     std::ofstream file(jsonPath);
@@ -119,7 +129,6 @@ void TableLoader::generateIndex() {
     if (result != 0) {
         LOG_DEBUG("Failed to index." << " (command: " << cmd << ")");
     }
-    
 }
 
 void TableLoader::loadTables(std::vector<TableEntry>& tables) {
@@ -151,9 +160,9 @@ void TableLoader::loadTables(std::vector<TableEntry>& tables) {
         }
         entry.version = tableInfo["table_version"].is_string() ? tableInfo["table_version"].get<std::string>() : "Unknown";
 
-        // Extract ROM metadata
         entry.requiresPinmame = t["requires_pinmame"].is_boolean() ? t["requires_pinmame"].get<bool>() : false;
         entry.gameName = t["game_name"].is_string() ? t["game_name"].get<std::string>() : "";
+        entry.lastRun = "clear";
         LOG_DEBUG("Loaded from index: " << entry.name << ", requiresPinmame=" << entry.requiresPinmame 
                   << ", gameName=" << entry.gameName);
 

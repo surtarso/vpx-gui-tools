@@ -13,7 +13,7 @@ using json = nlohmann::json;
 class TableLoader {
 public:
     TableLoader(IConfigProvider& config);
-    void load(std::vector<TableEntry>& tables, std::vector<TableEntry>& filteredTables);
+    void load(std::vector<TableEntry>& tables, std::vector<TableEntry>& filteredTables, bool forceVpxToolIndex = false); // Modified
 private:
     void loadFromCache(const std::string& jsonPath, std::vector<TableEntry>& tables);
     void saveToCache(const std::string& jsonPath, const std::vector<TableEntry>& tables);

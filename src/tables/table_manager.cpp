@@ -1,22 +1,39 @@
 #include "tables/table_manager.h"
+#include <fstream>
+#include <filesystem>
 
 TableManager::TableManager(IConfigProvider& config)
     : config(config), 
       loading(false), 
-      tablesLoaded(false), // Initialize to false
+      tablesLoaded(false),
       loader(config), 
       updater(config, tablesMutex), 
-      filter() {
-    // Do not call loadTables() or updateTablesAsync() here
+      filter() {}
+
+bool TableManager::hasTablesDirChanged() const {
+    std::string tablesDir = config.getTablesDir();
+    std::string jsonPath = config.getBasePath() + "resources/tables_index.json";
+
+    if (!std::filesystem::exists(tablesDir) || !std::filesystem::exists(jsonPath)) {
+        return true; // If either doesn't exist, we need to refresh
+    }
+
+    auto tablesDirLastWrite = std::filesystem::last_write_time(tablesDir).time_since_epoch().count();
+    std::ifstream file(jsonPath);
+    json j;
+    file >> j;
+    auto lastUpdated = j["last_updated"].get<long long>();
+
+    return tablesDirLastWrite > lastUpdated;
 }
 
 void TableManager::loadTables() {
     if (!tablesLoaded) {
         loader.load(tables, filteredTables);
-        tablesLoaded = true; // Mark tables as loaded
-        updateTablesAsync(); // Start async updates after loading
+        tablesLoaded = true;
+        updateTablesAsync();
     }
-    filter.filterTables(tables, filteredTables, ""); // Apply initial filter
+    filter.filterTables(tables, filteredTables, "");
 }
 
 void TableManager::filterTables(const std::string& query) {
@@ -29,4 +46,60 @@ void TableManager::setSortSpecs(int columnIdx, bool ascending) {
 
 void TableManager::updateTablesAsync() {
     updater.updateTablesAsync(tables, filteredTables, loading);
+}
+
+void TableManager::updateTableLastRun(size_t index, const std::string& status) {
+    std::lock_guard<std::mutex> lock(tablesMutex);
+    if (index >= tables.size() || index >= filteredTables.size()) {
+        LOG_DEBUG("Invalid index for updating lastRun: " << index);
+        return;
+    }
+    tables[index].lastRun = status;
+    filteredTables[index].lastRun = status;
+    LOG_DEBUG("Updated lastRun for table " << tables[index].name << " to " << status);
+    saveToCache();
+}
+
+void TableManager::refreshTables(bool forceFullRefresh) {
+    std::lock_guard<std::mutex> lock(tablesMutex);
+    bool forceVpxToolIndex = forceFullRefresh || hasTablesDirChanged();
+    tablesLoaded = false; // Force reload
+    tables.clear();
+    filteredTables.clear();
+    loader.load(tables, filteredTables, forceVpxToolIndex); // Pass forceVpxToolIndex to loader
+    tablesLoaded = true;
+    updateTablesAsync();
+}
+
+void TableManager::saveToCache() {
+    std::string jsonPath = config.getBasePath() + "resources/tables_index.json";
+    json j;
+    j["last_updated"] = std::chrono::system_clock::now().time_since_epoch().count();
+    for (const auto& t : tables) {
+        json tj;
+        tj["filepath"] = t.filepath;
+        tj["filename"] = t.filename;
+        tj["year"] = t.year;
+        tj["brand"] = t.brand;
+        tj["name"] = t.name;
+        tj["version"] = t.version;
+        tj["extraFiles"] = t.extraFiles;
+        tj["rom"] = t.rom;
+        tj["udmd"] = t.udmd;
+        tj["alts"] = t.alts;
+        tj["altc"] = t.altc;
+        tj["pup"] = t.pup;
+        tj["music"] = t.music;
+        tj["images"] = t.images;
+        tj["videos"] = t.videos;
+        tj["vbsModified"] = t.vbsModified;
+        tj["iniModified"] = t.iniModified;
+        tj["requiresPinmame"] = t.requiresPinmame;
+        tj["gameName"] = t.gameName;
+        tj["lastRun"] = t.lastRun;
+        j["tables"].push_back(tj);
+    }
+    std::ofstream file(jsonPath);
+    file << j.dump(2);
+    LOG_DEBUG("Saved " << tables.size() << " tables to cache: " << jsonPath);
 }

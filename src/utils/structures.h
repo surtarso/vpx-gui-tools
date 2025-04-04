@@ -30,6 +30,7 @@ struct TableEntry {
     bool iniModified = false; // INI differs from default
     bool requiresPinmame = false; // Does the table require a ROM?
     std::string gameName;         // ROM game name (e.g., "sprk_103")
+    std::string lastRun = "clear"; // New field: "clear", "success", or "failed"
 };
 
 #endif // STRUCTURES_H
