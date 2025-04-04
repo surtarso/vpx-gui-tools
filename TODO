@@ -2,19 +2,6 @@ TODO:
 
 - add all configurable values to ini to customize (colors etc)
 
-- add coloring to row as in:
-set if a table fails to launch, paint it red
-default is clear, if launches normally, make sure its clear (to remove red)
+- launcher related settings to apply on save instead of restart
 
-- get some feedback on shit
-extracting, launching, loading etc...
-
-- refresh button for changes (run vpxtool index again and refresh dirs)
-
-- launcher related settings apply on save
-
-- hamburguer menu for advanced options, like all vpxtool args etc
-
-- show filename on hover or next to tables found
-
-- allow search to also use filename(?)
+- hamburguer menu for advanced options, like all vpxtool args, see logs etc
