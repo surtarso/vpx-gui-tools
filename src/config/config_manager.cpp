@@ -110,8 +110,7 @@ void ConfigManager::loadSettings() {
         size_t pos = line.find('=');
         if (pos == std::string::npos) continue;
         std::string key = line.substr(0, pos);
-
-       std::string value = line.substr(pos + 1);
+        std::string value = line.substr(pos + 1);
         key.erase(key.find_last_not_of(" \t") + 1);
         value.erase(0, value.find_first_not_of(" \t"));
 
@@ -174,9 +173,12 @@ void ConfigManager::save() {
     std::string content = buffer.str();
     std::string newContent;
     bool inVPinballXSection = false;
+    bool inLauncherWindowSection = false;
     bool firstRunWritten = false;
     bool dpiAwarenessWritten = false;
     bool dpiScaleWritten = false;
+    bool windowWidthWritten = false;
+    bool windowHeightWritten = false;
 
     std::istringstream iss(content);
     std::string line;
@@ -186,18 +188,28 @@ void ConfigManager::save() {
             continue;
         }
         if (line.front() == '[' && line.back() == ']') {
+            // Before leaving a section, write any missing keys
             if (inVPinballXSection) {
                 if (!firstRunWritten) {
                     newContent += "FirstRun=" + std::string(firstRun ? "true" : "false") + "\n";
                 }
+            }
+            if (inLauncherWindowSection) {
                 if (!dpiAwarenessWritten) {
                     newContent += "EnableDPIAwareness=" + std::string(enableDPIAwareness ? "true" : "false") + "\n";
                 }
                 if (!dpiScaleWritten) {
                     newContent += "DPIScaleFactor=" + std::to_string(dpiScaleFactor) + "\n";
                 }
+                if (!windowWidthWritten) {
+                    newContent += "WindowWidth=" + std::to_string(windowWidth) + "\n";
+                }
+                if (!windowHeightWritten) {
+                    newContent += "WindowHeight=" + std::to_string(windowHeight) + "\n";
+                }
             }
             inVPinballXSection = (line == "[VPinballX]");
+            inLauncherWindowSection = (line == "[LauncherWindow]");
             newContent += line + "\n";
             continue;
         }
@@ -223,7 +235,14 @@ void ConfigManager::save() {
                     newContent += "VPinballXIni=" + vpinballXIni + "\n";
                     continue;
                 }
-                else if (key == "EnableDPIAwareness") {
+            }
+        }
+        if (inLauncherWindowSection) {
+            size_t pos = line.find('=');
+            if (pos != std::string::npos) {
+                std::string key = line.substr(0, pos);
+                key.erase(key.find_last_not_of(" \t") + 1);
+                if (key == "EnableDPIAwareness") {
                     newContent += "EnableDPIAwareness=" + std::string(enableDPIAwareness ? "true" : "false") + "\n";
                     dpiAwarenessWritten = true;
                     continue;
@@ -233,21 +252,37 @@ void ConfigManager::save() {
                     dpiScaleWritten = true;
                     continue;
                 }
+                else if (key == "WindowWidth") {
+                    newContent += "WindowWidth=" + std::to_string(windowWidth) + "\n";
+                    windowWidthWritten = true;
+                    continue;
+                }
+                else if (key == "WindowHeight") {
+                    newContent += "WindowHeight=" + std::to_string(windowHeight) + "\n";
+                    windowHeightWritten = true;
+                    continue;
+                }
             }
         }
         newContent += line + "\n";
     }
 
-    // Append DPI settings if not written
-    if (inVPinballXSection) {
-        if (!firstRunWritten) {
-            newContent += "FirstRun=" + std::string(firstRun ? "true" : "false") + "\n";
-        }
+    // Append missing keys for the last section
+    if (inVPinballXSection && !firstRunWritten) {
+        newContent += "FirstRun=" + std::string(firstRun ? "true" : "false") + "\n";
+    }
+    if (inLauncherWindowSection) {
         if (!dpiAwarenessWritten) {
             newContent += "EnableDPIAwareness=" + std::string(enableDPIAwareness ? "true" : "false") + "\n";
         }
         if (!dpiScaleWritten) {
             newContent += "DPIScaleFactor=" + std::to_string(dpiScaleFactor) + "\n";
+        }
+        if (!windowWidthWritten) {
+            newContent += "WindowWidth=" + std::to_string(windowWidth) + "\n";
+        }
+        if (!windowHeightWritten) {
+            newContent += "WindowHeight=" + std::to_string(windowHeight) + "\n";
         }
     }
 

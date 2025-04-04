@@ -9,26 +9,34 @@ void TableView::drawTable(std::vector<TableEntry>& tables) {
     float dpiScale = ImGui::GetIO().FontGlobalScale;
     if (dpiScale <= 0.0f) dpiScale = 1.0f;
 
-    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4.0f * dpiScale, 2.0f * dpiScale));
+    // Adjust padding for a compact look
+    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4.0f * dpiScale, 1.0f * dpiScale));
 
     const char* tableName = "Tables";
 
+    // Calculate total fixed width and scale if necessary to fit window
+    float baseFixedWidth = 30.0f + 60.0f + 35.0f + 90.0f + 65.0f + (15.0f * 5) + 200.0f + 120.0f; // Sum of fixed widths
+    float totalFixedWidth = baseFixedWidth * dpiScale;
+    float windowWidth = ImGui::GetWindowWidth();
+    float widthScale = (totalFixedWidth > windowWidth) ? (windowWidth * 0.8f / totalFixedWidth) : 1.0f;
+    float adjustedDpiScale = dpiScale * widthScale;
+
     if (ImGui::BeginTable(tableName, 13, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | 
                           ImGuiTableFlags_ScrollX | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable)) {
-        // Restore original widths, scaled by dpiScale
-        ImGui::TableSetupColumn("Year", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed, 30.0f * dpiScale);
-        ImGui::TableSetupColumn("Author", ImGuiTableColumnFlags_WidthFixed, 60.0f * dpiScale);
-        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 200.0f * dpiScale); // Back to original stretch
-        ImGui::TableSetupColumn("Version", ImGuiTableColumnFlags_WidthFixed, 35.0f * dpiScale);
-        ImGui::TableSetupColumn("Extra Files", ImGuiTableColumnFlags_WidthFixed, 90.0f * dpiScale);
-        ImGui::TableSetupColumn("ROM", ImGuiTableColumnFlags_WidthFixed, 65.0f * dpiScale);
-        ImGui::TableSetupColumn("UltraDMD", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * dpiScale);
-        ImGui::TableSetupColumn("AltSound", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * dpiScale);
-        ImGui::TableSetupColumn("AltColor", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * dpiScale);
-        ImGui::TableSetupColumn("PUPMedia", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * dpiScale);
-        ImGui::TableSetupColumn("Music", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * dpiScale);
-        ImGui::TableSetupColumn("Images", ImGuiTableColumnFlags_WidthFixed, 175.0f * dpiScale); // Back to 175
-        ImGui::TableSetupColumn("Videos", ImGuiTableColumnFlags_WidthFixed, 100.0f * dpiScale); // Back to 100
+        // Use adjusted scaling to prevent overflow
+        ImGui::TableSetupColumn("Year", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed, 30.0f * adjustedDpiScale);
+        ImGui::TableSetupColumn("Author", ImGuiTableColumnFlags_WidthFixed, 60.0f * adjustedDpiScale);
+        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 200.0f * adjustedDpiScale);
+        ImGui::TableSetupColumn("Version", ImGuiTableColumnFlags_WidthFixed, 35.0f * adjustedDpiScale);
+        ImGui::TableSetupColumn("Extra Files", ImGuiTableColumnFlags_WidthFixed, 90.0f * adjustedDpiScale);
+        ImGui::TableSetupColumn("ROM", ImGuiTableColumnFlags_WidthFixed, 65.0f * adjustedDpiScale);
+        ImGui::TableSetupColumn("UltraDMD", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * adjustedDpiScale);
+        ImGui::TableSetupColumn("AltSound", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * adjustedDpiScale);
+        ImGui::TableSetupColumn("AltColor", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * adjustedDpiScale);
+        ImGui::TableSetupColumn("PUPMedia", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * adjustedDpiScale);
+        ImGui::TableSetupColumn("Music", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 15.0f * adjustedDpiScale);
+        ImGui::TableSetupColumn("Images", ImGuiTableColumnFlags_WidthFixed, 200.0f * adjustedDpiScale); // Increased to fit "Wheel Table B2S Marquee"
+        ImGui::TableSetupColumn("Videos", ImGuiTableColumnFlags_WidthFixed, 120.0f * adjustedDpiScale); // Increased to fit "Table B2S DMD"
         ImGui::TableSetupScrollFreeze(0, 1);
         ImGui::TableHeadersRow();
 
@@ -43,7 +51,7 @@ void TableView::drawTable(std::vector<TableEntry>& tables) {
         }
 
         for (size_t i = 0; i < tables.size(); ++i) {
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, 30.0f * dpiScale);
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, 20.0f * dpiScale); // Reduced for compact look
             ImGui::PushID(static_cast<int>(i));
             bool isSelected = (selectedTable == static_cast<int>(i));
             if (ImGui::TableSetColumnIndex(0)) {
