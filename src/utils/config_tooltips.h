@@ -5,6 +5,8 @@
 #include <string>
 
 static std::map<std::string, std::string> CONFIG_TOOLTIPS = {
+    {"FirstRun", "Set to true to access the initial setup wizard.\n"
+                  "This will be set to false automatically after the first run."},
     {"TablesDir", "Directory where VPX table files are stored"},
     {"StartArgs", "Command-line arguments to pass before the main command"},
     {"CommandToRun", "Path to the VPinballX executable"},
@@ -25,7 +27,15 @@ static std::map<std::string, std::string> CONFIG_TOOLTIPS = {
     {"MusicPath", "Path to music files relative to table folder"},
     {"PUPPackPath", "Path to PUP pack files relative to table folder"},
     {"FallbackEditor", "Default text editor to use"},
-    {"VpxTool", "Path to the VPX tool utility"}
+    {"VpxTool", "Path to the 'vpxtool' utility"},
+    {"EnableDPIAwareness",
+        "Enable automatic DPI scaling based on system settings.\n"
+        "When enabled, the frontend will scale according to your monitor's DPI.\n"
+        "Disable for manual control via DpiScale."},
+    {"DPIScaleFactor",
+        "Manual DPI scale override.\n"
+        "Only used when EnableDPIAwareness is false.\n"
+        "1.0 = 100%, 1.5 = 150%, etc."},
 };
 
 #endif // CONFIG_TOOLTIPS_H
