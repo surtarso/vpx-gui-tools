@@ -87,15 +87,30 @@ void TableView::drawTable(std::vector<TableEntry>& tables) {
                 ImGui::TableSetColumnIndex(2); ImGui::Text("%s", tables[i].name.c_str());
                 ImGui::TableSetColumnIndex(3); ImGui::Text("%s", tables[i].version.c_str());
                 ImGui::TableSetColumnIndex(4); {
-                    std::string extraFiles;
-                    if (tables[i].extraFiles.find("INI") != std::string::npos) {
-                        extraFiles += tables[i].iniModified ? "[INI] " : "INI ";
-                    }
-                    if (tables[i].extraFiles.find("VBS") != std::string::npos) {
-                        extraFiles += tables[i].vbsModified ? "[VBS] " : "VBS ";
-                    }
-                    if (tables[i].extraFiles.find("B2S") != std::string::npos) extraFiles += "B2S";
-                    ImGui::Text("%s", extraFiles.c_str());
+                    // Always show "INI VBS B2S" with color coding
+                    // Colors: Grey (not found), White (found, unmodified), Yellow (found, modified)
+                    ImVec4 greyColor(0.5f, 0.5f, 0.5f, 1.0f);   // Grey for not found
+                    ImVec4 whiteColor(1.0f, 1.0f, 1.0f, 1.0f);   // White for found, unmodified
+                    ImVec4 yellowColor(1.0f, 1.0f, 0.0f, 1.0f);  // Yellow for found, modified
+
+                    // Check INI status
+                    bool iniExists = tables[i].extraFiles.find("INI") != std::string::npos;
+                    bool iniModified = tables[i].iniModified;
+                    ImVec4 iniColor = iniExists ? (iniModified ? yellowColor : whiteColor) : greyColor;
+                    ImGui::TextColored(iniColor, "INI");
+
+                    ImGui::SameLine();
+                    // Check VBS status
+                    bool vbsExists = tables[i].extraFiles.find("VBS") != std::string::npos;
+                    bool vbsModified = tables[i].vbsModified;
+                    ImVec4 vbsColor = vbsExists ? (vbsModified ? yellowColor : whiteColor) : greyColor;
+                    ImGui::TextColored(vbsColor, "VBS");
+
+                    ImGui::SameLine();
+                    // Check B2S status (no modification check for B2S)
+                    bool b2sExists = tables[i].extraFiles.find("B2S") != std::string::npos;
+                    ImVec4 b2sColor = b2sExists ? whiteColor : greyColor;
+                    ImGui::TextColored(b2sColor, "B2S");
                 }
                 ImGui::TableSetColumnIndex(5); ImGui::Text("%s", tables[i].rom.c_str());
                 ImGui::TableSetColumnIndex(6); {
@@ -114,21 +129,55 @@ void TableView::drawTable(std::vector<TableEntry>& tables) {
                     if (!tables[i].music.empty()) ImGui::TextColored(ImVec4(0.4f, 0.6f, 0.9f, 0.85f), "%s", tables[i].music.c_str());
                 }
                 ImGui::TableSetColumnIndex(11); {
+                    // Always show "Wheel Table B2S Marquee" with color coding
+                    // Colors: Green (found), Red (not found)
+                    ImVec4 greenColor(0.0f, 1.0f, 0.0f, 1.0f);  // Green for found
+                    ImVec4 redColor(1.0f, 0.0f, 0.0f, 1.0f);    // Red for not found
+
                     std::string tableDir = std::filesystem::path(tables[i].filepath).parent_path().string();
                     std::string images = tables[i].images;
-                    if (images.find("Wheel") == std::string::npos && checkFilePresence(tableDir, config.getWheelImage())) images += " Wheel";
-                    if (images.find("Table") == std::string::npos && checkFilePresence(tableDir, config.getTableImage())) images += " Table";
-                    if (images.find("B2S") == std::string::npos && checkFilePresence(tableDir, config.getBackglassImage())) images += " B2S";
-                    if (images.find("Marquee") == std::string::npos && checkFilePresence(tableDir, config.getMarqueeImage())) images += " Marquee";
-                    ImGui::Text("%s", images.c_str());
+
+                    // Check Wheel image
+                    bool wheelExists = images.find("Wheel") != std::string::npos || checkFilePresence(tableDir, config.getWheelImage());
+                    ImGui::TextColored(wheelExists ? greenColor : redColor, "Wheel");
+
+                    ImGui::SameLine();
+                    // Check Table image
+                    bool tableImageExists = images.find("Table") != std::string::npos || checkFilePresence(tableDir, config.getTableImage());
+                    ImGui::TextColored(tableImageExists ? greenColor : redColor, "Table");
+
+                    ImGui::SameLine();
+                    // Check B2S image
+                    bool b2sImageExists = images.find("B2S") != std::string::npos || checkFilePresence(tableDir, config.getBackglassImage());
+                    ImGui::TextColored(b2sImageExists ? greenColor : redColor, "B2S");
+
+                    ImGui::SameLine();
+                    // Check Marquee image
+                    bool marqueeExists = images.find("Marquee") != std::string::npos || checkFilePresence(tableDir, config.getMarqueeImage());
+                    ImGui::TextColored(marqueeExists ? greenColor : redColor, "Marquee");
                 }
                 ImGui::TableSetColumnIndex(12); {
+                    // Always show "Table B2S DMD" with color coding
+                    // Colors: Green (found), Red (not found)
+                    ImVec4 greenColor(0.0f, 1.0f, 0.0f, 1.0f);  // Green for found
+                    ImVec4 redColor(1.0f, 0.0f, 0.0f, 1.0f);    // Red for not found
+
                     std::string tableDir = std::filesystem::path(tables[i].filepath).parent_path().string();
                     std::string videos = tables[i].videos;
-                    if (videos.find("Table") == std::string::npos && checkFilePresence(tableDir, config.getTableVideo())) videos += " Table";
-                    if (videos.find("B2S") == std::string::npos && checkFilePresence(tableDir, config.getBackglassVideo())) videos += " B2S";
-                    if (videos.find("DMD") == std::string::npos && checkFilePresence(tableDir, config.getDmdVideo())) videos += " DMD";
-                    ImGui::Text("%s", videos.c_str());
+
+                    // Check Table video
+                    bool tableVideoExists = videos.find("Table") != std::string::npos || checkFilePresence(tableDir, config.getTableVideo());
+                    ImGui::TextColored(tableVideoExists ? greenColor : redColor, "Table");
+
+                    ImGui::SameLine();
+                    // Check B2S video
+                    bool b2sVideoExists = videos.find("B2S") != std::string::npos || checkFilePresence(tableDir, config.getBackglassVideo());
+                    ImGui::TextColored(b2sVideoExists ? greenColor : redColor, "B2S");
+
+                    ImGui::SameLine();
+                    // Check DMD video
+                    bool dmdVideoExists = videos.find("DMD") != std::string::npos || checkFilePresence(tableDir, config.getDmdVideo());
+                    ImGui::TextColored(dmdVideoExists ? greenColor : redColor, "DMD");
                 }
             }
             ImGui::PopID();
