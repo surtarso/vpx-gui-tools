@@ -40,6 +40,9 @@ public:
     std::string getDiffSubCmd() const override { return diffSubCmd; }
     std::string getRomSubCmd() const override { return romSubCmd; }
     std::string getImGuiConf() const override { return imGuiConf; }
+    // New DPI-related getters
+    bool getEnableDPIAwareness() const { return enableDPIAwareness; }
+    float getDPIScaleFactor() const { return dpiScaleFactor; }
 
     // New methods for first-run setup
     void setTablesDir(const std::string& path) override;
@@ -82,6 +85,9 @@ private:
     std::string diffSubCmd;
     std::string romSubCmd;
     std::string imGuiConf;
+    // New DPI-related members
+    bool enableDPIAwareness = true; // Default to true
+    float dpiScaleFactor = 1.0f; // Default to no scaling
 };
 
 #endif // CONFIG_MANAGER_H

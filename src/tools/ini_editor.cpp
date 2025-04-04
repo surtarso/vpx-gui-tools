@@ -82,7 +82,7 @@ void IniEditor::saveIniFile() {
     }
 }
 
-void IniEditor::draw(bool& isOpen) {
+void IniEditor::draw(bool& isOpen) { // Removed needRescale parameter
     float dpiScale = ImGui::GetIO().FontGlobalScale;
     if (dpiScale <= 0.0f) dpiScale = 1.0f;
 
@@ -166,5 +166,9 @@ void IniEditor::draw(bool& isOpen) {
 }
 
 void IniEditor::initExplanations() {
-    explanations = isConfigEditor ? CONFIG_TOOLTIPS : VPX_TOOLTIPS;
+    const auto& source = isConfigEditor ? CONFIG_TOOLTIPS : VPX_TOOLTIPS;
+    explanations.clear();
+    for (const auto& [key, value] : source) {
+        explanations[key] = value;
+    }
 }

@@ -78,7 +78,7 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
         ImGui::SameLine();
         float padding = ImGui::GetStyle().ItemSpacing.x * dpiScale;
         ImGui::SetCursorPosX(playButtonPosX + playButtonWidth + padding);
-        float searchBarWidth = 350.0f * dpiScale;
+        float searchBarWidth = 350.0f * dpiScale; // Scale dynamically
         char searchBuf[300];
         strncpy(searchBuf, searchQuery.c_str(), sizeof(searchBuf) - 1);
         searchBuf[sizeof(searchBuf) - 1] = '\0';

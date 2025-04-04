@@ -23,12 +23,14 @@ void ConfigManager::loadSettings() {
     if (!std::filesystem::exists(configFile)) {
         std::ofstream out(configFile);
         out << "[VPinballX]\n"
-            << "FirstRun=true\n"  // Add FirstRun key
+            << "FirstRun=true\n"
             << "TablesDir=tables\n"
             << "StartArgs=\n"
             << "CommandToRun=vpinballx\n"
             << "EndArgs=\n"
             << "VPinballXIni=" << defaultIniPath << "\n"
+            << "EnableDPIAwareness=true\n" // Default DPI awareness on
+            << "DPIScaleFactor=1.0\n"     // Default no scaling
             << "\n[LauncherWindow]\n"
             << "WindowWidth=1024\n"
             << "WindowHeight=768\n"
@@ -70,6 +72,8 @@ void ConfigManager::loadSettings() {
         commandToRun = "vpinballx";
         endArgs = "";
         vpinballXIni = defaultIniPath;
+        enableDPIAwareness = true; // Default if file fails
+        dpiScaleFactor = 1.0f;
         fallbackEditor = "code";
         vpxTool = prependBasePath("resources/vpxtool");
         vbsSubCmd = "extractvbs";
@@ -106,7 +110,8 @@ void ConfigManager::loadSettings() {
         size_t pos = line.find('=');
         if (pos == std::string::npos) continue;
         std::string key = line.substr(0, pos);
-        std::string value = line.substr(pos + 1);
+
+       std::string value = line.substr(pos + 1);
         key.erase(key.find_last_not_of(" \t") + 1);
         value.erase(0, value.find_first_not_of(" \t"));
 
@@ -125,9 +130,11 @@ void ConfigManager::loadSettings() {
         else if (currentSection == "LauncherWindow") {
             if (key == "WindowWidth") windowWidth = std::stoi(value);
             else if (key == "WindowHeight") windowHeight = std::stoi(value);
+            else if (key == "EnableDPIAwareness") enableDPIAwareness = (value == "true");
+            else if (key == "DPIScaleFactor") dpiScaleFactor = std::stof(value);
         } 
         else if (currentSection == "Images") {
-            if (key == "WheelImage") wheelImage = value; // Relative to table folder
+            if (key == "WheelImage") wheelImage = value;
             else if (key == "TableImage") tableImage = value;
             else if (key == "BackglassImage") backglassImage = value;
             else if (key == "MarqueeImage") marqueeImage = value;
@@ -168,6 +175,8 @@ void ConfigManager::save() {
     std::string newContent;
     bool inVPinballXSection = false;
     bool firstRunWritten = false;
+    bool dpiAwarenessWritten = false;
+    bool dpiScaleWritten = false;
 
     std::istringstream iss(content);
     std::string line;
@@ -178,9 +187,14 @@ void ConfigManager::save() {
         }
         if (line.front() == '[' && line.back() == ']') {
             if (inVPinballXSection) {
-                // End of [VPinballX] section, write FirstRun if not already written
                 if (!firstRunWritten) {
                     newContent += "FirstRun=" + std::string(firstRun ? "true" : "false") + "\n";
+                }
+                if (!dpiAwarenessWritten) {
+                    newContent += "EnableDPIAwareness=" + std::string(enableDPIAwareness ? "true" : "false") + "\n";
+                }
+                if (!dpiScaleWritten) {
+                    newContent += "DPIScaleFactor=" + std::to_string(dpiScaleFactor) + "\n";
                 }
             }
             inVPinballXSection = (line == "[VPinballX]");
@@ -209,14 +223,32 @@ void ConfigManager::save() {
                     newContent += "VPinballXIni=" + vpinballXIni + "\n";
                     continue;
                 }
+                else if (key == "EnableDPIAwareness") {
+                    newContent += "EnableDPIAwareness=" + std::string(enableDPIAwareness ? "true" : "false") + "\n";
+                    dpiAwarenessWritten = true;
+                    continue;
+                }
+                else if (key == "DPIScaleFactor") {
+                    newContent += "DPIScaleFactor=" + std::to_string(dpiScaleFactor) + "\n";
+                    dpiScaleWritten = true;
+                    continue;
+                }
             }
         }
         newContent += line + "\n";
     }
 
-    // If [VPinballX] section was the last section and FirstRun wasn't written
-    if (inVPinballXSection && !firstRunWritten) {
-        newContent += "FirstRun=" + std::string(firstRun ? "true" : "false") + "\n";
+    // Append DPI settings if not written
+    if (inVPinballXSection) {
+        if (!firstRunWritten) {
+            newContent += "FirstRun=" + std::string(firstRun ? "true" : "false") + "\n";
+        }
+        if (!dpiAwarenessWritten) {
+            newContent += "EnableDPIAwareness=" + std::string(enableDPIAwareness ? "true" : "false") + "\n";
+        }
+        if (!dpiScaleWritten) {
+            newContent += "DPIScaleFactor=" + std::to_string(dpiScaleFactor) + "\n";
+        }
     }
 
     std::ofstream outFile(configFile);
@@ -245,7 +277,6 @@ bool ConfigManager::isFirstRun() const {
 }
 
 bool ConfigManager::arePathsValid() const {
-    // Validate table folder: must exist, be a directory, and contain at least one .vpx file
     bool tablePathValid = std::filesystem::exists(tablesDir) && std::filesystem::is_directory(tablesDir);
     if (tablePathValid) {
         bool hasVpxFile = false;
@@ -258,11 +289,9 @@ bool ConfigManager::arePathsValid() const {
         tablePathValid = hasVpxFile;
     }
 
-    // Validate VPinballX executable: must exist and be executable
     bool vpxExecutableValid = std::filesystem::exists(commandToRun) && 
                              (std::filesystem::status(commandToRun).permissions() & std::filesystem::perms::owner_exec) != std::filesystem::perms::none;
 
-    // Validate VPinballX.ini: must exist
     bool vpinballXIniValid = std::filesystem::exists(vpinballXIni);
 
     return tablePathValid && vpxExecutableValid && vpinballXIniValid;

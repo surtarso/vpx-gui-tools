@@ -1,36 +1,32 @@
 #ifndef INI_EDITOR_H
 #define INI_EDITOR_H
 
-#include "utils/structures.h"
 #include <string>
 #include <vector>
-#include <map>
+#include <unordered_map>
+#include "utils/structures.h"
 
 class IniEditor {
 public:
-    IniEditor(const std::string& initialFile, bool isConfigEditor = false);
+    IniEditor(const std::string& initialFile, bool isConfigEditor);
     void loadIniFile(const std::string& filename);
     void saveIniFile();
-    void draw(bool& isOpen);  // isOpen parameter to control visibility
-
-    std::string getCurrentFile() const { return currentIniFile; }
-    bool isEditing() const { return true; } // Always editable for now
-    //void setEditing(bool editing) { } // Placeholder for toggling
+    void draw(bool& isOpen); // Removed needRescale parameter
 
 private:
-    std::map<std::string, ConfigSection> iniData;
-    std::vector<std::string> sections;
-    std::map<std::string, std::string> explanations;
-    std::string currentSection;
+    void initExplanations();
+
     std::string currentIniFile;
+    bool isConfigEditor;
+    std::unordered_map<std::string, std::string> explanations;
+    std::unordered_map<std::string, ConfigSection> iniData;
+    std::vector<std::string> sections;
+    std::string currentSection;
     std::vector<std::string> originalLines;
-    std::map<size_t, std::pair<std::string, std::string>> lineToKey;
+    std::unordered_map<size_t, std::pair<std::string, std::string>> lineToKey;
+    bool wasOpen;
     bool showSavedMessage = false;
     double savedMessageTimer = 0.0;
-    bool isConfigEditor;
-    bool wasOpen; // Track the previous state of isOpen
-
-    void initExplanations();
 };
 
 #endif // INI_EDITOR_H
