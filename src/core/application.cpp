@@ -147,7 +147,7 @@ void Application::run() {
         ImGuiIO& io = ImGui::GetIO();
         io.FontGlobalScale = dpiScale;
 
-        float baseFontSize = 16.0f;
+        float baseFontSize = 15.0f;
         float scaledFontSize = baseFontSize * dpiScale;
         io.Fonts->Clear();
         static const ImWchar glyphRanges[] = {

@@ -1,6 +1,8 @@
 #include "tables/table_loader.h"
 #include <fstream>
 #include <iostream>
+#include <functional> // For std::hash
+#include <thread>     // For parallel parsing
 
 TableLoader::TableLoader(IConfigProvider& config) : config(config) {}
 
@@ -25,20 +27,23 @@ void TableLoader::load(std::vector<TableEntry>& tables, std::vector<TableEntry>&
             if (hasRequiredFields) {
                 auto tablesDirLastWrite = std::filesystem::last_write_time(config.getTablesDir()).time_since_epoch().count();
                 auto lastUpdated = j["last_updated"].get<long long>();
-                if (lastUpdated >= tablesDirLastWrite) {
-                    LOG_DEBUG("Cache is valid, loading from cache: " << cachePath);
+                std::string cachedHash = j.contains("tables_hash") ? j["tables_hash"].get<std::string>() : "";
+                std::string currentHash = computeTablesHash(config.getTablesDir());
+                if (lastUpdated >= tablesDirLastWrite && cachedHash == currentHash) {
+                    LOG_DEBUG("Cache is valid (hash match: " << cachedHash << "), loading from cache: " << cachePath);
                     useCache = true;
                 } else {
-                    LOG_DEBUG("Cache is outdated (tables directory modified), regenerating index...");
+                    LOG_DEBUG("Cache outdated (time: " << lastUpdated << " < " << tablesDirLastWrite 
+                              << ", hash: " << cachedHash << " != " << currentHash << "), regenerating...");
                 }
             } else {
-                LOG_DEBUG("Cache is outdated (missing required fields), regenerating index...");
+                LOG_DEBUG("Cache lacks required fields, regenerating index...");
                 std::filesystem::remove(cachePath);
             }
         }
     } else {
-        LOG_DEBUG("Cache or index not found (cache exists: " << std::filesystem::exists(cachePath) 
-                  << ", index exists: " << std::filesystem::exists(indexPath) << "), generating index...");
+        LOG_DEBUG("Cache or index missing (cache: " << std::filesystem::exists(cachePath) 
+                  << ", index: " << std::filesystem::exists(indexPath) << "), generating index...");
     }
 
     if (useCache) {
@@ -93,6 +98,7 @@ void TableLoader::loadFromCache(const std::string& jsonPath, std::vector<TableEn
 void TableLoader::saveToCache(const std::string& jsonPath, const std::vector<TableEntry>& tables) {
     json j;
     j["last_updated"] = std::chrono::system_clock::now().time_since_epoch().count();
+    j["tables_hash"] = computeTablesHash(config.getTablesDir()); // Store hash for validation
     for (const auto& t : tables) {
         json tj;
         tj["filepath"] = t.filepath;
@@ -119,7 +125,7 @@ void TableLoader::saveToCache(const std::string& jsonPath, const std::vector<Tab
     }
     std::ofstream file(jsonPath);
     file << j.dump(2);
-    LOG_DEBUG("Saved " << tables.size() << " tables to cache: " << jsonPath);
+    LOG_DEBUG("Saved " << tables.size() << " tables to cache: " << jsonPath << " with hash: " << j["tables_hash"]);
 }
 
 void TableLoader::generateIndex() {
@@ -127,7 +133,7 @@ void TableLoader::generateIndex() {
     LOG_DEBUG("Generating index with command: " << cmd);
     int result = system(cmd.c_str());
     if (result != 0) {
-        LOG_DEBUG("Failed to index." << " (command: " << cmd << ")");
+        LOG_DEBUG("Failed to index (command: " << cmd << ")");
     }
 }
 
@@ -142,7 +148,58 @@ void TableLoader::loadTables(std::vector<TableEntry>& tables) {
     std::ifstream file(indexPath);
     json j;
     file >> j;
-    for (const auto& t : j["tables"]) {
+    auto& jt = j["tables"];
+    if (jt.empty()) {
+        LOG_DEBUG("No tables found in index: " << indexPath);
+        return;
+    }
+
+    // Parallel parsing
+    const size_t numThreads = std::thread::hardware_concurrency();
+    const size_t chunkSize = jt.size() / numThreads + (jt.size() % numThreads != 0 ? 1 : 0);
+    std::vector<std::thread> threads;
+    std::vector<std::vector<TableEntry>> threadTables(numThreads);
+
+    LOG_DEBUG("Parsing " << jt.size() << " tables with " << numThreads << " threads, chunk size=" << chunkSize);
+    for (size_t i = 0; i < numThreads; ++i) {
+        size_t start = i * chunkSize;
+        size_t end = std::min(start + chunkSize, jt.size());
+        if (start < end) {
+            threads.emplace_back(&TableLoader::parseTableChunk, this, std::ref(jt), std::ref(threadTables[i]), start, end);
+        }
+    }
+
+    for (auto& t : threads) {
+        t.join();
+    }
+
+    // Merge thread results
+    for (const auto& chunk : threadTables) {
+        tables.insert(tables.end(), chunk.begin(), chunk.end());
+    }
+    LOG_DEBUG("Loaded " << tables.size() << " tables from index");
+}
+
+std::string TableLoader::computeTablesHash(const std::string& dir) {
+    std::string filenames;
+    try {
+        for (const auto& entry : std::filesystem::recursive_directory_iterator(dir)) {
+            if (entry.path().extension() == ".vpx") {
+                filenames += entry.path().filename().string(); // Concatenate .vpx filenames
+            }
+        }
+    } catch (const std::filesystem::filesystem_error& e) {
+        LOG_DEBUG("Failed to hash tables dir " << dir << ": " << e.what());
+        return "";
+    }
+    std::string hash = std::to_string(std::hash<std::string>{}(filenames));
+    LOG_DEBUG("Computed tables hash for " << dir << ": " << hash);
+    return hash;
+}
+
+void TableLoader::parseTableChunk(const json& jt, std::vector<TableEntry>& chunk, size_t start, size_t end) {
+    for (size_t i = start; i < end; ++i) {
+        const auto& t = jt[i];
         TableEntry entry;
         entry.filepath = t["path"].is_string() ? t["path"].get<std::string>() : "Unknown";
         entry.filename = std::filesystem::path(entry.filepath).stem().string();
@@ -163,8 +220,8 @@ void TableLoader::loadTables(std::vector<TableEntry>& tables) {
         entry.requiresPinmame = t["requires_pinmame"].is_boolean() ? t["requires_pinmame"].get<bool>() : false;
         entry.gameName = t["game_name"].is_string() ? t["game_name"].get<std::string>() : "";
         entry.lastRun = "clear";
-        LOG_DEBUG("Loaded from index: " << entry.name << ", requiresPinmame=" << entry.requiresPinmame 
-                  << ", gameName=" << entry.gameName);
+        LOG_DEBUG("Parsed in thread " << std::this_thread::get_id() << ": " << entry.name 
+                  << ", requiresPinmame=" << entry.requiresPinmame << ", gameName=" << entry.gameName);
 
         if (!t["path"].is_string()) LOG_DEBUG("Null path for table at " << entry.filepath);
         if (!tableInfo["table_name"].is_string()) LOG_DEBUG("Null table_name for " << entry.filepath);
@@ -172,6 +229,6 @@ void TableLoader::loadTables(std::vector<TableEntry>& tables) {
         if (!tableInfo["release_date"].is_string()) LOG_DEBUG("Null release_date for " << entry.name);
         if (!tableInfo["table_version"].is_string()) LOG_DEBUG("Null table_version for " << entry.name);
 
-        tables.push_back(entry);
+        chunk.push_back(entry);
     }
 }
