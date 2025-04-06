@@ -17,6 +17,10 @@ set(SOURCES
     src/main.cpp
     src/core/application.cpp
     src/config/config_manager.cpp
+    src/config/media_config.cpp
+    src/config/path_config.cpp
+    src/config/tools_config.cpp
+    src/config/window_config.cpp
     src/tools/ini_editor.cpp
     src/tools/first_run.cpp
     src/launcher/launcher.cpp

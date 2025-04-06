@@ -1,93 +1,73 @@
 #ifndef CONFIG_MANAGER_H
 #define CONFIG_MANAGER_H
 
-#include "utils/logging.h"
 #include "iconfig_provider.h"
-#include <string>
+#include "paths_config.h"
+#include "tools_config.h"
+#include "window_config.h"
+#include "media_config.h"
+#include <memory>
 
+// Central config manager implementing IConfigProvider, delegating to specialized config classes
 class ConfigManager : public IConfigProvider {
 public:
-    ConfigManager(const std::string& basePath);
+    explicit ConfigManager(const std::string& basePath);
     void loadSettings();
     void save() override;
 
-    std::string getBasePath() const override { return basePath; }
-    std::string getTablesDir() const override { return tablesDir; }
-    std::string getStartArgs() const override { return startArgs; }
-    std::string getCommandToRun() const override { return commandToRun; }
-    std::string getEndArgs() const override { return endArgs; }
-    std::string getVPinballXIni() const override { return vpinballXIni; }
-    std::string getFallbackEditor() const override { return fallbackEditor; }
-    std::string getVpxTool() const override { return vpxTool; }
-    std::string getVbsSubCmd() const override { return vbsSubCmd; }
-    std::string getPlaySubCmd() const override { return playSubCmd; }
-    int getWindowWidth() const override { return windowWidth; }
-    int getWindowHeight() const override { return windowHeight; }
-    std::string getRomPath() const override { return romPath; }
-    std::string getAltSoundPath() const override { return altSoundPath; }
-    std::string getAltColorPath() const override { return altColorPath; }
-    std::string getMusicPath() const override { return musicPath; }
-    std::string getPupPackPath() const override { return pupPackPath; }
-    std::string getWheelImage() const override { return wheelImage; }
-    std::string getTableImage() const override { return tableImage; }
-    std::string getBackglassImage() const override { return backglassImage; }
-    std::string getMarqueeImage() const override { return marqueeImage; }
-    std::string getTableVideo() const override { return tableVideo; }
-    std::string getBackglassVideo() const override { return backglassVideo; }
-    std::string getDmdVideo() const override { return dmdVideo; }
-    std::string getVpxtoolIndexFile() const override { return vpxtoolIndexFile; }
-    std::string getIndexerSubCmd() const override { return indexerSubCmd; }
-    std::string getDiffSubCmd() const override { return diffSubCmd; }
-    std::string getRomSubCmd() const override { return romSubCmd; }
-    std::string getImGuiConf() const override { return imGuiConf; }
-    // New DPI-related getters
-    bool getEnableDPIAwareness() const { return enableDPIAwareness; }
-    float getDPIScaleFactor() const { return dpiScaleFactor; }
+    // Core path getters
+    std::string getBasePath() const override { return basePath_; }
+    std::string getTablesDir() const override { return pathsConfig_->getTablesDir(); }
+    std::string getStartArgs() const override { return pathsConfig_->getStartArgs(); }
+    std::string getCommandToRun() const override { return pathsConfig_->getCommandToRun(); }
+    std::string getEndArgs() const override { return pathsConfig_->getEndArgs(); }
+    std::string getVPinballXIni() const override { return pathsConfig_->getVPinballXIni(); }
 
-    // New methods for first-run setup
-    void setTablesDir(const std::string& path) override;
-    void setCommandToRun(const std::string& path) override;
-    void setVPinballXIni(const std::string& path) override;
-    void setFirstRun(bool value) override;
-    bool isFirstRun() const override;
-    bool arePathsValid() const override;
+    // Tool-related getters
+    std::string getFallbackEditor() const override { return toolsConfig_->getFallbackEditor(); }
+    std::string getVpxTool() const override { return toolsConfig_->getVpxTool(); }
+    std::string getVbsSubCmd() const override { return toolsConfig_->getVbsSubCmd(); }
+    std::string getPlaySubCmd() const override { return toolsConfig_->getPlaySubCmd(); }
+    std::string getVpxtoolIndexFile() const override { return toolsConfig_->getVpxtoolIndexFile(); }
+    std::string getIndexerSubCmd() const override { return toolsConfig_->getIndexerSubCmd(); }
+    std::string getDiffSubCmd() const override { return toolsConfig_->getDiffSubCmd(); }
+    std::string getRomSubCmd() const override { return toolsConfig_->getRomSubCmd(); }
+    std::string getImGuiConf() const override { return toolsConfig_->getImGuiConf(); }
+
+    // Window-related getters
+    int getWindowWidth() const override { return windowConfig_->getWindowWidth(); }
+    int getWindowHeight() const override { return windowConfig_->getWindowHeight(); }
+    bool getEnableDPIAwareness() const override { return windowConfig_->getEnableDPIAwareness(); }
+    float getDPIScaleFactor() const override { return windowConfig_->getDPIScaleFactor(); }
+
+    // Media-related getters
+    std::string getRomPath() const override { return mediaConfig_->getRomPath(); }
+    std::string getAltSoundPath() const override { return mediaConfig_->getAltSoundPath(); }
+    std::string getAltColorPath() const override { return mediaConfig_->getAltColorPath(); }
+    std::string getMusicPath() const override { return mediaConfig_->getMusicPath(); }
+    std::string getPupPackPath() const override { return mediaConfig_->getPupPackPath(); }
+    std::string getWheelImage() const override { return mediaConfig_->getWheelImage(); }
+    std::string getTableImage() const override { return mediaConfig_->getTableImage(); }
+    std::string getBackglassImage() const override { return mediaConfig_->getBackglassImage(); }
+    std::string getMarqueeImage() const override { return mediaConfig_->getMarqueeImage(); }
+    std::string getTableVideo() const override { return mediaConfig_->getTableVideo(); }
+    std::string getBackglassVideo() const override { return mediaConfig_->getBackglassVideo(); }
+    std::string getDmdVideo() const override { return mediaConfig_->getDmdVideo(); }
+
+    // First-run setup methods
+    void setTablesDir(const std::string& path) override { pathsConfig_->setTablesDir(path); save(); }
+    void setCommandToRun(const std::string& path) override { pathsConfig_->setCommandToRun(path); save(); }
+    void setVPinballXIni(const std::string& path) override { pathsConfig_->setVPinballXIni(path); save(); }
+    void setFirstRun(bool value) override { pathsConfig_->setFirstRun(value); save(); }
+    bool isFirstRun() const override { return pathsConfig_->isFirstRun(); }
+    bool arePathsValid() const override { return pathsConfig_->arePathsValid(); }
 
 private:
-    std::string basePath;
-    std::string prependBasePath(const std::string& relativePath) const;
-
-    bool firstRun;
-    std::string tablesDir;
-    std::string startArgs;
-    std::string commandToRun;
-    std::string endArgs;
-    std::string vpinballXIni;
-    std::string fallbackEditor;
-    std::string vpxTool;
-    std::string vbsSubCmd;
-    std::string playSubCmd;
-    int windowWidth = 1024;
-    int windowHeight = 768;
-    std::string wheelImage;
-    std::string tableImage;
-    std::string backglassImage;
-    std::string marqueeImage;
-    std::string tableVideo;
-    std::string backglassVideo;
-    std::string dmdVideo;
-    std::string romPath;
-    std::string altSoundPath;
-    std::string altColorPath;
-    std::string musicPath;
-    std::string pupPackPath;
-    std::string vpxtoolIndexFile;
-    std::string indexerSubCmd;
-    std::string diffSubCmd;
-    std::string romSubCmd;
-    std::string imGuiConf;
-    // New DPI-related members
-    bool enableDPIAwareness = true; // Default to true
-    float dpiScaleFactor = 1.0f; // Default to no scaling
+    std::string basePath_; // Root directory for all relative paths
+    std::unique_ptr<PathsConfig> pathsConfig_; // Manages VPinballX paths and first-run state
+    std::unique_ptr<ToolsConfig> toolsConfig_; // Manages tool-related settings
+    std::unique_ptr<WindowConfig> windowConfig_; // Manages window and DPI settings
+    std::unique_ptr<MediaConfig> mediaConfig_; // Manages media and extra folder paths
 };
 
 #endif // CONFIG_MANAGER_H

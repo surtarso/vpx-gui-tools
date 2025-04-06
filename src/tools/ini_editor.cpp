@@ -82,7 +82,7 @@ void IniEditor::saveIniFile() {
     }
 }
 
-void IniEditor::draw(bool& isOpen) { // Removed needRescale parameter
+void IniEditor::draw(bool& isOpen) {
     float dpiScale = ImGui::GetIO().FontGlobalScale;
     if (dpiScale <= 0.0f) dpiScale = 1.0f;
 
@@ -101,20 +101,45 @@ void IniEditor::draw(bool& isOpen) { // Removed needRescale parameter
     std::string windowTitle = isConfigEditor ? "Settings Configuration" : "VPinballX Configuration - Editing: " + std::filesystem::path(currentIniFile).filename().string();
     ImGui::Begin(windowTitle.c_str(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
-    if (ImGui::BeginCombo("Section", currentSection.c_str())) {
-        for (const auto& section : sections) {
-            bool is_selected = (currentSection == section);
-            if (ImGui::Selectable(section.c_str(), is_selected)) currentSection = section;
-            if (is_selected) ImGui::SetItemDefaultFocus();
-        }
-        ImGui::EndCombo();
-    }
-
+    // Calculate heights
     float buttonHeight = ImGui::GetFrameHeight() * dpiScale + ImGui::GetStyle().ItemSpacing.y * dpiScale;
-    float availableHeight = ImGui::GetContentRegionAvail().y - buttonHeight;
-    if (availableHeight < 0) availableHeight = 0;
+    float sectionsHeight = ImGui::GetContentRegionAvail().y - buttonHeight;
+    if (sectionsHeight < 0) sectionsHeight = 0;
 
-    ImGui::BeginChild("KeyValues", ImVec2(0, availableHeight), true);
+    // Left side: Sections pane and buttons below
+    ImGui::BeginGroup();
+    ImGui::BeginChild("SectionsPane", ImVec2(200 * dpiScale, sectionsHeight), true);
+    for (const auto& section : sections) {
+        bool is_selected = (currentSection == section);
+        if (ImGui::Selectable(section.c_str(), is_selected)) {
+            currentSection = section;
+        }
+        if (is_selected) {
+            ImGui::SetItemDefaultFocus();
+        }
+    }
+    ImGui::EndChild();
+
+    // Buttons below sections pane
+    if (ImGui::Button("Save")) {
+        saveIniFile();
+        showSavedMessage = true;
+        savedMessageTimer = ImGui::GetTime();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Close")) {
+        isOpen = false;
+    }
+    ImGui::SameLine();
+    if (showSavedMessage) {
+        ImGui::Text("Saved!");
+        if (ImGui::GetTime() - savedMessageTimer > 2.0) showSavedMessage = false;
+    }
+    ImGui::EndGroup();
+
+    // Right side: Key-values pane, aligned beside sections pane
+    ImGui::SameLine();
+    ImGui::BeginChild("KeyValues", ImVec2(0, sectionsHeight), true);
     if (iniData.count(currentSection)) {
         for (auto& kv : iniData[currentSection].keyValues) {
             ImGui::PushID(kv.first.c_str());
@@ -146,21 +171,6 @@ void IniEditor::draw(bool& isOpen) { // Removed needRescale parameter
         }
     }
     ImGui::EndChild();
-
-    if (ImGui::Button("Save")) {
-        saveIniFile();
-        showSavedMessage = true;
-        savedMessageTimer = ImGui::GetTime();
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Close")) {
-        isOpen = false;
-    }
-    ImGui::SameLine();
-    if (showSavedMessage) {
-        ImGui::Text("Saved!");
-        if (ImGui::GetTime() - savedMessageTimer > 2.0) showSavedMessage = false;
-    }
 
     ImGui::End();
 }
