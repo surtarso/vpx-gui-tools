@@ -1,6 +1,7 @@
 #ifndef LAUNCHER_H
 #define LAUNCHER_H
 
+#include "utils/button_tooltips.h"
 #include "config/iconfig_provider.h"
 #include "tables/table_manager.h"
 #include "launcher/table_view.h"
@@ -28,6 +29,7 @@ private:
     std::string searchQuery;
     bool createIniConfirmed;
     std::string selectedIniPath;
+    ButtonTooltips buttonTooltips;
     std::string feedbackMessage;
     float feedbackMessageTimer = 0.0f;
     const float FEEDBACK_MESSAGE_DURATION = 1.5f; // Reduced to 1.5 seconds as requested

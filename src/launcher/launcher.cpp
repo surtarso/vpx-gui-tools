@@ -88,6 +88,7 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
         ImGui::EndChild();
 
         if (ImGui::Button("⛭")) editingSettings = true;
+        buttonTooltips.renderTooltip("⛭");
         ImGui::SameLine();
         if (ImGui::Button("INI Editor")) {
             int selectedTable = tableView.getSelectedTable();
@@ -102,6 +103,7 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
                 editingIni = true;
             }
         }
+        buttonTooltips.renderTooltip("INI Editor");
         ImGui::SameLine();
         if (ImGui::Button("Extract VBS")) {
             int selectedTable = tableView.getSelectedTable();
@@ -123,16 +125,19 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
                 showNoTablePopup = true;
             }
         }
+        buttonTooltips.renderTooltip("Extract VBS");
         ImGui::SameLine();
         if (ImGui::Button("Open Folder")) {
             int selectedTable = tableView.getSelectedTable();
             tableActions.openFolder(selectedTable >= 0 ? tables[selectedTable].filepath : config.getTablesDir());
         }
+        buttonTooltips.renderTooltip("Open Folder");
         ImGui::SameLine();
         if (ImGui::Button("Refresh")) {
             bool forceFullRefresh = isShiftKeyDown();
             tableManager->refreshTables(forceFullRefresh);
         }
+        buttonTooltips.renderTooltip("Refresh");
         ImGui::SameLine();
         float playButtonPosX = ImGui::GetCursorPosX();
         float playButtonWidth = ImGui::CalcTextSize("▶ Play").x + ImGui::GetStyle().FramePadding.x * 2 * dpiScale;
@@ -148,6 +153,7 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
                 showNoTablePopup = true;
             }
         }
+        buttonTooltips.renderTooltip("▶ Play");
         ImGui::SameLine();
         float padding = ImGui::GetStyle().ItemSpacing.x * dpiScale;
         ImGui::SetCursorPosX(playButtonPosX + playButtonWidth + padding);
@@ -175,7 +181,7 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
         }
 
         ImGui::PopItemWidth();
-
+        buttonTooltips.renderTooltip("X");
         ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::CalcTextSize("✖ Quit").x - ImGui::GetStyle().ItemSpacing.x * 2 * dpiScale);
         if (ImGui::Button("✖ Quit")) quitRequested = true;
 
@@ -196,6 +202,7 @@ void Launcher::draw(std::vector<TableEntry>& tables, bool& editingIni, bool& edi
             ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, alpha), "%s", feedbackMessage.c_str());
             ImGui::End();
         }
+        buttonTooltips.renderTooltip("✖ Quit");
     }
     ImGui::End();
 
