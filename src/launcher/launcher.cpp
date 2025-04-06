@@ -45,8 +45,10 @@ void Launcher::handlePendingOperations(std::vector<TableEntry>& tables) {
                 }
 
                 if (pendingPlay && pendingTableIndex != static_cast<size_t>(-1) && pendingTableIndex < tables.size()) {
-                    bool success = tableActions.launchTable(tables[pendingTableIndex].filepath);
-                    tableManager->updateTableLastRun(pendingTableIndex, success ? "success" : "failed");
+                    std::string filepath = tables[pendingTableIndex].filepath;
+                    bool success = tableActions.launchTable(filepath);
+                    LOG_DEBUG("Launched table at index " << pendingTableIndex << ": " << filepath << ", success=" << success);
+                    tableManager->updateTableLastRun(filepath, success ? "success" : "failed");
                     pendingPlay = false;
                     pendingTableIndex = static_cast<size_t>(-1);
                 }

@@ -63,15 +63,37 @@ void TableManager::updateTablesAsync() {
     updater.updateTablesAsync(tables, filteredTables, loading);
 }
 
-void TableManager::updateTableLastRun(size_t index, const std::string& status) {
+void TableManager::updateTableLastRun(const std::string& filepath, const std::string& status) {
     std::lock_guard<std::mutex> lock(tablesMutex);
-    if (index >= tables.size() || index >= filteredTables.size()) {
-        LOG_DEBUG("Invalid index for updating lastRun: " << index);
+    bool found = false;
+    
+    for (size_t i = 0; i < tables.size(); ++i) {
+        if (tables[i].filepath == filepath) {
+            tables[i].lastRun = status;
+            if (status == "success") {
+                tables[i].playCount++; // Increment on success
+            }
+            LOG_DEBUG("Updated table " << tables[i].name << " (" << filepath << "): lastRun=" << status << ", playCount=" << tables[i].playCount);
+            found = true;
+            break;
+        }
+    }
+    
+    for (size_t i = 0; i < filteredTables.size(); ++i) {
+        if (filteredTables[i].filepath == filepath) {
+            filteredTables[i].lastRun = status;
+            if (status == "success") {
+                filteredTables[i].playCount++;
+            }
+            break;
+        }
+    }
+    
+    if (!found) {
+        LOG_DEBUG("Table not found for filepath: " << filepath);
         return;
     }
-    tables[index].lastRun = status;
-    filteredTables[index].lastRun = status;
-    LOG_DEBUG("Updated lastRun for table " << tables[index].name << " to " << status);
+    
     saveToCache();
 }
 
@@ -112,6 +134,7 @@ void TableManager::saveToCache() {
         tj["requiresPinmame"] = t.requiresPinmame;
         tj["gameName"] = t.gameName;
         tj["lastRun"] = t.lastRun;
+        tj["playCount"] = t.playCount;
         j["tables"].push_back(tj);
     }
     std::ofstream file(jsonPath);

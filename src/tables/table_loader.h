@@ -50,7 +50,7 @@ private:
     // chunk: Vector to store parsed table entries for this chunk
     // start: Starting index in jt for this chunk
     // end: Ending index in jt for this chunk
-    void parseTableChunk(const json& jt, std::vector<TableEntry>& chunk, size_t start, size_t end);
+    void parseTableChunk(const json& jt, std::vector<TableEntry>& chunk, size_t start, size_t end, std::map<std::string, std::string>& cachedLastRun);
 
     IConfigProvider& config; // Reference to configuration provider
 };

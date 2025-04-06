@@ -100,6 +100,9 @@ void TableView::drawTable(std::vector<TableEntry>& tables) {
                     if (tables[i].lastRun == "failed") {
                         ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Failed to launch table.");
                     }
+                    if (tables[i].playCount > 0) {
+                        ImGui::Text("Played: %d time%s", tables[i].playCount, tables[i].playCount == 1 ? "" : "s");
+                    }
                     ImGui::EndTooltip();
                 }
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0) && selectedTable >= 0) {
@@ -111,12 +114,13 @@ void TableView::drawTable(std::vector<TableEntry>& tables) {
                     }
                 }
                 if (isSelected && ImGui::IsKeyPressed(ImGuiKey_Enter) && selectedTable >= 0) {
-                    std::string cmd = config.getStartArgs() + " \"" + config.getCommandToRun() + "\" " + config.getPlaySubCmd() + " \"" + tables[selectedTable].filepath + "\" " + config.getEndArgs();
+                    std::string filepath = tables[selectedTable].filepath;
+                    std::string cmd = config.getStartArgs() + " \"" + config.getCommandToRun() + "\" " + config.getPlaySubCmd() + " \"" + filepath + "\" " + config.getEndArgs();
                     int result = system(cmd.c_str());
                     std::string status = (result == 0) ? "success" : "failed";
-                    tableManager->updateTableLastRun(selectedTable, status);
+                    tableManager->updateTableLastRun(filepath, status);
                     if (result != 0) {
-                        LOG_DEBUG("Failed to open: " << tables[selectedTable].filepath << " (command: " << cmd << ")");
+                        LOG_DEBUG("Failed to open: " << filepath << " (command: " << cmd << ")");
                     }
                 }
                 ImGui::TableSetColumnIndex(1); ImGui::Text("%s", tables[i].brand.c_str());

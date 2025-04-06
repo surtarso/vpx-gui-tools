@@ -89,6 +89,7 @@ void TableLoader::loadFromCache(const std::string& jsonPath, std::vector<TableEn
         entry.requiresPinmame = t.contains("requiresPinmame") ? t["requiresPinmame"].get<bool>() : false;
         entry.gameName = t.contains("gameName") ? t["gameName"].get<std::string>() : "";
         entry.lastRun = t.contains("lastRun") ? t["lastRun"].get<std::string>() : "clear";
+        entry.playCount = t.contains("playCount") ? t["playCount"].get<int>() : 0; // Load playCount
         tables.push_back(entry);
         LOG_DEBUG("Loaded from cache: " << entry.name << ", requiresPinmame=" << entry.requiresPinmame 
                   << ", gameName=" << entry.gameName << ", rom=" << entry.rom << ", lastRun=" << entry.lastRun);
@@ -121,6 +122,7 @@ void TableLoader::saveToCache(const std::string& jsonPath, const std::vector<Tab
         tj["requiresPinmame"] = t.requiresPinmame;
         tj["gameName"] = t.gameName;
         tj["lastRun"] = t.lastRun;
+        tj["playCount"] = t.playCount; // Save playCount
         j["tables"].push_back(tj);
     }
     std::ofstream file(jsonPath);
@@ -145,6 +147,20 @@ void TableLoader::loadTables(std::vector<TableEntry>& tables) {
         return;
     }
 
+    // Load existing cache to preserve lastRun
+    std::map<std::string, std::string> cachedLastRun;
+    std::string cachePath = config.getBasePath() + "resources/tables_index.json";
+    if (std::filesystem::exists(cachePath)) {
+        std::ifstream cacheFile(cachePath);
+        json j;
+        cacheFile >> j;
+        for (const auto& t : j["tables"]) {
+            if (t.contains("filepath") && t.contains("lastRun")) {
+                cachedLastRun[t["filepath"].get<std::string>()] = t["lastRun"].get<std::string>();
+            }
+        }
+    }
+
     std::ifstream file(indexPath);
     json j;
     file >> j;
@@ -154,7 +170,6 @@ void TableLoader::loadTables(std::vector<TableEntry>& tables) {
         return;
     }
 
-    // Parallel parsing
     const size_t numThreads = std::thread::hardware_concurrency();
     const size_t chunkSize = jt.size() / numThreads + (jt.size() % numThreads != 0 ? 1 : 0);
     std::vector<std::thread> threads;
@@ -165,7 +180,7 @@ void TableLoader::loadTables(std::vector<TableEntry>& tables) {
         size_t start = i * chunkSize;
         size_t end = std::min(start + chunkSize, jt.size());
         if (start < end) {
-            threads.emplace_back(&TableLoader::parseTableChunk, this, std::ref(jt), std::ref(threadTables[i]), start, end);
+            threads.emplace_back(&TableLoader::parseTableChunk, this, std::ref(jt), std::ref(threadTables[i]), start, end, std::ref(cachedLastRun));
         }
     }
 
@@ -173,7 +188,6 @@ void TableLoader::loadTables(std::vector<TableEntry>& tables) {
         t.join();
     }
 
-    // Merge thread results
     for (const auto& chunk : threadTables) {
         tables.insert(tables.end(), chunk.begin(), chunk.end());
     }
@@ -197,7 +211,19 @@ std::string TableLoader::computeTablesHash(const std::string& dir) {
     return hash;
 }
 
-void TableLoader::parseTableChunk(const json& jt, std::vector<TableEntry>& chunk, size_t start, size_t end) {
+void TableLoader::parseTableChunk(const json& jt, std::vector<TableEntry>& chunk, size_t start, size_t end, std::map<std::string, std::string>& cachedLastRun) {
+    std::map<std::string, int> cachedPlayCount; // Add playCount cache
+    std::string cachePath = config.getBasePath() + "resources/tables_index.json";
+    if (std::filesystem::exists(cachePath)) {
+        std::ifstream cacheFile(cachePath);
+        json j;
+        cacheFile >> j;
+        for (const auto& t : j["tables"]) {
+            if (t.contains("filepath") && t.contains("playCount")) {
+                cachedPlayCount[t["filepath"].get<std::string>()] = t["playCount"].get<int>();
+            }
+        }
+    }
     for (size_t i = start; i < end; ++i) {
         const auto& t = jt[i];
         TableEntry entry;
@@ -222,6 +248,12 @@ void TableLoader::parseTableChunk(const json& jt, std::vector<TableEntry>& chunk
         entry.lastRun = "clear";
         LOG_DEBUG("Parsed in thread " << std::this_thread::get_id() << ": " << entry.name 
                   << ", requiresPinmame=" << entry.requiresPinmame << ", gameName=" << entry.gameName);
+        
+                  // Set lastRun from cache, default to "clear" only if not found
+        entry.lastRun = cachedLastRun.count(entry.filepath) ? cachedLastRun[entry.filepath] : "clear";
+        entry.playCount = cachedPlayCount.count(entry.filepath) ? cachedPlayCount[entry.filepath] : 0; // Preserve playCount
+        LOG_DEBUG("Parsed in thread " << std::this_thread::get_id() << ": " << entry.name 
+                  << ", lastRun=" << entry.lastRun);
 
         if (!t["path"].is_string()) LOG_DEBUG("Null path for table at " << entry.filepath);
         if (!tableInfo["table_name"].is_string()) LOG_DEBUG("Null table_name for " << entry.filepath);

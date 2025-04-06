@@ -17,7 +17,7 @@ public:
     void filterTables(const std::string& query);
     void setSortSpecs(int columnIdx, bool ascending);
     void updateTablesAsync();
-    void updateTableLastRun(size_t index, const std::string& status);
+    void updateTableLastRun(const std::string& filepath, const std::string& status); // Replace size_t index version
     void refreshTables(bool forceFullRefresh = false); // Modified to accept forceFullRefresh
 
     std::vector<TableEntry>& getTables() { return filteredTables; }

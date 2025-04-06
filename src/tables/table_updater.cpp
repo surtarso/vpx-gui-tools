@@ -147,12 +147,11 @@ void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vecto
         loading = true;
         std::lock_guard<std::mutex> lock(tablesMutex);
 
-        std::vector<std::string> lastRunValues(tables.size());
+        std::vector<std::pair<std::string, int>> preservedValues(tables.size());
         for (size_t i = 0; i < tables.size(); ++i) {
-            lastRunValues[i] = tables[i].lastRun;
+            preservedValues[i] = {tables[i].lastRun, tables[i].playCount};
         }
 
-        std::vector<size_t> invalidIndices;
         const size_t numThreads = std::thread::hardware_concurrency();
         const size_t chunkSize = tables.size() / numThreads + (tables.size() % numThreads != 0 ? 1 : 0);
         std::vector<std::thread> threads;
@@ -168,23 +167,9 @@ void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vecto
             thread.join();
         }
 
-        // Collect invalid indices post-threading
         for (size_t i = 0; i < tables.size(); ++i) {
-            std::string folder = std::filesystem::path(tables[i].filepath).parent_path().string();
-            if (!std::filesystem::exists(folder)) {
-                invalidIndices.push_back(i);
-            }
-        }
-
-        std::sort(invalidIndices.begin(), invalidIndices.end(), std::greater<size_t>());
-        for (size_t idx : invalidIndices) {
-            LOG_DEBUG("Removing invalid table at index " << idx << ": " << tables[idx].filepath);
-            tables.erase(tables.begin() + idx);
-            lastRunValues.erase(lastRunValues.begin() + idx);
-        }
-
-        for (size_t i = 0; i < tables.size(); ++i) {
-            tables[i].lastRun = lastRunValues[i];
+            tables[i].lastRun = preservedValues[i].first;
+            tables[i].playCount = preservedValues[i].second;
         }
 
         json j;
@@ -211,6 +196,7 @@ void TableUpdater::updateTablesAsync(std::vector<TableEntry>& tables, std::vecto
             tj["requiresPinmame"] = t.requiresPinmame;
             tj["gameName"] = t.gameName;
             tj["lastRun"] = t.lastRun;
+            tj["playCount"] = t.playCount; // Save playCount
             j["tables"].push_back(tj);
         }
         std::ofstream file(config.getBasePath() + "resources/tables_index.json");
