@@ -64,7 +64,7 @@
 
 ## **INI Editor**  
 
-![image](https://github.com/user-attachments/assets/35dd68cf-e8b7-43ad-bc09-bea7c6d0082e)
+![image](https://github.com/user-attachments/assets/03aa5b51-129c-4e6b-bebb-0e39e81a3ac1)
 
 ## **Editor Features:**  
  - Explanations for each variable [**(need help!)**](https://github.com/surtarso/vpx-gui-tools/wiki/Adding-VPinballX.ini-Tooltips)
