@@ -22,7 +22,7 @@
 
 1. **Download the repository** to any folder of your choice.
    ```bash
-   git clone --recurse-submodules https://github.com/surtarso/vpx-gui-tools.git
+   git clone --recurse-submodules --shallow-submodules https://github.com/surtarso/vpx-gui-tools.git
    ```
    
 2. **Install dependencies:**  
