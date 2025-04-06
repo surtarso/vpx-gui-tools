@@ -2,7 +2,7 @@
 <p align="center">A <a href="https://github.com/vpinball/vpinball">VPinballX</a> GUI tool for launching VPX tables, editing INI settings, extracting VBS scripts, and more with "just a mouse click".</p>
 <p align="center"><i>Now in C++ and powered by <a href="https://github.com/francisdb/vpxtool">vpxtool</a>! "Harder, better, faster, stronger"</i></p>
 
-![image](https://github.com/user-attachments/assets/596cb02d-4078-45a7-a642-8706b1d18e5a)
+![image](https://github.com/user-attachments/assets/04e07077-8886-4f70-aa47-4c68e8ac2b7e)
 
 <p align="center"><i>This tool is part of the <a href="https://github.com/surtarso/ASAPCabinetFE">ASAPCabinetFE</a> ecosystem.</i></p>
 
