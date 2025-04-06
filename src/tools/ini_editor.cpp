@@ -1,7 +1,7 @@
 #include "tools/ini_editor.h"
 #include "utils/vpx_tooltips.h"
 #include "utils/config_tooltips.h"
-#include "imgui.h"
+#include <imgui.h>
 #include <fstream>
 #include <iostream>
 #include <filesystem>

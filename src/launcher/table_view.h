@@ -5,7 +5,7 @@
 #include "utils/structures.h"
 #include "tables/table_manager.h"
 #include "config/iconfig_provider.h"
-#include "imgui.h"
+#include <imgui.h>
 
 class TableView {
 public:

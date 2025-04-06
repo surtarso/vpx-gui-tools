@@ -1,10 +1,10 @@
 #ifndef INI_EDITOR_H
 #define INI_EDITOR_H
 
+#include "utils/structures.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include "utils/structures.h"
 
 class IniEditor {
 public:

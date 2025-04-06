@@ -21,6 +21,7 @@ void ConfigManager::loadSettings() {
     std::string configFile = prependBasePath("resources/settings.ini");
 
     if (!std::filesystem::exists(configFile)) {
+        // Create the settings.ini file with default values
         std::ofstream out(configFile);
         out << "[VPinballX]\n"
             << "FirstRun=true\n"
@@ -65,6 +66,7 @@ void ConfigManager::loadSettings() {
 
     std::ifstream file(configFile);
     if (!file.is_open()) {
+        // If the file cannot be opened, set default values
         std::cerr << "Could not open " << configFile << std::endl;
         firstRun = true;
         tablesDir = prependBasePath("tables");
@@ -72,9 +74,9 @@ void ConfigManager::loadSettings() {
         commandToRun = "vpinballx";
         endArgs = "";
         vpinballXIni = defaultIniPath;
-        enableDPIAwareness = true; // Default if file fails
+        enableDPIAwareness = true;
         dpiScaleFactor = 1.0f;
-        fallbackEditor = "code"; // Fixed typo: was "codeI"
+        fallbackEditor = "code"; 
         vpxTool = prependBasePath("resources/vpxtool");
         vbsSubCmd = "extractvbs";
         playSubCmd = "-Play";
