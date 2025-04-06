@@ -13,7 +13,6 @@ PathsConfig::PathsConfig(const std::string& basePath)
       commandToRun_(prependBasePath("vpinballx")),
       endArgs_(""),
       vpinballXIni_(std::string(std::getenv("HOME") ? std::getenv("HOME") : "") + "/.vpinball/VPinballX.ini") {
-    std::filesystem::create_directories(tablesDir_); // Ensure tables dir exists
 }
 
 // Prepends basePath_ to relative paths, leaving absolute paths unchanged
