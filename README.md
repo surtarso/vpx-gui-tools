@@ -2,7 +2,7 @@
 <p align="center">A <a href="https://github.com/vpinball/vpinball">VPinballX</a> GUI tool for launching VPX tables, editing INI settings, extracting VBS scripts, and more with "just a mouse click".</p>
 <p align="center"><i>Now in C++ and powered by <a href="https://github.com/francisdb/vpxtool">vpxtool</a>! "Harder, better, faster, stronger"</i></p>
 
-![image](https://github.com/user-attachments/assets/e8d96bd5-8c40-440b-80ea-721f30e67931)
+![image](https://github.com/user-attachments/assets/04e07077-8886-4f70-aa47-4c68e8ac2b7e)
 
 <p align="center"><i>This tool is part of the <a href="https://github.com/surtarso/ASAPCabinetFE">ASAPCabinetFE</a> ecosystem.</i></p>
 
@@ -64,7 +64,7 @@
 
 ## **INI Editor**  
 
-![image](https://github.com/user-attachments/assets/35dd68cf-e8b7-43ad-bc09-bea7c6d0082e)
+![image](https://github.com/user-attachments/assets/4f084731-fbb8-45c8-b323-bb8db114b3e8)
 
 ## **Editor Features:**  
  - Explanations for each variable [**(need help!)**](https://github.com/surtarso/vpx-gui-tools/wiki/Adding-VPinballX.ini-Tooltips)
