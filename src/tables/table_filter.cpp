@@ -35,7 +35,7 @@ void TableFilter::filterTables(const std::vector<TableEntry>& tables, std::vecto
     std::sort(filteredTables.begin(), filteredTables.end(), [this](const TableEntry& a, const TableEntry& b) {
         switch (sortColumn) {
             case 0: return sortAscending ? a.year < b.year : a.year > b.year;
-            case 1: return sortAscending ? a.brand < b.brand : a.brand > b.brand;
+            case 1: return sortAscending ? a.author < b.author : a.author > b.author;
             case 2: return sortAscending ? a.name < b.name : a.name > b.name;
             case 3: return sortAscending ? a.version < b.version : a.version > b.version;
             case 4: return sortAscending ? a.extraFiles < b.extraFiles : a.extraFiles > b.extraFiles;

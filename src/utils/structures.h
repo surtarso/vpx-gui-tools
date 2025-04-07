@@ -12,7 +12,7 @@ struct ConfigSection {
 
 struct TableEntry {
     std::string year;
-    std::string brand;
+    std::string author;
     std::string name;
     std::string version;    // Table version from vpxtool
     std::string extraFiles; // INI, VBS, B2S status

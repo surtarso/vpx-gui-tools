@@ -75,6 +75,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 
 # Build type-specific flags
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_definitions(-DDEBUG_LOGGING)
     target_compile_options(${PROJECT_NAME} PRIVATE -g)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
     target_compile_options(${PROJECT_NAME} PRIVATE -O2)

@@ -3,6 +3,12 @@
 #include <iostream>
 #include <functional> // For std::hash
 #include <thread>     // For parallel parsing
+#include <algorithm>
+#include <cctype>
+#include <sstream>
+#include <vector>
+#include <string>
+#include <regex>
 
 TableLoader::TableLoader(IConfigProvider& config) : config(config) {}
 
@@ -72,7 +78,7 @@ void TableLoader::loadFromCache(const std::string& jsonPath, std::vector<TableEn
         entry.filepath = t["filepath"];
         entry.filename = t["filename"];
         entry.year = t["year"];
-        entry.brand = t["brand"];
+        entry.author = t["author"];
         entry.name = t["name"];
         entry.version = t["version"];
         entry.extraFiles = t["extraFiles"];
@@ -105,7 +111,7 @@ void TableLoader::saveToCache(const std::string& jsonPath, const std::vector<Tab
         tj["filepath"] = t.filepath;
         tj["filename"] = t.filename;
         tj["year"] = t.year;
-        tj["brand"] = t.brand;
+        tj["author"] = t.author;
         tj["name"] = t.name;
         tj["version"] = t.version;
         tj["extraFiles"] = t.extraFiles;
@@ -211,8 +217,65 @@ std::string TableLoader::computeTablesHash(const std::string& dir) {
     return hash;
 }
 
+// Extract words from a string, removing content in parentheses
+std::vector<std::string> extractWords(const std::string& s) {
+    std::string mainTitle = s.substr(0, s.find('('));
+    size_t end = mainTitle.find_last_not_of(' ');
+    if (end != std::string::npos) {
+        mainTitle = mainTitle.substr(0, end + 1);
+    } else {
+        mainTitle.clear();
+    }
+    std::istringstream iss(mainTitle);
+    std::vector<std::string> words;
+    std::string word;
+    while (iss >> word) {
+        std::transform(word.begin(), word.end(), word.begin(), ::tolower);
+        words.push_back(word);
+    }
+    return words;
+}
+
+// Check if two strings share at least one common word
+bool areSimilar(const std::string& s1, const std::string& s2) {
+    auto words1 = extractWords(s1);
+    auto words2 = extractWords(s2);
+    for (const auto& word : words1) {
+        if (std::find(words2.begin(), words2.end(), word) != words2.end()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::string extractYear(const std::string& s) {
+    std::regex yearPattern(R"(\b(19|20)\d{2}\b)");
+    std::smatch match;
+    if (std::regex_search(s, match, yearPattern)) {
+        return match.str();
+    }
+    return "";
+}
+
+std::string parseReleaseDate(const std::string& release) {
+    if (release.empty()) return "";
+
+    if (release.size() >= 10 && std::all_of(release.begin() + 6, release.begin() + 10, ::isdigit)) {
+        return release.substr(6, 4);
+    }
+
+    std::regex shortDatePattern(R"(\b(\d{1,2})[/-](\d{1,2})[/-](\d{2})\b)");
+    std::smatch match;
+    if (std::regex_search(release, match, shortDatePattern) && match.size() == 4) {
+        std::string yearStr = match[3].str();
+        return (std::stoi(yearStr) <= 99) ? "19" + yearStr : yearStr;
+    }
+
+    return extractYear(release);
+}
+
 void TableLoader::parseTableChunk(const json& jt, std::vector<TableEntry>& chunk, size_t start, size_t end, std::map<std::string, std::string>& cachedLastRun) {
-    std::map<std::string, int> cachedPlayCount; // Add playCount cache
+    std::map<std::string, int> cachedPlayCount;
     std::string cachePath = config.getBasePath() + "resources/tables_index.json";
     if (std::filesystem::exists(cachePath)) {
         std::ifstream cacheFile(cachePath);
@@ -231,27 +294,40 @@ void TableLoader::parseTableChunk(const json& jt, std::vector<TableEntry>& chunk
         entry.filename = std::filesystem::path(entry.filepath).stem().string();
 
         auto tableInfo = t["table_info"];
-        entry.name = tableInfo["table_name"].is_string() && !tableInfo["table_name"].get<std::string>().empty() 
-                     ? tableInfo["table_name"].get<std::string>() : entry.filename;
-        entry.brand = tableInfo["author_name"].is_string() ? tableInfo["author_name"].get<std::string>() : "Unknown";
-        std::string release = tableInfo["release_date"].is_string() ? tableInfo["release_date"].get<std::string>() : "";
-        if (release.size() >= 10 && std::all_of(release.begin() + 6, release.begin() + 10, ::isdigit)) {
-            entry.year = release.substr(6, 4); // "14.12.2024" → "2024"
+        std::string tableName;
+        if (tableInfo["table_name"].is_string()) {
+            tableName = tableInfo["table_name"].get<std::string>();
+            if (!tableName.empty() && areSimilar(tableName, entry.filename)) {
+                entry.name = tableName;
+            } else {
+                entry.name = entry.filename;
+            }
         } else {
-            entry.year = "Unknown";
-            if (!release.empty()) LOG_DEBUG("Invalid release_date for " << entry.name << ": " << release);
+            entry.name = entry.filename;
+        }
+        entry.author = tableInfo["author_name"].is_string() ? tableInfo["author_name"].get<std::string>() : "Unknown";
+        std::string release = tableInfo["release_date"].is_string() ? tableInfo["release_date"].get<std::string>() : "";
+        entry.year = parseReleaseDate(release);
+        if (entry.year.empty()) {
+            entry.year = extractYear(entry.filename); // Try filename first
+            if (entry.year.empty()) {
+                entry.year = extractYear(entry.name); // fallback to name, probably not a good idea.
+                if (entry.year.empty()) {
+                    entry.year = "Unknown";
+                }
+            }
+        }
+        if (entry.year == "Unknown" && !release.empty()) {
+            LOG_DEBUG("Invalid release_date for " << entry.name << ": " << release);
         }
         entry.version = tableInfo["table_version"].is_string() ? tableInfo["table_version"].get<std::string>() : "Unknown";
 
         entry.requiresPinmame = t["requires_pinmame"].is_boolean() ? t["requires_pinmame"].get<bool>() : false;
         entry.gameName = t["game_name"].is_string() ? t["game_name"].get<std::string>() : "";
-        entry.lastRun = "clear";
+        entry.lastRun = cachedLastRun.count(entry.filepath) ? cachedLastRun[entry.filepath] : "clear";
+        entry.playCount = cachedPlayCount.count(entry.filepath) ? cachedPlayCount[entry.filepath] : 0;
         LOG_DEBUG("Parsed in thread " << std::this_thread::get_id() << ": " << entry.name 
                   << ", requiresPinmame=" << entry.requiresPinmame << ", gameName=" << entry.gameName);
-        
-                  // Set lastRun from cache, default to "clear" only if not found
-        entry.lastRun = cachedLastRun.count(entry.filepath) ? cachedLastRun[entry.filepath] : "clear";
-        entry.playCount = cachedPlayCount.count(entry.filepath) ? cachedPlayCount[entry.filepath] : 0; // Preserve playCount
         LOG_DEBUG("Parsed in thread " << std::this_thread::get_id() << ": " << entry.name 
                   << ", lastRun=" << entry.lastRun);
 

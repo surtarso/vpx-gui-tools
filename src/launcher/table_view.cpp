@@ -95,7 +95,7 @@ void TableView::drawTable(std::vector<TableEntry>& tables) {
                 }
                 if (ImGui::IsItemHovered()) {
                     ImGui::BeginTooltip();
-                    ImGui::Text("Name: %s", tables[i].name.c_str());
+                    // ImGui::Text("Name: %s", tables[i].name.c_str());
                     ImGui::Text("Filename: %s", tables[i].filename.c_str());
                     if (tables[i].lastRun == "failed") {
                         ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Failed to launch table.");
@@ -123,7 +123,7 @@ void TableView::drawTable(std::vector<TableEntry>& tables) {
                         LOG_DEBUG("Failed to open: " << filepath << " (command: " << cmd << ")");
                     }
                 }
-                ImGui::TableSetColumnIndex(1); ImGui::Text("%s", tables[i].brand.c_str());
+                ImGui::TableSetColumnIndex(1); ImGui::Text("%s", tables[i].author.c_str());
                 ImGui::TableSetColumnIndex(2); {
                     if (tables[i].lastRun == "failed") {
                         ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "%s", tables[i].name.c_str());

@@ -117,7 +117,7 @@ void TableManager::saveToCache() {
         tj["filepath"] = t.filepath;
         tj["filename"] = t.filename;
         tj["year"] = t.year;
-        tj["brand"] = t.brand;
+        tj["author"] = t.author;
         tj["name"] = t.name;
         tj["version"] = t.version;
         tj["extraFiles"] = t.extraFiles;
