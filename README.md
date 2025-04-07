@@ -70,7 +70,7 @@
  - Explanations for each variable [**(need help!)**](https://github.com/surtarso/vpx-gui-tools/wiki/Adding-VPinballX.ini-Tooltips)
  - Category-split Sections 
  - Create and edit single table INI files or default vpx ini
- - Won’t override INI-code comments 
+ - Keeps the ini file intact
 
 ## Contribute
 
