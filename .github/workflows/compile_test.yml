@@ -9,8 +9,8 @@ on:
       - "resources/**"                # Watch all resource files
       - "CMakeLists.txt"              # Watch CMakeLists.txt instead of Makefile
       - "external/imgui/**"           # Watch ImGui files
-      - "external/json/**"           # Watch json files
-      # - "external/tinyfiledialogs/**" # Watch tinyfiledialogs files
+      - "external/json/**"            # Watch json files
+      - "external/ImGuiFileDialog/**" # Watch ImGuiFileDialog files
   pull_request:
     branches: [ "main" ]
 
