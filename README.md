@@ -1,3 +1,10 @@
+# PLEASE NOTE:
+
+---
+This software is currently (and slowly) being ported to be part of [ASAPCabinetFE](https://github.com/surtarso/ASAPCabinetFE) as a standalone editor and this repository will soon™ be archived. Unless things go wrong and I end up keeping them separate. Let's see what happens =)
+
+---
+
 <h1 align="center">VPX GUI Tools for Linux</h1>
 <p align="center">A <a href="https://github.com/vpinball/vpinball">VPinballX</a> GUI tool for launching VPX tables, editing INI settings, extracting VBS scripts, and more with "just a mouse click".</p>
 <p align="center"><i>Now in C++ and powered by <a href="https://github.com/francisdb/vpxtool">vpxtool</a>! "Harder, better, faster, stronger"</i></p>
