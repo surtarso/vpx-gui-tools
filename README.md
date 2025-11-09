@@ -1,7 +1,9 @@
 # PLEASE NOTE:
 
----
 This software is currently (and slowly) being ported to be part of [ASAPCabinetFE](https://github.com/surtarso/ASAPCabinetFE) as a standalone editor and this repository will soon™ be archived. Unless things go wrong and I end up keeping them separate. Let's see what happens =)
+
+#### Update:
+Progress on the port is going smoothly and a usable but limited version can already be used if you build [ASAPCabinetFE](https://github.com/surtarso/ASAPCabinetFE) from source.
 
 ---
 
