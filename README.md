@@ -5,6 +5,9 @@ This software is currently (and slowly) being ported to be part of [ASAPCabinetF
 #### Update:
 Progress on the port is going smoothly and a usable but limited version can already be used if you build [ASAPCabinetFE](https://github.com/surtarso/ASAPCabinetFE) from source.
 
+### Update 2:
+The "Editor Mode" (VPX GUI Tools port) is almost ready! Beta testing is highly apreciated! Build [ASAPCabinetFE](https://github.com/surtarso/ASAPCabinetFE) from source and use `./ASAPCabinetFE --editor` or the binary shortcut `ASAPCabinetFE-Editor`.
+
 ---
 
 <h1 align="center">VPX GUI Tools for Linux</h1>
