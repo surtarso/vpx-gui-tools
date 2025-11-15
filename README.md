@@ -1,12 +1,18 @@
+---
+
 # PLEASE NOTE:
 
-This software is currently (and slowly) being ported to be part of [ASAPCabinetFE](https://github.com/surtarso/ASAPCabinetFE) as a standalone editor and this repository will soon™ be archived. Unless things go wrong and I end up keeping them separate. Let's see what happens =)
+This software is currently being ported as part of [ASAPCabinetFE](https://github.com/surtarso/ASAPCabinetFE) and this repository will soon™ be archived.
 
-#### Update:
-Progress on the port is going smoothly and a usable but limited version can already be used if you build [ASAPCabinetFE](https://github.com/surtarso/ASAPCabinetFE) from source.
+>[!IMPORTANT]
+>NEW *VPX GUI Tools* BETA testing is now live with *[ASAPCabinetFE](https://github.com/surtarso/ASAPCabinetFE) release* [1.2.10](https://github.com/surtarso/ASAPCabinetFE/releases/tag/v1.2.10) using the `--editor` flag.
 
-### Update 2:
-The "Editor Mode" (VPX GUI Tools port) is almost ready! Beta testing is highly apreciated! Build [ASAPCabinetFE](https://github.com/surtarso/ASAPCabinetFE) from source and use `./ASAPCabinetFE --editor` or the binary shortcut `ASAPCabinetFE-Editor`.
+<img width="1287" height="729" alt="image" src="https://github.com/user-attachments/assets/e1380e27-3c90-4336-b97b-542f5d1272f7" />
+
+<p align="center"><i>-> Please redirect any issues to ASAPCabinet <-</i></p>
+
+
+<br><br><br>
 
 ---
 
