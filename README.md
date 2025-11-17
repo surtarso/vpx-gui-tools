@@ -1,18 +1,10 @@
----
+<br><br><br><br><br><br><br><br><br><br>
 
-# PLEASE NOTE:
-
-This software is currently being ported as part of [ASAPCabinetFE](https://github.com/surtarso/ASAPCabinetFE) and this repository will soon™ be archived.
-
->[!IMPORTANT]
->NEW *VPX GUI Tools* BETA testing is now live with *[ASAPCabinetFE](https://github.com/surtarso/ASAPCabinetFE) release* [1.2.10](https://github.com/surtarso/ASAPCabinetFE/releases/tag/v1.2.10) using the `--editor` flag.
-
-<img width="1287" height="729" alt="image" src="https://github.com/user-attachments/assets/e1380e27-3c90-4336-b97b-542f5d1272f7" />
-
-<p align="center"><i>-> Please redirect any issues to ASAPCabinet <-</i></p>
-
-
-<br><br><br>
+<h1 align="center">PLEASE NOTE:</h1>
+<div align="center">
+This software was <i>ported</i> as part of <a href="https://github.com/surtarso/ASAPCabinetFE">ASAPCabinetFE</a> and <b>this repository is no longer maintained</b>.
+</div>
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 
 ---
 
